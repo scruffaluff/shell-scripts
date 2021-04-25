@@ -1,0 +1,13 @@
+# Git configuration file for ignoring untracked paths.
+#
+# For more information, visit https://git-scm.com/docs/gitignore.
+
+.DS_Store
+.local/
+build/
+dist/
+docs/index.md
+node_modules/
+package-lock.json
+site/
+tmp/

@@ -1,0 +1,33 @@
+# GitHub Actions workflow file.
+#
+# For more information, visit
+# https://docs.github.com/actions/learn-github-actions.
+
+name: pages
+
+# Make workflow run only for pushes to the master branch.
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    name: Build documentation and upload to GitHub Pages.
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Install Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      - name: Install Node dependencies
+        run: npm install
+      - name: Build documentation
+        run: npm run vuepress:build
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site

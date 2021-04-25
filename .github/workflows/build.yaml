@@ -1,0 +1,79 @@
+# GitHub Actions workflow file.
+#
+# For more information, visit
+# https://docs.github.com/actions/learn-github-actions.
+
+name: build
+
+# Make workflow run only for commits pushed to othe develop, feature, master
+# branches, or pull requests made to the develop and master branches.
+on:
+  push:
+    branches:
+      - develop
+      - feature/*
+      - master
+  pull_request:
+    branches:
+      - develop
+      - master
+
+jobs:
+  lint:
+    name: Check code with formatter and linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Install Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      - name: Install Node dependencies
+        run: npm install
+      - name: Check format of configuration files
+        run: npm run prettier:test
+      - name: Install Shfmt
+        run: |
+          sudo curl -LSfs https://github.com/mvdan/sh/releases/download/v3.2.4/shfmt_v3.2.4_linux_amd64 -o /usr/local/bin/shfmt
+          sudo chmod 755 /usr/local/bin/shfmt
+      - name: Check format of shell scripts
+        run: npm run shfmt:test
+      - name: Run ShellCheck on shell scripts
+        uses: ludeeus/action-shellcheck@master
+        with:
+          ignore: node_modules
+
+  test-bash:
+    name: Run unit tests for Bash scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Install Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      - name: Install Bats dependencies
+        run: npm install
+      - name: Run Bash unit tests with Bats
+        run: npm run bats:test
+
+  test-powershell:
+    name: Run linter and unit tests for PowerShell scripts
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v2
+      - name: Install PSScriptAnalyzer
+        run: Install-Module -Name PSScriptAnalyzer -Force
+        shell: pwsh
+      - name: Run PSScriptAnalyzer on all PowerShell scripts
+        run: Invoke-ScriptAnalyzer -Path . -Recurse
+        shell: pwsh
+      - name: Install Pester
+        run: Install-Module -Name Pester -Force
+        shell: pwsh
+      - name: Run PowerShell unit tests with Pester
+        run: Invoke-Pester -Output Detailed ./tests/unit/
+        shell: pwsh
