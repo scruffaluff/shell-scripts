@@ -1,0 +1,40 @@
+{
+  "sha": "mocksha",
+  "tree": [
+    {
+      "path": "script.sh",
+      "mode": "100644",
+      "type": "blob",
+      "size": 540
+    },
+    {
+      "path": "src/mockscript.sh",
+      "mode": "100644",
+      "type": "blob",
+      "size": 659
+    },
+    {
+      "path": "folder",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "src/otherscript.sh",
+      "mode": "100644",
+      "type": "blob",
+      "size": 621
+    },
+    {
+      "path": "src/data.json",
+      "mode": "100644",
+      "type": "blob",
+      "size": 720
+    },
+    {
+      "path": "src/directory",
+      "mode": "040000",
+      "type": "tree"
+    }
+  ],
+  "truncated": false
+}
