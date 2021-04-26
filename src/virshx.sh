@@ -71,7 +71,8 @@ delete() {
     virsh snapshot-delete "$1" "${snapshot}"
   done
 
-  virsh undefine --remove-all-storage "$1"
+  # Virsh will not delete a domain's storage if it has NVRAM.
+  virsh undefine --nvram --remove-all-storage "$1"
 }
 
 #######################################
