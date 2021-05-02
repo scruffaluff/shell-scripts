@@ -5,7 +5,6 @@
 
 ---
 
-<!-- prettier-ignore -->
 **Documentation**: https://wolfgangwazzlestrauss.github.io/shell-scripts
 
 **Source Code**: https://github.com/wolfgangwazzlestrauss/shell-scripts

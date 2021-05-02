@@ -5,11 +5,11 @@
 
 name: release
 
-# Make workflow run only for pushed SemVer compatible tags.
+# Trigger workflow on SemVer compatible tags.
 on:
   push:
     tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+      - "v?[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   release:
