@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Extension commands for Virsh.
+# Invokes upgrade commands to all installed package managers.
 
 # Exit immediately if a command exists with a non-zero status.
 set -e
@@ -13,31 +13,17 @@ set -e
 #######################################
 usage() {
   case "$1" in
-    delete)
-      cat 1>&2 << EOF
-Virshx delete
-Delete a domain, associated snapshots, and associated storage
-
-USAGE:
-    virshx delete DOMAIN
-EOF
-      ;;
     main)
       cat 1>&2 << EOF
 $(version)
-Virsh extension commands
+Invokes upgrade commands to all installed package managers.
 
 USAGE:
-    virshx [OPTIONS] [SUBCOMMAND]
+    packup [OPTIONS]
 
 OPTIONS:
     -h, --help       Print help information
     -v, --version    Print version information
-
-SUBCOMMANDS:
-    delete           Delete a domain, associated snapshots, and associated storage
-
-See 'virshx <subcommand> --help' for more information on a specific command.
 EOF
       ;;
   esac
@@ -61,18 +47,21 @@ assert_cmd() {
 }
 
 #######################################
-# Subcommand to delete a domain and its associated snapshots and storage.
+# Update dnf package lists.
+#
+# DNF's check-update command will give a 100 exit code if there are packages
+# available to update. Thus both 0 and 100 must be treated as successful exit
+# codes.
+#
+# Arguments:
+#   Whether to use sudo command.
 #######################################
-delete() {
-  local snapshots
-
-  snapshots="$(virsh snapshot-list "$1" | tail -n +3 | cut -d' ' -f2)"
-  for snapshot in ${snapshots}; do
-    virsh snapshot-delete "$1" "${snapshot}"
-  done
-
-  # Virsh will not delete a domain's storage if it has NVRAM.
-  virsh undefine --nvram --remove-all-storage "$1"
+dnf_check_update() {
+  ${1:+sudo} dnf check-update || {
+    code="$?"
+    [[ "${code}" -eq 100 ]] && return 0
+    return "${code}"
+  }
 }
 
 #######################################
@@ -98,17 +87,54 @@ error_usage() {
   local default="\033[0m"
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
-  printf "Run 'virshx --help' for usage.\n" >&2
+  printf "Run 'packup --help' for usage.\n" >&2
   exit 2
 }
 
 #######################################
-# Print Virshx version string.
+# Subcommand to delete a domain and its associated snapshots and storage.
+#######################################
+upgrade() {
+  if [[ -x "$(command -v apk)" ]]; then
+    sudo apk update
+  fi
+
+  if [[ -x "$(command -v apt-get)" ]]; then
+    sudo apt-get update && sudo apt-get upgrade -y --allow-downgrades && sudo apt-get autoremove -y
+  fi
+
+  if [[ -x "$(command -v brew)" ]]; then
+    brew update && brew upgrade
+  fi
+
+  if [[ -x "$(command -v dnf)" ]]; then
+    dnf_check_update "1"
+  fi
+
+  if [[ -x "$(command -v flatpak)" ]]; then
+    sudo flatpak update -y
+  fi
+
+  if [[ -x "$(command -v pacman)" ]]; then
+    sudo pacman --noconfirm -Suy
+  fi
+
+  if [[ -x "$(command -v pkg)" ]]; then
+    pkg update
+  fi
+
+  if [[ -x "$(command -v snap)" ]]; then
+    sudo snap refresh
+  fi
+}
+
+#######################################
+# Print Packup version string.
 # Outputs:
-#   Virshx version string.
+#   Packup version string.
 #######################################
 version() {
-  echo "Virshx 0.0.1"
+  echo "Packup 0.0.1"
 }
 
 #######################################
@@ -123,12 +149,8 @@ main() {
     -v | --version)
       version
       ;;
-    delete)
-      shift 1
-      delete "$@"
-      ;;
     *)
-      error_usage "No such subcommand '$1'"
+      upgrade
       ;;
   esac
 }
