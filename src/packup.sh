@@ -95,36 +95,52 @@ error_usage() {
 # Subcommand to delete a domain and its associated snapshots and storage.
 #######################################
 upgrade() {
+  local use_sudo
+
+  # Use sudo for system installation if user is not root.
+  if [[ "${EUID}" -ne 0 ]]; then
+    assert_cmd sudo
+    use_sudo=1
+  fi
+
+  # Do not quote the sudo parameter expansion. Bash will error due to be being
+  # unable to find the "" command.
   if [[ -x "$(command -v apk)" ]]; then
-    sudo apk update
+    ${use_sudo:+sudo} apk update
+    ${use_sudo:+sudo} apk upgrade
   fi
 
   if [[ -x "$(command -v apt-get)" ]]; then
-    sudo apt-get update && sudo apt-get upgrade -y --allow-downgrades && sudo apt-get autoremove -y
+    ${use_sudo:+sudo} apt-get update
+    ${use_sudo:+sudo} apt-get full-upgrade -y --allow-downgrades
+    ${use_sudo:+sudo} apt-get autoremove -y
   fi
 
   if [[ -x "$(command -v brew)" ]]; then
-    brew update && brew upgrade
+    brew update
+    brew upgrade
   fi
 
   if [[ -x "$(command -v dnf)" ]]; then
-    dnf_check_update "1"
+    dnf_check_update "${use_sudo}"
+    ${use_sudo:+sudo} dnf upgrade -y
+    ${use_sudo:+sudo} dnf autoremove -y
   fi
 
   if [[ -x "$(command -v flatpak)" ]]; then
-    sudo flatpak update -y
+    ${use_sudo:+sudo} flatpak update -y
   fi
 
   if [[ -x "$(command -v pacman)" ]]; then
-    sudo pacman --noconfirm -Suy
+    ${use_sudo:+sudo} pacman --noconfirm -Suy
   fi
 
   if [[ -x "$(command -v pkg)" ]]; then
-    pkg update
+    ${use_sudo:+sudo} pkg update
   fi
 
   if [[ -x "$(command -v snap)" ]]; then
-    sudo snap refresh
+    ${use_sudo:+sudo} snap refresh
   fi
 }
 
