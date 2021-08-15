@@ -132,6 +132,9 @@ lint() {
   else
     echo "${response}" | jq .
   fi
+
+  # Exit with error code if errors array is not empty.
+  echo "${response}" | jq -e ".errors | length == 0" &> /dev/null
 }
 
 #######################################

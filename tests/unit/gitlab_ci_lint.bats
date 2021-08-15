@@ -31,6 +31,7 @@ setup() {
   local expected
 
   expected='{"status":"invalid","errors":["deploy: circular dependency detected in `extends`"],"warnings":[]}'
-  actual="$(src/gitlab-ci-lint.sh -r tests/data/gitlab_ci_invalid.yaml)"
-  assert_equal "${actual}" "${expected}"
+  run src/gitlab-ci-lint.sh -r tests/data/gitlab_ci_invalid.yaml
+  assert_failure
+  assert_output "${expected}"
 }
