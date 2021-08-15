@@ -1,0 +1,5 @@
+test:
+  image: "node:16"
+  stage: build
+  script:
+    - npm run test
