@@ -70,7 +70,7 @@ error_usage() {
   local default="\033[0m"
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
-  printf "Run 'packup --help' for usage.\n" >&2
+  printf "Run 'gitlab-ci-lint --help' for usage.\n" >&2
   exit 2
 }
 
@@ -79,16 +79,52 @@ error_usage() {
 #######################################
 lint() {
   local content
+  local file_path
+  local output_raw
 
   assert_cmd curl
   assert_cmd jq
 
-  content="$(jq --null-input --arg yaml "$(< "$1")" '.content=$yaml')"
+  # Parse command line arguments.
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      -r | --raw)
+        output_raw="true"
+        shift 1
+        ;;
+      *)
+        # Parse for file path if unset else throw error.
+        #
+        # Flags:
+        #   -z: Check if string has zero length.
+        if [[ -z "${file_path}" ]]; then
+          file_path="$1"
+          shift 1
+        else
+          error_usage "No such option '$1'"
+        fi
+        ;;
+    esac
+  done
 
-  curl -LSfs "https://gitlab.com/api/v4/ci/lint" \
-    --header 'Content-Type: application/json' \
-    --header "PRIVATE-TOKEN: ${GITLAB_CI_LINT_TOKEN}" \
-    --data "${content}"
+  if [[ -z "${file_path}" ]]; then
+    error_usage "FILE argument required"
+  fi
+
+  content="$(jq --null-input --arg yaml "$(< "${file_path}")" '.content=$yaml')"
+
+  response="$(
+    curl -LSfs "https://gitlab.com/api/v4/ci/lint" \
+      --header 'Content-Type: application/json' \
+      --header "PRIVATE-TOKEN: ${GITLAB_CI_LINT_TOKEN}" \
+      --data "${content}"
+  )"
+
+  if [[ "${output_raw}" == "true" ]]; then
+    echo "${response}"
+  else
+    echo "${response}" | jq .
+  fi
 }
 
 #######################################

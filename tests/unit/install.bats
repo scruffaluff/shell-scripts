@@ -19,7 +19,7 @@ setup() {
 
   curl() {
     if [[ "$*" =~ api\.github\.com ]]; then
-      cat tests/data/response.json
+      cat tests/data/install_response.json
     else
       echo "curl $*"
       exit 0

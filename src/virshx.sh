@@ -68,6 +68,10 @@ delete() {
 
   assert_cmd virsh
 
+  if [[ -z "$1" ]]; then
+    error_usage "DOMAIN argument required"
+  fi
+
   snapshots="$(virsh snapshot-list "$1" | tail -n +3 | cut -d' ' -f2)"
   for snapshot in ${snapshots}; do
     virsh snapshot-delete "$1" "${snapshot}"
