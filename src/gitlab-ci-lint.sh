@@ -80,6 +80,7 @@ error_usage() {
 lint() {
   local content
   local file_path
+  local gitlab_token="${GITLAB_CI_LINT_TOKEN}"
   local output_raw
 
   assert_cmd curl
@@ -91,6 +92,10 @@ lint() {
       -r | --raw)
         output_raw="true"
         shift 1
+        ;;
+      -t | --token)
+        gitlab_token="$2"
+        shift 2
         ;;
       *)
         # Parse for file path if unset else throw error.
@@ -109,6 +114,8 @@ lint() {
 
   if [[ -z "${file_path}" ]]; then
     error_usage "FILE argument required"
+  elif [[ -z "${gitlab_token}" ]]; then
+    error_usage "GitLab API token must be set in GITLAB_CI_LINT_TOKEN environment variable or passed in with --token flag"
   fi
 
   content="$(jq --null-input --arg yaml "$(< "${file_path}")" '.content=$yaml')"
@@ -116,7 +123,7 @@ lint() {
   response="$(
     curl -LSfs "https://gitlab.com/api/v4/ci/lint" \
       --header 'Content-Type: application/json' \
-      --header "PRIVATE-TOKEN: ${GITLAB_CI_LINT_TOKEN}" \
+      --header "PRIVATE-TOKEN: ${gitlab_token}" \
       --data "${content}"
   )"
 
