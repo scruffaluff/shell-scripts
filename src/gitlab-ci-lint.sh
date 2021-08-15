@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Extension commands for Virsh.
+# Lints a GitLab CI configuration file with the GitLab CI Lint API.
+# For more information, visit https://docs.gitlab.com/ee/api/lint.html.
 
 # Exit immediately if a command exists with a non-zero status.
 set -e
@@ -13,31 +14,17 @@ set -e
 #######################################
 usage() {
   case "$1" in
-    delete)
-      cat 1>&2 << EOF
-Virshx delete
-Delete a domain, associated snapshots, and associated storage
-
-USAGE:
-    virshx delete DOMAIN
-EOF
-      ;;
     main)
       cat 1>&2 << EOF
 $(version)
-Virsh extension commands
+Lints a GitLab CI configuration file with the GitLab CI Lint API.
 
 USAGE:
-    virshx [OPTIONS] [SUBCOMMAND]
+    gitlab-ci-lint [OPTIONS] FILE
 
 OPTIONS:
     -h, --help       Print help information
     -v, --version    Print version information
-
-SUBCOMMANDS:
-    delete           Delete a domain, associated snapshots, and associated storage
-
-See 'virshx <subcommand> --help' for more information on a specific command.
 EOF
       ;;
   esac
@@ -58,23 +45,6 @@ assert_cmd() {
   if [[ ! -x "$(command -v "$1")" ]]; then
     error "Cannot find required $1 command on computer"
   fi
-}
-
-#######################################
-# Subcommand to delete a domain and its associated snapshots and storage.
-#######################################
-delete() {
-  local snapshots
-
-  assert_cmd virsh
-
-  snapshots="$(virsh snapshot-list "$1" | tail -n +3 | cut -d' ' -f2)"
-  for snapshot in ${snapshots}; do
-    virsh snapshot-delete "$1" "${snapshot}"
-  done
-
-  # Virsh will not delete a domain's storage if it has NVRAM.
-  virsh undefine --nvram --remove-all-storage "$1"
 }
 
 #######################################
@@ -100,17 +70,34 @@ error_usage() {
   local default="\033[0m"
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
-  printf "Run 'virshx --help' for usage.\n" >&2
+  printf "Run 'packup --help' for usage.\n" >&2
   exit 2
 }
 
 #######################################
-# Print Virshx version string.
+# Subcommand to lint a GitLab CI YAML configuration file.
+#######################################
+lint() {
+  local content
+
+  assert_cmd curl
+  assert_cmd jq
+
+  content="$(jq --null-input --arg yaml "$(< "$1")" '.content=$yaml')"
+
+  curl -LSfs "https://gitlab.com/api/v4/ci/lint" \
+    --header 'Content-Type: application/json' \
+    --header "PRIVATE-TOKEN: ${GITLAB_CI_LINT_TOKEN}" \
+    --data "${content}"
+}
+
+#######################################
+# Print GitLab CI Lint version string.
 # Outputs:
-#   Virshx version string.
+#   GitLab CI Lint version string.
 #######################################
 version() {
-  echo "Virshx 0.0.1"
+  echo "GitLab CI Lint 0.0.1"
 }
 
 #######################################
@@ -125,12 +112,8 @@ main() {
     -v | --version)
       version
       ;;
-    delete)
-      shift 1
-      delete "$@"
-      ;;
     *)
-      error_usage "No such subcommand '$1'"
+      lint "$@"
       ;;
   esac
 }
