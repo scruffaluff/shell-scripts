@@ -23,8 +23,14 @@ USAGE:
     gitlab-ci-lint [OPTIONS] FILE
 
 OPTIONS:
-    -h, --help       Print help information
-    -v, --version    Print version information
+    -h, --help            Print help information
+    -r, --raw             Output raw JSON without pretty printing
+    -t, --token <TOKEN>   GitLab API token
+        --token-stdin     Take GitLab API token from stdin
+    -v, --version         Print version information
+
+If no token is provided, then value of the GITLAB_CI_LINT_TOKEN environment
+variable is used.
 EOF
       ;;
   esac
@@ -96,6 +102,11 @@ lint() {
       -t | --token)
         gitlab_token="$2"
         shift 2
+        ;;
+      --token-stdin)
+        gitlab_token="$(cat -)"
+        echo "gitlab-token: ${gitlab_token}"
+        exit 0
         ;;
       *)
         # Parse for file path if unset else throw error.
