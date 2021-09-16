@@ -89,9 +89,6 @@ lint() {
   local gitlab_token="${GITLAB_CI_LINT_TOKEN}"
   local output_raw
 
-  assert_cmd curl
-  assert_cmd jq
-
   # Parse command line arguments.
   while [[ "$#" -gt 0 ]]; do
     case "$1" in
@@ -122,6 +119,9 @@ lint() {
         ;;
     esac
   done
+
+  assert_cmd curl
+  assert_cmd jq
 
   if [[ -z "${file_path}" ]]; then
     error_usage "FILE argument required"

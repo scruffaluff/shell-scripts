@@ -207,9 +207,6 @@ main() {
   local user_install
   local version="master"
 
-  assert_cmd curl
-  assert_cmd jq
-
   # Parse command line arguments.
   while [[ "$#" -gt 0 ]]; do
     case "$1" in
@@ -240,6 +237,9 @@ main() {
         ;;
     esac
   done
+
+  assert_cmd curl
+  assert_cmd jq
 
   src_prefix="https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/${version}/src"
   scripts="$(find_scripts "${version}")"
