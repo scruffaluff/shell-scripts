@@ -21,7 +21,7 @@ setup() {
   local actual
   local expected
 
-  expected='{"status":"valid","errors":[],"warnings":[]}'
+  expected='{"valid":true,"errors":[],"warnings":[],"status":"valid"}'
   actual="$(src/gitlab-ci-lint.sh -r tests/data/gitlab_ci_valid.yaml)"
   assert_equal "${actual}" "${expected}"
 }
@@ -30,7 +30,7 @@ setup() {
   local actual
   local expected
 
-  expected='{"status":"invalid","errors":["deploy: circular dependency detected in `extends`"],"warnings":[]}'
+  expected='{"valid":false,"errors":["deploy: circular dependency detected in `extends`"],"warnings":[],"status":"invalid"}'
   run src/gitlab-ci-lint.sh -r tests/data/gitlab_ci_invalid.yaml
   assert_failure
   assert_output "${expected}"

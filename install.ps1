@@ -35,6 +35,12 @@ Function ErrorUsage($Message) {
     Exit 2
 }
 
+# Find all scripts inside GitHub repository.
+Function FindScripts($Version) {
+    $Response = $(Invoke-WebRequest -UseBasicParsing -Uri "https://api.github.com/repos/wolfgangwazzlestrauss/shell-scripts/git/trees/$Version`?recursive=true")
+    Write-Output "$Response" | jq -r '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".ps1\")'
+}
+
 # Print log message to stdout if logging is enabled.
 Function Log($Message) {
     If (!"$Env:SHELL_SCRIPTS_NOLOG") {
@@ -45,12 +51,20 @@ Function Log($Message) {
 # Script entrypoint.
 Function Main() {
     $ArgIdx = 0
+    $List = 0
+    $Target = "Machine"
+    $Version = "master"
 
     While ($ArgIdx -lt $Args[0].Count) {
         Switch ($Args[0][$ArgIdx]) {
             { $_ -In "-h", "--help" } {
                 Usage
                 Exit 0
+            }
+            { $_ -In "-l", "--list" } {
+                $List = 1
+                $ArgIdx += 1
+                Break
             }
             { $_ -In "-v", "--version" } {
                 $Version = $Args[0][$ArgIdx + 1]
@@ -63,12 +77,43 @@ Function Main() {
                 Break
             }
             Default {
-                ErrorUsage "No such option '$($Args[0][$ArgIdx])'"
+                $Name = $Args[0][$ArgIdx]
+                $ArgIdx += 1
             }
         }
     }
 
-    Throw "Error: PowerShell installer is not yet implemented"
+    $SrcPrefix = "https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/$Version/src"
+    $Scripts = $(FindScripts "$Version")
+
+    If ($List) {
+        Write-Output $Scripts
+    } Else {
+        If ($Target -Eq "User") {
+            $DestDir = $PSGetPath.CurrentUserScripts
+        }
+        Else {
+            $DestDir = $PSGetPath.AllUsersScripts
+        }
+        New-Item -Force -ItemType Directory -Path $DestDir | Out-Null
+
+        If (-Not ($Env:Path -Like "*$DestDir*")) {
+            $Env:Path = "$DestDir" + ";$Env:Path"
+            [System.Environment]::SetEnvironmentVariable("Path", "$Env:Path", "$Target")
+        }
+
+        $MatchFound = 0
+        ForEach ($Script in $Scripts) {
+            If ($Name -And ("$Script" -Eq "$Name")) {
+                $MatchFound = 1
+                DownloadFile "$SrcPrefix/$Script.ps1" "$DestDir/$Script.ps1"
+            }
+        }
+
+        If (-Not $MatchFound) {
+            Throw "No script name match found for '$Name'"
+        }
+    }
 }
 
 # Only run Main if invoked as script. Otherwise import functions as library.
