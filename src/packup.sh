@@ -142,6 +142,18 @@ upgrade() {
   if [[ -x "$(command -v snap)" ]]; then
     ${use_sudo:+sudo} snap refresh
   fi
+
+  if [[ -x "$(command -v gem)" ]]; then
+    ${use_sudo:+sudo} gem update
+  fi
+
+  if [[ -x "$(command -v npm)" ]]; then
+    ${use_sudo:+sudo} npm update -g
+  fi
+
+  if [[ -x "$(command -v pipx)" ]]; then
+    ${use_sudo:+sudo} pipx upgrade-all
+  fi
 }
 
 #######################################

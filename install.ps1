@@ -1,6 +1,8 @@
 # If unable to execute due to policy rules, run
 # Set-ExecutionPolicy RemoteSigned -Scope CurrentUser.
 
+# Exit immediately if a PowerShell Cmdlet encounters an error.
+$ErrorActionPreference = "Stop"
 
 # Show CLI help information.
 Function Usage() {
@@ -46,11 +48,11 @@ Function Main() {
 
     While ($ArgIdx -lt $Args[0].Count) {
         Switch ($Args[0][$ArgIdx]) {
-            {$_ -In "-h", "--help"} {
+            { $_ -In "-h", "--help" } {
                 Usage
                 Exit 0
             }
-            {$_ -In "-v", "--version"} {
+            { $_ -In "-v", "--version" } {
                 $Version = $Args[0][$ArgIdx + 1]
                 $ArgIdx += 2
                 Break
