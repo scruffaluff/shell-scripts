@@ -96,7 +96,8 @@ Function Main() {
 
     If ($List) {
         Write-Output $Scripts
-    } Else {
+    } 
+    Else {
         If (-Not $DestDir) {
             If ($Target -Eq "User") {
                 $DestDir = "C:\Users\$Env:UserName\Documents\PowerShell\Scripts"
@@ -107,9 +108,11 @@ Function Main() {
         }
         New-Item -Force -ItemType Directory -Path $DestDir | Out-Null
 
-        If (-Not ($Env:Path -Like "*$DestDir*")) {
-            $Env:Path = "$DestDir" + ";$Env:Path"
-            [System.Environment]::SetEnvironmentVariable("Path", "$Env:Path", "$Target")
+        $Path = [Environment]::GetEnvironmentVariable("Path", "$Target")
+        If (-Not ($Path -Like "*$DestDir*")) {
+            [System.Environment]::SetEnvironmentVariable(
+                "Path", "$DestDir" + ";$Path", "$Target"
+            )
         }
 
         $MatchFound = 0
