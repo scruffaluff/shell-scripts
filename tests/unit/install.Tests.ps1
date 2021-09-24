@@ -5,7 +5,7 @@ BeforeAll {
 }
 
 Describe "Install" {
-    It "Temporary unit test placeholder" {
-        { & "$Install" } | Should -Throw "Error: PowerShell installer is not yet implemented"
+    It "Missing name argument throws error" {
+        { & "$Install" --user } | Should -Throw "Error: No script name match found for ''"
     }
 }

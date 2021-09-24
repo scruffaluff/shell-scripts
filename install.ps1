@@ -11,10 +11,12 @@ Shell Scripts Installer
 Installer script for Shell Scripts
 
 USAGE:
-    shell-scripts-install [OPTIONS]
+    shell-scripts-install [OPTIONS] NAME
 
 OPTIONS:
+    -d, --dest <PATH>           Directory to install scripts
     -h, --help                  Print help information
+    -l, --list                  List all available scripts
     -u, --user                  Install scripts for current user
     -v, --version <VERSION>     Version of scripts to install
 '@
@@ -51,12 +53,18 @@ Function Log($Message) {
 # Script entrypoint.
 Function Main() {
     $ArgIdx = 0
+    $Dest = ""
     $List = 0
     $Target = "Machine"
     $Version = "master"
 
     While ($ArgIdx -lt $Args[0].Count) {
         Switch ($Args[0][$ArgIdx]) {
+            { $_ -In "-d", "--dest" } {
+                $DestDir = $Args[0][$ArgIdx + 1]
+                $ArgIdx += 2
+                Exit 0
+            }
             { $_ -In "-h", "--help" } {
                 Usage
                 Exit 0
@@ -89,11 +97,13 @@ Function Main() {
     If ($List) {
         Write-Output $Scripts
     } Else {
-        If ($Target -Eq "User") {
-            $DestDir = $PSGetPath.CurrentUserScripts
-        }
-        Else {
-            $DestDir = $PSGetPath.AllUsersScripts
+        If (-Not $DestDir) {
+            If ($Target -Eq "User") {
+                $DestDir = "C:\Users\$Env:UserName\Documents\PowerShell\Scripts"
+            }
+            Else {
+                $DestDir = "C:\Program Files\PowerShell\Scripts"
+            }
         }
         New-Item -Force -ItemType Directory -Path $DestDir | Out-Null
 
@@ -111,7 +121,7 @@ Function Main() {
         }
 
         If (-Not $MatchFound) {
-            Throw "No script name match found for '$Name'"
+            Throw "Error: No script name match found for '$Name'"
         }
     }
 }
