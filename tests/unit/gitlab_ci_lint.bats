@@ -26,6 +26,8 @@ setup() {
   assert_equal "${actual}" "${expected}"
 }
 
+# Disable lint since expected variable is JSON not Bash expansion syntax.
+# shellcheck disable=2016
 @test "YAML file fails CI Lint API" {
   local actual
   local expected

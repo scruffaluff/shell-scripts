@@ -26,6 +26,9 @@ OPTIONS:
     -v, --version    Print version information
 EOF
       ;;
+    *)
+      error "No such usage option '$1'"
+      ;;
   esac
 }
 
@@ -144,15 +147,15 @@ upgrade() {
   fi
 
   if [[ -x "$(command -v gem)" ]]; then
-    ${use_sudo:+sudo} gem update
+    gem update
   fi
 
   if [[ -x "$(command -v npm)" ]]; then
-    ${use_sudo:+sudo} npm update -g
+    npm update -g
   fi
 
   if [[ -x "$(command -v pipx)" ]]; then
-    ${use_sudo:+sudo} pipx upgrade-all
+    pipx upgrade-all
   fi
 }
 

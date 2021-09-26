@@ -245,9 +245,9 @@ main() {
   scripts="$(find_scripts "${version}")"
 
   if [[ list -eq 1 ]]; then
-    echo "$scripts"
+    echo "${scripts}"
   else
-    for script in $scripts; do
+    for script in ${scripts}; do
       if [[ -n "${name}" && "${script}" =~ ${name} ]]; then
         match_found="true"
         install_script "${user_install}" "${src_prefix}" "${dst_dir}" "${script}"

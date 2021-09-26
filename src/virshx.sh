@@ -40,6 +40,9 @@ SUBCOMMANDS:
 See 'virshx <subcommand> --help' for more information on a specific command.
 EOF
       ;;
+    *)
+      error "No such usage option '$1'"
+      ;;
   esac
 }
 

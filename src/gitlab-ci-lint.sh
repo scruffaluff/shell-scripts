@@ -33,6 +33,9 @@ If no token is provided, then value of the GITLAB_CI_LINT_TOKEN environment
 variable is used.
 EOF
       ;;
+    *)
+      error "No such usage option '$1'"
+      ;;
   esac
 }
 
