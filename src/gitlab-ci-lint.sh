@@ -3,8 +3,8 @@
 # Lints a GitLab CI configuration file with the GitLab CI Lint API.
 # For more information, visit https://docs.gitlab.com/ee/api/lint.html.
 
-# Exit immediately if a command exists with a non-zero status.
-set -e
+# Exit immediately if a command exits or pipes a non-zero return code.
+set -eo pipefail
 
 #######################################
 # Show CLI help information.

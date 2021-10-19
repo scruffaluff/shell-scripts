@@ -2,8 +2,8 @@
 #
 # Install Scripts for MacOS or Linux systems.
 
-# Exit immediately if a command exists with a non-zero status.
-set -e
+# Exit immediately if a command exits or pipes a non-zero return code.
+set -eo pipefail
 
 #######################################
 # Show CLI help information.
