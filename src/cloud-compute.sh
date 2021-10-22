@@ -340,12 +340,21 @@ launch() {
       gcp_launch "$@"
       ;;
     -h | --help)
-      usage
+      usage "launch"
       ;;
     *)
       error_usage "Unsupported cloud provider '$1'"
       ;;
   esac
+}
+
+#######################################
+# Print Cloud Compute version string.
+# Outputs:
+#   Cloud Compute version string.
+#######################################
+version() {
+  echo "Cloud Compute 0.0.1"
 }
 
 #######################################
@@ -371,7 +380,10 @@ main() {
       launch "$@"
       ;;
     -h | --help)
-      usage
+      usage "main"
+      ;;
+    -v | --version)
+      version
       ;;
     *)
       error_usage "No such subcommand '$1'"
