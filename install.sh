@@ -3,7 +3,12 @@
 # Install Scripts for MacOS or Linux systems.
 
 # Exit immediately if a command exits or pipes a non-zero return code.
-set -eo pipefail
+#
+# Flags:
+#   -e: Exit immediately when a command pipeline fails.
+#   -o: Persist nonzero exit codes through a Bash pipe.
+#   -u: Throw an error when an unset variable is encountered.
+set -eou pipefail
 
 #######################################
 # Show CLI help information.
@@ -119,7 +124,6 @@ error_usage() {
 #######################################
 find_scripts() {
   local response
-
   assert_cmd jq
 
   response="$(curl -LSfs "https://api.github.com/repos/wolfgangwazzlestrauss/shell-scripts/git/trees/$1?recursive=true")"
@@ -138,7 +142,7 @@ log() {
   #
   # Flags:
   #   -z: Check if string has zero length.
-  if [[ -z "${SHELL_SCRIPTS_NOLOG}" ]]; then
+  if [[ -z "${SHELL_SCRIPTS_NOLOG:-}" ]]; then
     echo "$@"
   fi
 }
@@ -244,18 +248,20 @@ main() {
   src_prefix="https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/${version}/src"
   scripts="$(find_scripts "${version}")"
 
-  if [[ list -eq 1 ]]; then
+  if [[ "${list:-}" -eq 1 ]]; then
     echo "${scripts}"
   else
     for script in ${scripts}; do
-      if [[ -n "${name}" && "${script}" =~ ${name} ]]; then
+      # Flags:
+      #   -n: Check if the string has nonzero length.
+      if [[ -n "${name:-}" && "${script}" =~ ${name} ]]; then
         match_found="true"
-        install_script "${user_install}" "${src_prefix}" "${dst_dir}" "${script}"
+        install_script "${user_install:-}" "${src_prefix}" "${dst_dir}" "${script}"
       fi
     done
 
-    if [[ -z "${match_found}" ]]; then
-      error_usage "No script name match found for '${name}'"
+    if [[ -z "${match_found:-}" ]]; then
+      error_usage "No script name match found for '${name:-}'"
     fi
   fi
 }
