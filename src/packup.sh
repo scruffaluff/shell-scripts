@@ -7,7 +7,8 @@
 # Flags:
 #   -e: Exit immediately when a command pipeline fails.
 #   -o: Persist nonzero exit codes through a Bash pipe.
-set -eo pipefail
+#   -u: Throw an error when an unset variable is encountered.
+set -eou pipefail
 
 #######################################
 # Show CLI help information.
@@ -177,7 +178,7 @@ version() {
 #######################################
 main() {
   # Parse command line arguments.
-  case "$1" in
+  case "${1:-}" in
     -h | --help)
       usage "main"
       ;;

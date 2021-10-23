@@ -7,7 +7,8 @@
 # Flags:
 #   -e: Exit immediately when a command pipeline fails.
 #   -o: Persist nonzero exit codes through a Bash pipe.
-set -eo pipefail
+#   -u: Throw an error when an unset variable is encountered.
+set -eou pipefail
 
 #######################################
 # Show CLI help information.
@@ -23,7 +24,7 @@ Virshx delete
 Delete a domain, associated snapshots, and associated storage
 
 USAGE:
-    virshx delete DOMAIN
+    virshx delete <DOMAIN>
 EOF
       ;;
     main)
@@ -75,8 +76,8 @@ delete() {
 
   assert_cmd virsh
 
-  if [[ -z "$1" ]]; then
-    error_usage "DOMAIN argument required"
+  if [[ -z "${1:-}" ]]; then
+    error_usage "DOMAIN argument missing"
   fi
 
   snapshots="$(virsh snapshot-list "$1" | tail -n +3 | cut -d' ' -f2)"
@@ -129,7 +130,7 @@ version() {
 #######################################
 main() {
   # Parse command line arguments.
-  case "$1" in
+  case "${1:-}" in
     -h | --help)
       usage "main"
       ;;
@@ -141,7 +142,7 @@ main() {
       delete "$@"
       ;;
     *)
-      error_usage "No such subcommand '$1'"
+      error_usage "No such subcommand '${1:-}'"
       ;;
   esac
 }

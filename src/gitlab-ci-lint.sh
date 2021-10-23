@@ -8,7 +8,8 @@
 # Flags:
 #   -e: Exit immediately when a command pipeline fails.
 #   -o: Persist nonzero exit codes through a Bash pipe.
-set -eo pipefail
+#   -u: Throw an error when an unset variable is encountered.
+set -eou pipefail
 
 #######################################
 # Show CLI help information.
@@ -24,7 +25,7 @@ $(version)
 Lints a GitLab CI configuration file with the GitLab CI Lint API.
 
 USAGE:
-    gitlab-ci-lint [OPTIONS] FILE
+    gitlab-ci-lint [OPTIONS] <FILE>
 
 OPTIONS:
     -h, --help            Print help information
@@ -93,7 +94,7 @@ error_usage() {
 lint() {
   local content
   local file_path
-  local gitlab_token="${GITLAB_CI_LINT_TOKEN}"
+  local gitlab_token="${GITLAB_CI_LINT_TOKEN:-}"
   local output_raw
 
   # Parse command line arguments.
@@ -117,7 +118,7 @@ lint() {
         #
         # Flags:
         #   -z: Check if string has zero length.
-        if [[ -z "${file_path}" ]]; then
+        if [[ -z "${file_path:-}" ]]; then
           file_path="$1"
           shift 1
         else
@@ -130,9 +131,9 @@ lint() {
   assert_cmd curl
   assert_cmd jq
 
-  if [[ -z "${file_path}" ]]; then
-    error_usage "FILE argument required"
-  elif [[ -z "${gitlab_token}" ]]; then
+  if [[ -z "${file_path:-}" ]]; then
+    error_usage "FILE argument missing"
+  elif [[ -z "${gitlab_token:-}" ]]; then
     error_usage "GitLab API token must be set in GITLAB_CI_LINT_TOKEN environment variable or passed in with --token flag"
   fi
 
@@ -169,7 +170,7 @@ version() {
 #######################################
 main() {
   # Parse command line arguments.
-  case "$1" in
+  case "${1:-}" in
     -h | --help)
       usage "main"
       ;;

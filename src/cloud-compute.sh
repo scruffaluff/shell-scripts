@@ -20,7 +20,58 @@ INSTANCE_NAME="CloudCompute"
 #   Writes help information to stdout.
 #######################################
 usage() {
-  cat 1>&2 << EOF
+  case "$1" in
+    address)
+      cat 1>&2 << EOF
+Cloud Compute address
+Print IP address of compute instance
+
+USAGE:
+    cloud-compute address [OPTIONS] <CLOUD>
+
+OPTIONS:
+    -h, --help                  Print help information
+EOF
+      ;;
+    connect)
+      cat 1>&2 << EOF
+Cloud Compute connect
+SSH connect to compute instance
+
+USAGE:
+    cloud-compute connect [OPTIONS] <CLOUD>
+
+OPTIONS:
+    -h, --help                  Print help information
+EOF
+      ;;
+    destroy)
+      cat 1>&2 << EOF
+Cloud Compute destroy
+Shutdown and delete compute instance
+
+USAGE:
+    cloud-compute destroy [OPTIONS] <CLOUD>
+
+OPTIONS:
+    -h, --help                  Print help information
+EOF
+      ;;
+    launch)
+      cat 1>&2 << EOF
+Cloud Compute launch
+Launch compute instance and wait until ready
+
+USAGE:
+    cloud-compute launch [OPTIONS] <CLOUD> <OS>
+
+OPTIONS:
+    -h, --help                  Print help information
+EOF
+      ;;
+    main)
+      cat 1>&2 << EOF
+$(version)
 Provision basic compute instances on AWS, Digital Ocean, and GCP.
 
 USAGE:
@@ -34,8 +85,13 @@ SUBCOMMANDS:
     address       Print IP address of compute instance
     connect       SSH connect to compute instance
     destroy       Shutdown and delete compute instance
-    launch        Launch compute instance and wait until it is ready
+    launch        Launch compute instance and wait until ready
 EOF
+      ;;
+    *)
+      error "No such usage option '$1'"
+      ;;
+  esac
 }
 
 #######################################
@@ -45,14 +101,17 @@ address() {
   case "$1" in
     aws)
       shift 1
+      assert_cmd aws
       aws_address "$@"
       ;;
     "do")
       shift 1
+      assert_cmd doctl
       do_address "$@"
       ;;
     gcp)
       shift 1
+      assert_cmd gcloud
       gcp_address "$@"
       ;;
     -h | --help)
@@ -145,13 +204,45 @@ aws_instance_id() {
 # Launch AWS EC2 instance.
 #######################################
 aws_launch() {
+  local image=
+  local size="t4g.micro"
+
+  # Parse command line arguments.
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      -s | --size)
+        size="$2"
+        shift 2
+        ;;
+      opensuse)
+        image="ami-0174313b5af8423d7"
+        shift 1
+        ;;
+      ubuntu)
+        image="ami-03d5c68bab01f3496"
+        shift 1
+        ;;
+      windows)
+        image="ami-06eae680a1f3c6b6b"
+        shift 1
+        ;;
+      *)
+        error_usage "No such option '$1'" "update"
+        ;;
+    esac
+  done
+
+  if [[ -z "${image:-}" ]]; then
+    error_usage "OS argument is missing"
+  fi
+
   if [[ "$(aws_instance_id)" == "None" ]]; then
     aws_create_security_group
 
     aws ec2 run-instances \
       --count 1 \
-      --image-id ami-09d9c897fc36713bf \
-      --instance-type t4g.micro \
+      --image-id "${image}" \
+      --instance-type "${size}" \
       --key-name aws \
       --security-groups "${AWS_SECURITY_GROUP}" \
       --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=${INSTANCE_NAME}}]"
@@ -167,14 +258,17 @@ connect() {
   case "$1" in
     aws)
       shift 1
+      assert_cmd aws
       aws_connect "$@"
       ;;
     "do")
       shift 1
+      assert_cmd doctl
       do_connect "$@"
       ;;
     gcp)
       shift 1
+      assert_cmd gcloud
       gcp_connect "$@"
       ;;
     -h | --help)
@@ -193,14 +287,17 @@ destroy() {
   case "$1" in
     aws)
       shift 1
+      assert_cmd aws
       aws_destroy "$@"
       ;;
     "do")
       shift 1
+      assert_cmd doctl
       do_destroy "$@"
       ;;
     gcp)
       shift 1
+      assert_cmd gcloud
       gcp_destroy "$@"
       ;;
     -h | --help)
@@ -244,12 +341,44 @@ do_destroy() {
 # Launch Digital Ocean droplet.
 #######################################
 do_launch() {
+  local image
+  local size="s-1vcpu-1gb"
+
+  # Parse command line arguments.
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      -s | --size)
+        size="$2"
+        shift 2
+        ;;
+      fedora)
+        image="fedora-34-x64"
+        shift 1
+        ;;
+      freebsd)
+        image="freebsd-12-x64-zfs"
+        shift 1
+        ;;
+      ubuntu)
+        image="ubuntu-21-04-x64"
+        shift 1
+        ;;
+      *)
+        error_usage "No such option '$1'" "update"
+        ;;
+    esac
+  done
+
+  if [[ -z "${image:-}" ]]; then
+    error_usage "OS argument is missing"
+  fi
+
   if ! doctl compute droplet get "${INSTANCE_NAME}" &> /dev/null; then
     doctl compute droplet create \
       --wait \
-      --image freebsd-12-x64-zfs \
+      --image "${image}" \
       --region sfo3 \
-      --size s-1vcpu-1gb \
+      --size "${size}" \
       --ssh-keys "${DO_SSH_KEY_ID}" \
       "${INSTANCE_NAME}"
   fi
@@ -317,11 +446,35 @@ gcp_destroy() {
 # Launch GCP compute instance.
 #######################################
 gcp_launch() {
+  local image
+  local size="e2-micro"
+
+  # Parse command line arguments.
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      -s | --size)
+        size="$2"
+        shift 2
+        ;;
+      ubuntu)
+        image="ubuntu-2104"
+        shift 1
+        ;;
+      *)
+        error_usage "No such option '$1'" "update"
+        ;;
+    esac
+  done
+
+  if [[ -z "${image:-}" ]]; then
+    error_usage "OS argument is missing"
+  fi
+
   if ! gcloud compute instances describe --zone us-west2-a "${INSTANCE_NAME}" &> /dev/null; then
     gcloud compute instances create \
-      --image-family ubuntu-2104 \
+      --image-family "${image}" \
       --image-project ubuntu-os-cloud \
-      --machine-type e2-micro \
+      --machine-type "${size}" \
       --metadata "ssh-keys=ubuntu:$(cat "${GCP_SSH_KEY_PATH}".pub)" \
       --zone us-west2-a \
       "${INSTANCE_NAME}"
@@ -335,14 +488,17 @@ launch() {
   case "$1" in
     aws)
       shift 1
+      assert_cmd aws
       aws_launch "$@"
       ;;
     "do")
       shift 1
+      assert_cmd doctl
       do_launch "$@"
       ;;
     gcp)
       shift 1
+      assert_cmd gcloud
       gcp_launch "$@"
       ;;
     -h | --help)
