@@ -3,6 +3,11 @@
 # Provision basic compute instances on AWS, Digital Ocean, and GCP.
 
 # Exit immediately if a command exits or pipes a non-zero return code.
+#
+# Flags:
+#   -e: Exit immediately when a command pipeline fails.
+#   -o: Persist nonzero exit codes through a Bash pipe.
+#   -u: Throw an error when an unset variable is encountered.
 set -eou pipefail
 
 AWS_SECURITY_GROUP="cloud-compute"
@@ -23,11 +28,12 @@ USAGE:
 
 OPTIONS:
     -h, --help    Print help information
+    -v, --version    Print version information
 
 SUBCOMMANDS:
     address       Print IP address of compute instance
-    connect       SSH connect to instance
-    destroy       Shutdown and delete compute instance if it exists
+    connect       SSH connect to compute instance
+    destroy       Shutdown and delete compute instance
     launch        Launch compute instance and wait until it is ready
 EOF
 }
@@ -91,7 +97,7 @@ aws_address() {
 # SSH connect to AWS EC2 instance.
 #######################################
 aws_connect() {
-  ssh -i "${AWS_SSH_KEY_PATH?}" \
+  ssh -i "${AWS_SSH_KEY_PATH}" \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \
     ubuntu@"$(aws_address)"
@@ -219,7 +225,7 @@ do_address() {
 # SSH connect to Digital Ocean droplet.
 #######################################
 do_connect() {
-  ssh -i "${DO_SSH_KEY_PATH?}" \
+  ssh -i "${DO_SSH_KEY_PATH}" \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \
     root@"$(do_address)"
@@ -244,7 +250,7 @@ do_launch() {
       --image freebsd-12-x64-zfs \
       --region sfo3 \
       --size s-1vcpu-1gb \
-      --ssh-keys "${DO_SSH_KEY_ID?}" \
+      --ssh-keys "${DO_SSH_KEY_ID}" \
       "${INSTANCE_NAME}"
   fi
 }
@@ -292,7 +298,7 @@ gcp_address() {
 # SSH connect to GCP instance.
 #######################################
 gcp_connect() {
-  ssh -i "${GCP_SSH_KEY_PATH?}" \
+  ssh -i "${GCP_SSH_KEY_PATH}" \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \
     ubuntu@"$(address)"
@@ -316,7 +322,7 @@ gcp_launch() {
       --image-family ubuntu-2104 \
       --image-project ubuntu-os-cloud \
       --machine-type e2-micro \
-      --metadata "ssh-keys=ubuntu:$(cat "${GCP_SSH_KEY_PATH?}".pub)" \
+      --metadata "ssh-keys=ubuntu:$(cat "${GCP_SSH_KEY_PATH}".pub)" \
       --zone us-west2-a \
       "${INSTANCE_NAME}"
   fi
