@@ -25,7 +25,7 @@ curl -LSfs https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts
 
 <code-block title="Windows">
 ```powershell
-powershell { & ([ScriptBlock]::Create((Invoke-WebRequest -UseBasicParsing -Uri https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/master/install.ps1))) "--list" }
+powershell { & ([ScriptBlock]::Create((iwr -useb https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/master/install.ps1))) "--list" }
 ```
 </code-block>
 </code-group>
@@ -54,7 +54,7 @@ curl -LSfs https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts
 
 <code-block title="Windows">
 ```powershell
-powershell { & ([ScriptBlock]::Create((Invoke-WebRequest -UseBasicParsing -Uri https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/master/install.ps1))) "packup" }
+powershell { & ([ScriptBlock]::Create((iwr -useb https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/master/install.ps1))) "packup" }
 ```
 </code-block>
 </code-group>

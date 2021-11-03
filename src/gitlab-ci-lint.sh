@@ -34,6 +34,9 @@ OPTIONS:
         --token-stdin     Take GitLab API token from stdin
     -v, --version         Print version information
 
+ENVIRONMENT VARIABLES:
+    GITLAB_CI_LINT_TOKEN    GitLab access token with read API permissions
+
 If no token is provided, then value of the GITLAB_CI_LINT_TOKEN environment
 variable is used.
 EOF

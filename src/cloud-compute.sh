@@ -99,7 +99,7 @@ EOF
 # Subcommand to get compute instance IP address.
 #######################################
 address() {
-  case "$1" in
+  case "${1:-}" in
     aws)
       shift 1
       assert_cmd aws
@@ -119,7 +119,7 @@ address() {
       usage "address"
       ;;
     *)
-      error_usage "Unsupported cloud provider '$1'"
+      error_usage "Unsupported cloud provider '${1:-}'"
       ;;
   esac
 }
@@ -275,7 +275,7 @@ aws_launch() {
 # Subcommand to connect to compute instance.
 #######################################
 connect() {
-  case "$1" in
+  case "${1:-}" in
     aws)
       shift 1
       assert_cmd aws
@@ -295,7 +295,7 @@ connect() {
       usage "connect"
       ;;
     *)
-      error_usage "Unsupported cloud provider '$1'"
+      error_usage "Unsupported cloud provider '${1:-}'"
       ;;
   esac
 }
@@ -304,7 +304,7 @@ connect() {
 # Subcommand to shutdown and delete compute instance.
 #######################################
 destroy() {
-  case "$1" in
+  case "${1:-}" in
     aws)
       shift 1
       assert_cmd aws
@@ -324,7 +324,7 @@ destroy() {
       usage "destroy"
       ;;
     *)
-      error_usage "Unsupported cloud provider '$1'"
+      error_usage "Unsupported cloud provider '${1:-}'"
       ;;
   esac
 }
@@ -524,7 +524,7 @@ gcp_launch() {
 # Subcommand to launch compute instance.
 #######################################
 launch() {
-  case "$1" in
+  case "${1:-}" in
     aws)
       shift 1
       assert_cmd aws
@@ -544,7 +544,7 @@ launch() {
       usage "launch"
       ;;
     *)
-      error_usage "Unsupported cloud provider '$1'"
+      error_usage "Unsupported cloud provider '${1:-}'"
       ;;
   esac
 }
@@ -563,7 +563,7 @@ version() {
 #######################################
 main() {
   # Parse command line arguments.
-  case "$1" in
+  case "${1:-}" in
     address)
       shift 1
       address "$@"
@@ -587,7 +587,7 @@ main() {
       version
       ;;
     *)
-      error_usage "No such subcommand '$1'"
+      error_usage "No such subcommand '${1:-}'"
       ;;
   esac
 }

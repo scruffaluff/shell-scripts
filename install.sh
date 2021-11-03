@@ -85,7 +85,7 @@ configure_shell() {
       ;;
   esac
 
-  printf "\n# Added by Shell Scripts installer.\n%s\n" "${export_cmd}" >> "${profile}"
+  printf '\n# Added by Shell Scripts installer.\n%s\n' "${export_cmd}" >> "${profile}"
 }
 
 #######################################
@@ -94,8 +94,8 @@ configure_shell() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red="\033[1;31m"
-  local default="\033[0m"
+  local bold_red='\033[1;31m'
+  local default='\033[0m'
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   exit 1
@@ -107,8 +107,8 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red="\033[1;31m"
-  local default="\033[0m"
+  local bold_red='\033[1;31m'
+  local default='\033[0m'
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   printf "Run 'shell-scripts-install --help' for usage\n" >&2
@@ -203,13 +203,13 @@ install_script() {
 # Script entrypoint.
 #######################################
 main() {
-  local dst_dir="/usr/local/bin"
+  local dst_dir='/usr/local/bin'
   local list
   local match_found
   local name
   local src_url
   local user_install
-  local version="master"
+  local version='master'
 
   # Parse command line arguments.
   while [[ "$#" -gt 0 ]]; do
@@ -255,7 +255,7 @@ main() {
       # Flags:
       #   -n: Check if the string has nonzero length.
       if [[ -n "${name:-}" && "${script}" =~ ${name} ]]; then
-        match_found="true"
+        match_found='true'
         install_script "${user_install:-}" "${src_prefix}" "${dst_dir}" "${script}"
       fi
     done

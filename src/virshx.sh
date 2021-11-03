@@ -77,7 +77,7 @@ delete() {
   assert_cmd virsh
 
   if [[ -z "${1:-}" ]]; then
-    error_usage "DOMAIN argument missing"
+    error_usage 'DOMAIN argument missing'
   fi
 
   snapshots="$(virsh snapshot-list "$1" | tail -n +3 | cut -d' ' -f2)"
@@ -95,8 +95,8 @@ delete() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red="\033[1;31m"
-  local default="\033[0m"
+  local bold_red='\033[1;31m'
+  local default='\033[0m'
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   exit 1
@@ -108,8 +108,8 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red="\033[1;31m"
-  local default="\033[0m"
+  local bold_red='\033[1;31m'
+  local default='\033[0m'
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   printf "Run 'virshx --help' for usage.\n" >&2
@@ -122,7 +122,7 @@ error_usage() {
 #   Virshx version string.
 #######################################
 version() {
-  echo "Virshx 0.0.1"
+  echo 'Virshx 0.0.1'
 }
 
 #######################################
@@ -132,7 +132,7 @@ main() {
   # Parse command line arguments.
   case "${1:-}" in
     -h | --help)
-      usage "main"
+      usage 'main'
       ;;
     -v | --version)
       version
