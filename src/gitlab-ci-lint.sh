@@ -149,7 +149,7 @@ lint() {
       --data "${content}"
   )"
 
-  if [[ "${output_raw}" == "true" ]]; then
+  if [[ "${output_raw:-}" == "true" ]]; then
     echo "${response}"
   else
     echo "${response}" | jq .
