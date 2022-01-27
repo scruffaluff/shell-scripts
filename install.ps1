@@ -110,9 +110,12 @@ Function Main() {
 
         $Path = [Environment]::GetEnvironmentVariable("Path", "$Target")
         If (-Not ($Path -Like "*$DestDir*")) {
+            $PrependedPath = "$DestDir" + ";$Path";
+
             [System.Environment]::SetEnvironmentVariable(
-                "Path", "$DestDir" + ";$Path", "$Target"
+                "Path", "$PrependedPath", "$Target"
             )
+            $Env:Path = $PrependedPath
         }
 
         $MatchFound = 0
