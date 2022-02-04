@@ -126,7 +126,7 @@ find_scripts() {
   local response
   assert_cmd jq
 
-  response="$(curl -LSfs "https://api.github.com/repos/wolfgangwazzlestrauss/shell-scripts/git/trees/$1?recursive=true")"
+  response="$(curl -LSfs "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$1?recursive=true")"
   echo "${response}" | jq -r '.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
 }
 
@@ -245,7 +245,7 @@ main() {
   assert_cmd curl
   assert_cmd jq
 
-  src_prefix="https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/${version}/src"
+  src_prefix="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${version}/src"
   scripts="$(find_scripts "${version}")"
 
   if [[ "${list:-}" -eq 1 ]]; then

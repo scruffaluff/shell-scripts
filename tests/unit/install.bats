@@ -32,7 +32,7 @@ setup() {
   local actual
   local expected
 
-  expected="curl -LSfs https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/develop/src/otherscript.sh -o ${HOME}/.local/bin/otherscript"
+  expected="curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/develop/src/otherscript.sh -o ${HOME}/.local/bin/otherscript"
   actual="$(install.sh --user --version develop other)"
   assert_equal "${actual}" "${expected}"
 }

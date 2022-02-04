@@ -35,5 +35,5 @@ jobs:
           release_name: Scripts ${{ steps.extract_tag.outputs.tag }}
           body: >-
             See the
-            [changelog](https://github.com/wolfgangwazzlestrauss/shell-scripts/blob/${{
+            [changelog](https://github.com/scruffaluff/shell-scripts/blob/${{
             steps.extract_tag.outputs.tag }}/CHANGELOG.md) for more information.

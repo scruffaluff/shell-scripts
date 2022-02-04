@@ -7,25 +7,25 @@ of downloadable scripts from the repository.
 <code-group>
 <code-block title="FreeBSD" active>
 ```bash
-curl -LSfs https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/master/install.sh | bash -s -- --list
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/master/install.sh | bash -s -- --list
 ```
 </code-block>
 
 <code-block title="Linux" active>
 ```bash
-curl -LSfs https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/master/install.sh | bash -s -- --list
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/master/install.sh | bash -s -- --list
 ```
 </code-block>
 
 <code-block title="MacOS">
 ```bash
-curl -LSfs https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/master/install.sh | bash -s -- --list
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/master/install.sh | bash -s -- --list
 ```
 </code-block>
 
 <code-block title="Windows">
 ```powershell
-powershell { & ([ScriptBlock]::Create((iwr -useb https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/master/install.ps1))) "--list" }
+powershell { & ([ScriptBlock]::Create((iwr -useb https://raw.githubusercontent.com/scruffaluff/shell-scripts/master/install.ps1))) "--list" }
 ```
 </code-block>
 </code-group>
@@ -36,25 +36,25 @@ installed by replacing the `packup` argument.
 <code-group>
 <code-block title="FreeBSD" active>
 ```bash
-curl -LSfs https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/master/install.sh | bash -s -- packup
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/master/install.sh | bash -s -- packup
 ```
 </code-block>
 
 <code-block title="Linux" active>
 ```bash
-curl -LSfs https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/master/install.sh | bash -s -- packup
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/master/install.sh | bash -s -- packup
 ```
 </code-block>
 
 <code-block title="MacOS">
 ```bash
-curl -LSfs https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/master/install.sh | bash -s -- packup
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/master/install.sh | bash -s -- packup
 ```
 </code-block>
 
 <code-block title="Windows">
 ```powershell
-powershell { & ([ScriptBlock]::Create((iwr -useb https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/master/install.ps1))) "packup" }
+powershell { & ([ScriptBlock]::Create((iwr -useb https://raw.githubusercontent.com/scruffaluff/shell-scripts/master/install.ps1))) "packup" }
 ```
 </code-block>
 </code-group>

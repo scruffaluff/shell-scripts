@@ -11,7 +11,7 @@ module.exports = {
       { text: "Home", link: "/" },
       { text: "Install", link: "/install/" },
     ],
-    repo: "https://github.com/wolfgangwazzlestrauss/shell-scripts",
+    repo: "https://github.com/scruffaluff/shell-scripts",
     smoothScroll: true,
   },
 };

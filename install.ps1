@@ -39,7 +39,7 @@ Function ErrorUsage($Message) {
 
 # Find all scripts inside GitHub repository.
 Function FindScripts($Version) {
-    $Response = $(Invoke-WebRequest -UseBasicParsing -Uri "https://api.github.com/repos/wolfgangwazzlestrauss/shell-scripts/git/trees/$Version`?recursive=true")
+    $Response = $(Invoke-WebRequest -UseBasicParsing -Uri "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true")
     Write-Output "$Response" | jq -r '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".ps1\")'
 }
 
@@ -91,7 +91,7 @@ Function Main() {
         }
     }
 
-    $SrcPrefix = "https://raw.githubusercontent.com/wolfgangwazzlestrauss/shell-scripts/$Version/src"
+    $SrcPrefix = "https://raw.githubusercontent.com/scruffaluff/shell-scripts/$Version/src"
     $Scripts = $(FindScripts "$Version")
 
     If ($List) {
