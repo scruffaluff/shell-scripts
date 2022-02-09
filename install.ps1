@@ -56,7 +56,7 @@ Function Main() {
     $Dest = ""
     $List = 0
     $Target = "Machine"
-    $Version = "master"
+    $Version = "main"
 
     While ($ArgIdx -lt $Args[0].Count) {
         Switch ($Args[0][$ArgIdx]) {

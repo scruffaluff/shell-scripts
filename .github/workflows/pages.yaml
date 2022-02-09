@@ -9,8 +9,7 @@ name: pages
 on:
   push:
     branches:
-      - main
-      - master
+      - $default-branch
 
 jobs:
   docs:
