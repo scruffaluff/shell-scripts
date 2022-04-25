@@ -24,7 +24,7 @@ Function Main() {
     }
 
     If (Get-Command npm -ErrorAction SilentlyContinue) {
-        npm update -g
+        npm update -g --loglevel error
     }
 
     If (Get-Command pipx -ErrorAction SilentlyContinue) {

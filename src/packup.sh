@@ -5,10 +5,25 @@
 # Exit immediately if a command exits or pipes a non-zero return code.
 #
 # Flags:
+#   -E: Inheret trap on ERR signal for all functions and sub shells.
 #   -e: Exit immediately when a command pipeline fails.
 #   -o: Persist nonzero exit codes through a Bash pipe.
 #   -u: Throw an error when an unset variable is encountered.
-set -eou pipefail
+set -Eeou pipefail
+
+#######################################
+# Notify user of unexpected error with diagnostic information.
+#
+# Line number reporting will only be highest calling function for earlier
+# versions of Bash.
+#######################################
+handle_panic() {
+  local bold_red="\033[1;31m"
+  local default="\033[0m"
+
+  message="$0 panicked on line $2 with exit code $1"
+  printf "${bold_red}error${default}: %s\n" "${message}" >&2
+}
 
 #######################################
 # Show CLI help information.
@@ -156,7 +171,7 @@ upgrade() {
   fi
 
   if [[ -x "$(command -v npm)" ]]; then
-    npm update -g
+    npm update -g --loglevel error
   fi
 
   if [[ -x "$(command -v pipx)" ]]; then
@@ -193,5 +208,6 @@ main() {
 
 # Only run main if invoked as script. Otherwise import functions as library.
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  trap 'handle_panic $? ${BASH_LINENO[@]}' ERR
   main "$@"
 fi
