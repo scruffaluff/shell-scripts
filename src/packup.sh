@@ -167,7 +167,7 @@ upgrade() {
   fi
 
   if [[ -x "$(command -v gem)" ]]; then
-    gem update
+    gem update --user-install
   fi
 
   if [[ -x "$(command -v npm)" ]]; then

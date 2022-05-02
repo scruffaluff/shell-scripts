@@ -20,7 +20,7 @@ Function Main() {
     }
 
     If (Get-Command gem -ErrorAction SilentlyContinue) {
-        gem update
+        gem update --user-install
     }
 
     If (Get-Command npm -ErrorAction SilentlyContinue) {
