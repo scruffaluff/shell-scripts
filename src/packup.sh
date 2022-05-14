@@ -166,9 +166,10 @@ upgrade() {
     ${use_sudo:+sudo} snap refresh
   fi
 
-  if [[ -x "$(command -v gem)" ]]; then
-    gem update --user-install
-  fi
+  # Disabled since Gem updates are so very unreliable on most systems.
+  # if [[ -x "$(command -v gem)" ]]; then
+  #   gem update --user-install
+  # fi
 
   if [[ -x "$(command -v npm)" ]]; then
     npm update -g --loglevel error
@@ -185,7 +186,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo "Packup 0.0.1"
+  echo "Packup 0.1.0"
 }
 
 #######################################
@@ -208,6 +209,11 @@ main() {
 
 # Only run main if invoked as script. Otherwise import functions as library.
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-  trap 'handle_panic $? ${BASH_LINENO[@]}' ERR
+  # Bash versions 3 and lower handle trap incorrectly for subshells. For more
+  # information, visit https://unix.stackexchange.com/a/501669.
+  if [[ "${BASH_VERSINFO[0]}" -ge 4 ]]; then
+    trap 'handle_panic $? ${BASH_LINENO[@]}' ERR
+  fi
+
   main "$@"
 fi

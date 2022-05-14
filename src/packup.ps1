@@ -19,9 +19,10 @@ Function Main() {
         scoop update *
     }
 
-    If (Get-Command gem -ErrorAction SilentlyContinue) {
-        gem update --user-install
-    }
+    # Disabled since Gem updates are so very unreliable on most systems.
+    # If (Get-Command gem -ErrorAction SilentlyContinue) {
+    #     gem update --user-install
+    # }
 
     If (Get-Command npm -ErrorAction SilentlyContinue) {
         npm update -g --loglevel error
