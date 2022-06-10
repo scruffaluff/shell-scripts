@@ -16,7 +16,8 @@ Function Main() {
 
     If (Get-Command scoop -ErrorAction SilentlyContinue) {
         scoop update
-        scoop update *
+        scoop update --all
+        scoop cleanup --all
     }
 
     # Disabled since Gem updates are so very unreliable on most systems.
