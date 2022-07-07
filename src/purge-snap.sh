@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Invokes upgrade commands to all installed package managers.
+# Removes all traces of the Snap package manager. Forked from
+# https://github.com/MasterGeekMX/snap-to-flatpak/blob/004790749abb6fbc82e7bebc6f6420c5b3be0fbc/snap-to-flatpak.sh.
 
 # Exit immediately if a command exits or pipes a non-zero return code.
 #
@@ -36,10 +37,10 @@ usage() {
     main)
       cat 1>&2 << EOF
 $(version)
-Invokes upgrade commands to all installed package managers.
+Deletes all Snap packages, uninstalls Snap, and prevents reinstall of Snap.
 
 USAGE:
-    packup [OPTIONS]
+    purge-snap [OPTIONS]
 
 OPTIONS:
     -h, --help       Print help information
@@ -70,24 +71,6 @@ assert_cmd() {
 }
 
 #######################################
-# Update dnf package lists.
-#
-# DNF's check-update command will give a 100 exit code if there are packages
-# available to update. Thus both 0 and 100 must be treated as successful exit
-# codes.
-#
-# Arguments:
-#   Whether to use sudo command.
-#######################################
-dnf_check_update() {
-  ${1:+sudo} dnf check-update || {
-    code="$?"
-    [[ "${code}" -eq 100 ]] && return 0
-    return "${code}"
-  }
-}
-
-#######################################
 # Print error message and exit script with error code.
 # Outputs:
 #   Writes error message to stderr.
@@ -115,9 +98,9 @@ error_usage() {
 }
 
 #######################################
-# Subcommand to delete a domain and its associated snapshots and storage.
+# Remove all traces of Snap from system.
 #######################################
-upgrade() {
+purge_snaps() {
   local use_sudo
 
   # Use sudo for system installation if user is not root.
@@ -126,63 +109,39 @@ upgrade() {
     use_sudo=1
   fi
 
-  # Do not quote the sudo parameter expansion. Bash will error due to be being
-  # unable to find the "" command.
-  if [[ -x "$(command -v apk)" ]]; then
-    ${use_sudo:+sudo} apk update
-    ${use_sudo:+sudo} apk upgrade
-  fi
+  # Find all installed Snap packages.
+  #
+  # Flags:
+  #   --lines +2: Select the 2nd line to the end of the output.
+  #   --field 1: Take only the first part of the output.
+  snaps="$(snap list | tail --lines +2 | cut --field 1 --delimiter ' ')"
 
-  if [[ -x "$(command -v apt-get)" ]]; then
-    ${use_sudo:+sudo} apt-get update
-    ${use_sudo:+sudo} apt-get full-upgrade -y --allow-downgrades
-    ${use_sudo:+sudo} apt-get autoremove -y
-  fi
+  for snap in "${snaps[@]}"; do
+    # Do not quote the sudo parameter expansion. Bash will error due to be being
+    # unable to find the "" command.
+    ${use_sudo:+sudo} snap remove --purge "${snap}"
+  done
 
-  if [[ -x "$(command -v brew)" ]]; then
-    brew update
-    brew upgrade
-  fi
+  directories=(
+    "${HOME}/snap"
+    "/snap"
+    "/var/snap"
+    "/var/lib/snapd"
+    "/var/cache/snapd"
+    "/usr/lib/snapd"
+  )
+  for directory in "${directories[@]}"; do
+    ${use_sudo:+sudo} rm -fr "${directory}"
+  done
 
-  if [[ -x "$(command -v dnf)" ]]; then
-    dnf_check_update "${use_sudo}"
-    ${use_sudo:+sudo} dnf upgrade -y
-    ${use_sudo:+sudo} dnf autoremove -y
-  fi
+  # Delete Snap system daemons and services.
+  ${use_sudo:+sudo} systemctl stop -T snapd.socket
+  ${use_sudo:+sudo} systemctl stop -T snapd.service
+  ${use_sudo:+sudo} systemctl disable snapd.service
 
-  if [[ -x "$(command -v flatpak)" ]]; then
-    ${use_sudo:+sudo} flatpak update -y
-  fi
-
-  if [[ -x "$(command -v pacman)" ]]; then
-    ${use_sudo:+sudo} pacman --noconfirm -Suy
-  fi
-
-  if [[ -x "$(command -v pkg)" ]]; then
-    ${use_sudo:+sudo} pkg update
-  fi
-
-  if [[ -x "$(command -v snap)" ]]; then
-    ${use_sudo:+sudo} snap refresh
-  fi
-
-  # Disabled since Gem updates are so very unreliable on most systems.
-  # if [[ -x "$(command -v gem)" ]]; then
-  #   gem update --user-install
-  # fi
-
-  if [[ -x "$(command -v npm)" ]]; then
-    npm update -g --loglevel error
-  fi
-
-  if [[ -x "$(command -v pipx)" ]]; then
-    pipx upgrade-all
-  fi
-
-  if [[ -x "$(command -v zypper)" ]]; then
-    ${use_sudo:+sudo} zypper update -y
-    ${use_sudo:+sudo} zypper autoremove -y
-  fi
+  # Delete Snap package and prevent reinstallation.
+  ${use_sudo:+sudo} apt autoremove --assume-yes --purge snapd
+  ${use_sudo:+sudo} apt-mark hold snapd
 }
 
 #######################################
@@ -191,7 +150,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo "Packup 0.1.0"
+  echo "PurgeSnap 0.0.1"
 }
 
 #######################################
@@ -207,7 +166,7 @@ main() {
       version
       ;;
     *)
-      upgrade
+      purge_snaps
       ;;
   esac
 }
