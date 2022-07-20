@@ -13,17 +13,80 @@
 set -Eeou pipefail
 
 #######################################
+# Show CLI help information.
+# Cannot use function name help, since help is a pre-existing command.
+# Outputs:
+#   Writes help information to stdout.
+#######################################
+usage() {
+  case "$1" in
+    main)
+      cat 1>&2 << EOF
+$(version)
+Installs Tmate and creates a remote session.
+
+USAGE:
+    setup-tmate [OPTIONS]
+
+OPTIONS:
+    -h, --help       Print help information
+    -v, --version    Print version information
+EOF
+      ;;
+    *)
+      error "No such usage option '$1'"
+      ;;
+  esac
+}
+
+#######################################
+# Print error message and exit script with error code.
+# Outputs:
+#   Writes error message to stderr.
+#######################################
+error() {
+  local bold_red="\033[1;31m"
+  local default="\033[0m"
+
+  printf "${bold_red}error${default}: %s\n" "$1" >&2
+  exit 1
+}
+
+#######################################
 # Install Tmate.
 #######################################
 install_tmate() {
-  local tmate_arch='amd64'
+  local arch_type tmate_arch
   local tmate_version='2.4.0'
 
+  # Machine flag should be used since processor flag is non-portable. For more
+  # information, visit
+  # https://www.gnu.org/software/coreutils/manual/html_node/uname-invocation.html#index-_002dp-12.
+  arch_type="$(uname --machine)"
+  case "${arch_type}" in
+    x86_64 | amd64)
+      tmate_arch='amd64'
+      ;;
+    arm64 | aarch64)
+      tmate_arch='arm64v8'
+      ;;
+    *)
+      error "Unsupported architecture ${arch_type}"
+      ;;
+  esac
+
   if [[ -x "$(command -v apk)" ]]; then
-    ${1:+sudo} apk add bash curl openssh-client xz
+    ${1:+sudo} apk add curl openssh-client xz
   elif [[ -x "$(command -v apt-get)" ]]; then
     ${1:+sudo} apt-get update
     ${1:+sudo} apt-get install -y curl openssh-client xz-utils
+  elif [[ -x "$(command -v dnf)" ]]; then
+    ${1:+sudo} dnf install -y curl openssh xz
+  elif [[ -x "$(command -v pacman)" ]]; then
+    ${1:+sudo} pacman -Suy --noconfirm
+    ${1:+sudo} pacman -S --noconfirm curl openssh xz
+  elif [[ -x "$(command -v zypper)" ]]; then
+    ${1:+sudo} zypper install -y curl openssh tar xz
   fi
 
   curl -LSfs "https://github.com/tmate-io/tmate/releases/download/${tmate_version}/tmate-${tmate_version}-static-linux-${tmate_arch}.tar.xz" -o /tmp/tmate.tar.xz
@@ -38,13 +101,13 @@ install_tmate() {
 #   Setup Tmate version string.
 #######################################
 version() {
-  echo 'Setup Tmate 0.0.1'
+  echo 'SetupTmate 0.0.1'
 }
 
 #######################################
-# Script entrypoint.
+# Installs Tmate and creates a remote session.
 #######################################
-main() {
+setup_tmate() {
   local use_sudo=''
 
   # Check if user is not root.
@@ -74,7 +137,22 @@ main() {
   done
 }
 
-# Only run main if invoked as script. Otherwise import functions as library.
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-  main "$@"
-fi
+#######################################
+# Script entrypoint.
+#######################################
+main() {
+  # Parse command line arguments.
+  case "${1:-}" in
+    -h | --help)
+      usage "main"
+      ;;
+    -v | --version)
+      version
+      ;;
+    *)
+      setup_tmate
+      ;;
+  esac
+}
+
+main "$@"
