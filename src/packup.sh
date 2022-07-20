@@ -166,10 +166,10 @@ upgrade() {
     ${use_sudo:+sudo} snap refresh
   fi
 
-  # Disabled since Gem updates are so very unreliable on most systems.
-  # if [[ -x "$(command -v gem)" ]]; then
-  #   gem update --user-install
-  # fi
+  if [[ -x "$(command -v zypper)" ]]; then
+    ${use_sudo:+sudo} zypper update -y
+    ${use_sudo:+sudo} zypper autoremove -y
+  fi
 
   if [[ -x "$(command -v npm)" ]]; then
     npm update -g --loglevel error
@@ -177,11 +177,6 @@ upgrade() {
 
   if [[ -x "$(command -v pipx)" ]]; then
     pipx upgrade-all
-  fi
-
-  if [[ -x "$(command -v zypper)" ]]; then
-    ${use_sudo:+sudo} zypper update -y
-    ${use_sudo:+sudo} zypper autoremove -y
   fi
 }
 

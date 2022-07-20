@@ -20,11 +20,6 @@ Function Main() {
         scoop cleanup --all
     }
 
-    # Disabled since Gem updates are so very unreliable on most systems.
-    # If (Get-Command gem -ErrorAction SilentlyContinue) {
-    #     gem update --user-install
-    # }
-
     If (Get-Command npm -ErrorAction SilentlyContinue) {
         npm update -g --loglevel error
     }

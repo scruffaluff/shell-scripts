@@ -140,7 +140,7 @@ purge_snaps() {
   ${use_sudo:+sudo} systemctl disable snapd.service
 
   # Delete Snap package and prevent reinstallation.
-  ${use_sudo:+sudo} apt autoremove --assume-yes --purge snapd
+  ${use_sudo:+sudo} apt-get purge -y snapd
   ${use_sudo:+sudo} apt-mark hold snapd
 }
 
