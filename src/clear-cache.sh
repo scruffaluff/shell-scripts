@@ -12,20 +12,6 @@
 set -Eeou pipefail
 
 #######################################
-# Notify user of unexpected error with diagnostic information.
-#
-# Line number reporting will only be highest calling function for earlier
-# versions of Bash.
-#######################################
-handle_panic() {
-  local bold_red="\033[1;31m"
-  local default="\033[0m"
-
-  message="$0 panicked on line $2 with exit code $1"
-  printf "${bold_red}error${default}: %s\n" "${message}" >&2
-}
-
-#######################################
 # Show CLI help information.
 # Cannot use function name help, since help is a pre-existing command.
 # Outputs:
@@ -139,7 +125,6 @@ clear_cache() {
   fi
 
   if [[ -x "$(command -v docker)" ]]; then
-    ${use_sudo:+sudo} docker rmi "$(docker image ls --all --quiet)"
     ${use_sudo:+sudo} docker system prune --force --volumes
   fi
 
@@ -185,11 +170,5 @@ main() {
 
 # Only run main if invoked as script. Otherwise import functions as library.
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-  # Bash versions 3 and lower handle trap incorrectly for subshells. For more
-  # information, visit https://unix.stackexchange.com/a/501669.
-  if [[ "${BASH_VERSINFO[0]}" -ge 4 ]]; then
-    trap 'handle_panic $? ${BASH_LINENO[@]}' ERR
-  fi
-
   main "$@"
 fi

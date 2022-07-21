@@ -15,7 +15,6 @@ Function Main() {
     }
 
     If (Get-Command docker -ErrorAction SilentlyContinue) {
-        docker rmi "$(docker image ls --all --quiet)"
         docker system prune --force --volumes
     }
 
@@ -29,6 +28,6 @@ Function Main() {
 }
 
 # Only run Main if invoked as script. Otherwise import functions as library.
-If ($MyInvocation.InvocationName -ne '.') {
+If ($MyInvocation.InvocationName -NE '.') {
     Main $Args
 }

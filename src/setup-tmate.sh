@@ -155,4 +155,7 @@ main() {
   esac
 }
 
-main "$@"
+# Only run main if invoked as script. Otherwise import functions as library.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi
