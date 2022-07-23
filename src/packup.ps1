@@ -30,6 +30,6 @@ Function Main() {
 }
 
 # Only run Main if invoked as script. Otherwise import functions as library.
-If ($MyInvocation.InvocationName -NE.') {
+If ($MyInvocation.InvocationName -NE '.') {
     Main $Args
 }
