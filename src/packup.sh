@@ -120,6 +120,7 @@ upgrade() {
   fi
 
   if [[ -x "$(command -v apt-get)" ]]; then
+    export DEBIAN_FRONTEND=noninteractive
     ${use_sudo:+sudo} apt-get update
     ${use_sudo:+sudo} apt-get full-upgrade -y --allow-downgrades
     ${use_sudo:+sudo} apt-get autoremove -y
