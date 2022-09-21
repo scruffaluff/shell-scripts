@@ -59,10 +59,10 @@ install_tmate() {
   local arch_type tmate_arch
   local tmate_version='2.4.0'
 
-  # Machine flag should be used since processor flag is non-portable. For more
-  # information, visit
+  # Short form machine flag '-m' should be used since processor flag and long
+  # form machine flag '--machine' are non-portable. For more information, visit
   # https://www.gnu.org/software/coreutils/manual/html_node/uname-invocation.html#index-_002dp-12.
-  arch_type="$(uname --machine)"
+  arch_type="$(uname -m)"
   case "${arch_type}" in
     x86_64 | amd64)
       tmate_arch='amd64'
