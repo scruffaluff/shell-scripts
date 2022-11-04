@@ -120,9 +120,10 @@ upgrade() {
   fi
 
   if [[ -x "$(command -v apt-get)" ]]; then
-    export DEBIAN_FRONTEND=noninteractive
+    # DEBIAN_FRONTEND variable setting is ineffective if on a separate line,
+    # since the command is executed as sudo.
     ${use_sudo:+sudo} apt-get update
-    ${use_sudo:+sudo} apt-get full-upgrade -y --allow-downgrades
+    ${use_sudo:+sudo} DEBIAN_FRONTEND=noninteractive apt-get full-upgrade -y --allow-downgrades
     ${use_sudo:+sudo} apt-get autoremove -y
   fi
 

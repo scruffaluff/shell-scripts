@@ -131,7 +131,6 @@ setup_tmate() {
     install_tmate "${use_sudo}"
   fi
 
-
   # Launch new Tmate session with custom socket.
   #
   # Flags:
