@@ -23,7 +23,8 @@ usage() {
     main)
       cat 1>&2 << EOF
 $(version)
-Installs Tmate and creates a remote session.
+Installs Tmate and creates a remote session. Users can close the session by
+creating the file /close-tmate.
 
 USAGE:
     setup-tmate [OPTIONS]
@@ -75,6 +76,11 @@ install_tmate() {
       ;;
   esac
 
+  # Install OpenSSH and archive utils.
+  #
+  # Flags:
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
   if [[ -x "$(command -v apk)" ]]; then
     ${1:+sudo} apk add curl openssh-client xz
   elif [[ -x "$(command -v apt-get)" ]]; then
@@ -116,10 +122,20 @@ setup_tmate() {
     use_sudo=1
   fi
 
+  # Install Tmate if not available.
+  #
+  # Flags:
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
   if [[ ! -x "$(command -v tmate)" ]]; then
     install_tmate "${use_sudo}"
   fi
 
+
+  # Launch new Tmate session with custom socket.
+  #
+  # Flags:
+  #   -S: Set Tmate socket path.
   tmate -S /tmp/tmate.sock new-session -d
   tmate -S /tmp/tmate.sock wait tmate-ready
   ssh_connect="$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')"
@@ -129,7 +145,12 @@ setup_tmate() {
     echo "SSH: ${ssh_connect}"
     echo "Web shell: ${web_connect}"
 
-    if [[ ! -S /tmp/tmate.sock || -f /continue ]]; then
+    # Check if script should exit.
+    #
+    # Flags:
+    #   -f: Check if file exists and is a socket.
+    #   -f: Check if file exists and is a regular file.
+    if [[ ! -S /tmp/tmate.sock || -f /close-tmate ]]; then
       break
     fi
 
@@ -155,7 +176,4 @@ main() {
   esac
 }
 
-# Only run main if invoked as script. Otherwise import functions as library.
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-  main "$@"
-fi
+main "$@"
