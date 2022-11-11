@@ -5,11 +5,11 @@
 
 name: pages
 
-# Trigger workflow on push to the main and master branches.
+# Trigger workflow on push to the main branch.
 on:
   push:
     branches:
-      - $default-branch
+      - main
 
 jobs:
   docs:
