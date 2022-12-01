@@ -150,13 +150,15 @@ upgrade() {
     ${use_sudo:+sudo} pkg update
   fi
 
-  if [[ -x "$(command -v snap)" ]]; then
-    ${use_sudo:+sudo} snap refresh
-  fi
-
   if [[ -x "$(command -v zypper)" ]]; then
     ${use_sudo:+sudo} zypper update -y
     ${use_sudo:+sudo} zypper autoremove -y
+  fi
+
+  if [[ -x "$(command -v code)" ]]; then
+    for extension in $(code --list-extensions); do
+      code --force --install-extension "${extension}"
+    done
   fi
 
   if [[ -x "$(command -v npm)" ]]; then
@@ -174,7 +176,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo "Packup 0.1.0"
+  echo "Packup 0.1.1"
 }
 
 #######################################

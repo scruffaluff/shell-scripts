@@ -20,6 +20,12 @@ Function Main() {
         scoop cleanup --all
     }
 
+    If (Get-Command code -ErrorAction SilentlyContinue) {
+        ForEach ($Extension in $(code --list-extensions)) {
+            code --force --install-extension $Extension
+        }
+    }
+
     If (Get-Command npm -ErrorAction SilentlyContinue) {
         npm update -g --loglevel error
     }
