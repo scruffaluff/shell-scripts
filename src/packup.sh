@@ -155,12 +155,6 @@ upgrade() {
     ${use_sudo:+sudo} zypper autoremove -y
   fi
 
-  if [[ -x "$(command -v code)" ]]; then
-    for extension in $(code --list-extensions); do
-      code --force --install-extension "${extension}"
-    done
-  fi
-
   if [[ -x "$(command -v npm)" ]]; then
     npm update -g --loglevel error
   fi
