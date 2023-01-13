@@ -2,21 +2,23 @@
 
 setup() {
   export PATH="${BATS_TEST_DIRNAME}/../..:${PATH}"
-  load "../../node_modules/bats-support/load"
-  load "../../node_modules/bats-assert/load"
+  load '../../node_modules/bats-support/load'
+  load '../../node_modules/bats-assert/load'
 
   # Disable logging to simplify stdout for testing.
-  export SHELL_SCRIPTS_NOLOG="true"
+  export SHELL_SCRIPTS_NOLOG='true'
 
   # Mock functions for child processes by printing received arguments.
   #
   # Args:
   #   -f: Use override as a function instead of a variable.
   command() {
-    echo "/bin/bash"
+    # shellcheck disable=SC2317
+    echo '/bin/bash'
   }
   export -f command
 
+  # shellcheck disable=SC2317
   curl() {
     if [[ "$*" =~ api\.github\.com ]]; then
       cat tests/data/install_response.json
@@ -28,7 +30,7 @@ setup() {
   export -f curl
 }
 
-@test "Installer passes local path to Curl" {
+@test 'Installer passes local path to Curl' {
   local actual
   local expected
 
@@ -37,7 +39,7 @@ setup() {
   assert_equal "${actual}" "${expected}"
 }
 
-@test "JSON parser finds all Bash shell scripts" {
+@test 'JSON parser finds all Bash shell scripts' {
   local actual
   local expected
 
@@ -46,7 +48,7 @@ setup() {
   assert_equal "${actual}" "${expected}"
 }
 
-@test "Installer uses sudo when destination is not writable" {
+@test 'Installer uses sudo when destination is not writable' {
   local actual
   local expected
 
@@ -60,7 +62,7 @@ setup() {
   }
   export -f sudo
 
-  expected="sudo mkdir -p /bin"
+  expected='sudo mkdir -p /bin'
   actual="$(install.sh --dest /bin script)"
   assert_equal "${actual}" "${expected}"
 }

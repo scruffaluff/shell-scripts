@@ -5,11 +5,10 @@
 # Exit immediately if a command exits or pipes a non-zero return code.
 #
 # Flags:
-#   -E: Inheret trap on ERR signal for all functions and sub shells.
 #   -e: Exit immediately when a command pipeline fails.
 #   -o: Persist nonzero exit codes through a Bash pipe.
 #   -u: Throw an error when an unset variable is encountered.
-set -Eeou pipefail
+set -eou pipefail
 
 #######################################
 # Notify user of unexpected error with diagnostic information.
@@ -18,8 +17,8 @@ set -Eeou pipefail
 # versions of Bash.
 #######################################
 handle_panic() {
-  local bold_red="\033[1;31m"
-  local default="\033[0m"
+  local bold_red='\033[1;31m'
+  local default='\033[0m'
 
   message="$0 panicked on line $2 with exit code $1"
   printf "${bold_red}error${default}: %s\n" "${message}" >&2
@@ -283,5 +282,4 @@ main() {
 
 # Variable BASH_SOURCE cannot be used to load script as a library. Piping the
 # script to Bash gives the same BASH_SOURCE result as sourcing the script.
-trap 'handle_panic $? ${BASH_LINENO[@]}' ERR
 main "$@"

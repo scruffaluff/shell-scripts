@@ -5,11 +5,10 @@
 # Exit immediately if a command exits or pipes a non-zero return code.
 #
 # Flags:
-#   -E: Inheret trap on ERR signal for all functions and sub shells.
 #   -e: Exit immediately when a command pipeline fails.
 #   -o: Persist nonzero exit codes through a Bash pipe.
 #   -u: Throw an error when an unset variable is encountered.
-set -Eeou pipefail
+set -eou pipefail
 
 #######################################
 # Show CLI help information.
@@ -61,8 +60,8 @@ assert_cmd() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red="\033[1;31m"
-  local default="\033[0m"
+  local bold_red='\033[1;31m'
+  local default='\033[0m'
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   exit 1
@@ -74,8 +73,8 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red="\033[1;31m"
-  local default="\033[0m"
+  local bold_red='\033[1;31m'
+  local default='\033[0m'
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   printf "Run 'clear-cache --help' for usage.\n" >&2
@@ -91,7 +90,7 @@ clear_cache() {
   # Use sudo for system installation if user is not root.
   if [[ "${EUID}" -ne 0 ]]; then
     assert_cmd sudo
-    use_sudo=1
+    use_sudo='true'
   fi
 
   # Do not quote the sudo parameter expansion. Bash will error due to be being
@@ -147,7 +146,7 @@ clear_cache() {
 #   ClearCache version string.
 #######################################
 version() {
-  echo "ClearCache 0.0.1"
+  echo 'ClearCache 0.0.1'
 }
 
 #######################################
@@ -157,7 +156,7 @@ main() {
   # Parse command line arguments.
   case "${1:-}" in
     -h | --help)
-      usage "main"
+      usage 'main'
       ;;
     -v | --version)
       version

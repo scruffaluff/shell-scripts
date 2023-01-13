@@ -5,11 +5,10 @@
 # Exit immediately if a command exits or pipes a non-zero return code.
 #
 # Flags:
-#   -E: Inheret trap on ERR signal for all functions and sub shells.
 #   -e: Exit immediately when a command pipeline fails.
 #   -o: Persist nonzero exit codes through a Bash pipe.
 #   -u: Throw an error when an unset variable is encountered.
-set -Eeou pipefail
+set -eou pipefail
 
 #######################################
 # Show CLI help information.
@@ -79,8 +78,8 @@ dnf_check_update() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red="\033[1;31m"
-  local default="\033[0m"
+  local bold_red='\033[1;31m'
+  local default='\033[0m'
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   exit 1
@@ -92,8 +91,8 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red="\033[1;31m"
-  local default="\033[0m"
+  local bold_red='\033[1;31m'
+  local default='\033[0m'
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   printf "Run 'packup --help' for usage.\n" >&2
@@ -180,7 +179,7 @@ main() {
   # Parse command line arguments.
   case "${1:-}" in
     -h | --help)
-      usage "main"
+      usage 'main'
       ;;
     -v | --version)
       version

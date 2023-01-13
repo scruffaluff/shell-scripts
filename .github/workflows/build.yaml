@@ -20,17 +20,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install Node interpreter
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
       - name: Cache Node packages
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: node_modules
           key: >-
-            node-16_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
+            node-18_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
       - name: Install Node packages
         run: npm install
       - name: Check format of configuration files
@@ -42,28 +42,24 @@ jobs:
       - name: Check format of shell scripts
         run: npm run shfmt:test
       - name: Run ShellCheck on shell scripts
-        uses: ludeeus/action-shellcheck@master
-        with:
-          additional_files: "*.bats"
-          ignore: node_modules
-          severity: style
+        run: npm run shellcheck:test
 
   test-bash:
     name: Run unit tests for Bash scripts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install Node interpreter
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
       - name: Cache Node packages
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: node_modules
           key: >-
-            node-16_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
+            node-18_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
       - name: Install Node packages
         run: npm install
       - name: Run Bash unit tests with Bats
@@ -76,7 +72,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout code repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install PSScriptAnalyzer
         run: Install-Module -Name PSScriptAnalyzer -Force
         shell: pwsh

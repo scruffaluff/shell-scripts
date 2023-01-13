@@ -4,7 +4,7 @@
 #>
 
 # Exit immediately if a PowerShell Cmdlet encounters an error.
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
 # Script entrypoint.
 Function Main() {

@@ -2,7 +2,7 @@
 # Set-ExecutionPolicy RemoteSigned -Scope CurrentUser.
 
 # Exit immediately if a PowerShell Cmdlet encounters an error.
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
 # Show CLI help information.
 Function Usage() {
@@ -26,7 +26,7 @@ OPTIONS:
 Function DownloadFile($SrcURL, $DstFile) {
     # The progress bar updates every byte, which makes downloads slow. See
     # https://stackoverflow.com/a/43477248 for an explanation.
-    $ProgressPreference = "SilentlyContinue"
+    $ProgressPreference = 'SilentlyContinue'
     Invoke-WebRequest -UseBasicParsing -Uri "$SrcURL" -OutFile "$DstFile"
 }
 
@@ -53,34 +53,34 @@ Function Log($Message) {
 # Script entrypoint.
 Function Main() {
     $ArgIdx = 0
-    $Dest = ""
+    $Dest = ''
     $List = 0
-    $Target = "Machine"
-    $Version = "main"
+    $Target = 'Machine'
+    $Version = 'main'
 
     While ($ArgIdx -lt $Args[0].Count) {
         Switch ($Args[0][$ArgIdx]) {
-            { $_ -In "-d", "--dest" } {
+            { $_ -In '-d', '--dest' } {
                 $DestDir = $Args[0][$ArgIdx + 1]
                 $ArgIdx += 2
                 Exit 0
             }
-            { $_ -In "-h", "--help" } {
+            { $_ -In '-h', '--help' } {
                 Usage
                 Exit 0
             }
-            { $_ -In "-l", "--list" } {
+            { $_ -In '-l', '--list' } {
                 $List = 1
                 $ArgIdx += 1
                 Break
             }
-            { $_ -In "-v", "--version" } {
+            { $_ -In '-v', '--version' } {
                 $Version = $Args[0][$ArgIdx + 1]
                 $ArgIdx += 2
                 Break
             }
-            "--user" {
-                $Target = "User"
+            '--user' {
+                $Target = 'User'
                 $ArgIdx += 1
                 Break
             }
@@ -99,21 +99,21 @@ Function Main() {
     } 
     Else {
         If (-Not $DestDir) {
-            If ($Target -Eq "User") {
+            If ($Target -Eq 'User') {
                 $DestDir = "C:\Users\$Env:UserName\Documents\PowerShell\Scripts"
             }
             Else {
-                $DestDir = "C:\Program Files\PowerShell\Scripts"
+                $DestDir = 'C:\Program Files\PowerShell\Scripts'
             }
         }
         New-Item -Force -ItemType Directory -Path $DestDir | Out-Null
 
-        $Path = [Environment]::GetEnvironmentVariable("Path", "$Target")
+        $Path = [Environment]::GetEnvironmentVariable('Path', "$Target")
         If (-Not ($Path -Like "*$DestDir*")) {
             $PrependedPath = "$DestDir" + ";$Path";
 
             [System.Environment]::SetEnvironmentVariable(
-                "Path", "$PrependedPath", "$Target"
+                'Path', "$PrependedPath", "$Target"
             )
             $Env:Path = $PrependedPath
         }

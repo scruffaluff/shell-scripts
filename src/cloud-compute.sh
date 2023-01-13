@@ -11,8 +11,8 @@
 set -eou pipefail
 
 # GCP requires that resource names are lowercase.
-AWS_SECURITY_GROUP="cloud-compute"
-INSTANCE_NAME="cloud-compute"
+AWS_SECURITY_GROUP='cloud-compute'
+INSTANCE_NAME='cloud-compute'
 
 #######################################
 # Show CLI help information.
@@ -105,7 +105,7 @@ address() {
       assert_cmd aws
       aws_address "$@"
       ;;
-    "do")
+    'do')
       shift 1
       assert_cmd doctl
       do_address "$@"
@@ -116,7 +116,7 @@ address() {
       gcp_address "$@"
       ;;
     -h | --help)
-      usage "address"
+      usage 'address'
       ;;
     *)
       error_usage "Unsupported cloud provider '${1:-}'"
@@ -148,7 +148,7 @@ assert_cmd() {
 #######################################
 aws_address() {
   aws ec2 describe-instances \
-    --filters "Name=tag:Name,Values=${INSTANCE_NAME}" "Name=instance-state-name,Values=pending,running" \
+    --filters "Name=tag:Name,Values=${INSTANCE_NAME}" 'Name=instance-state-name,Values=pending,running' \
     --output text \
     --query 'Reservations[0].Instances[0].PublicIpAddress'
 }
@@ -163,7 +163,7 @@ aws_user() {
   # https://jmespath.org/examples.html#filters-and-multiselect-lists.
   # shellcheck disable=SC2016
   aws ec2 describe-instances \
-    --filters "Name=tag:Name,Values=${INSTANCE_NAME}" "Name=instance-state-name,Values=pending,running" \
+    --filters "Name=tag:Name,Values=${INSTANCE_NAME}" 'Name=instance-state-name,Values=pending,running' \
     --output text \
     --query 'Reservations[0].Instances[0].Tags[?Key==`User`].Value'
 }
@@ -184,7 +184,7 @@ aws_connect() {
 aws_create_security_group() {
   if ! aws ec2 describe-security-groups --group-names "${AWS_SECURITY_GROUP}" &> /dev/null; then
     aws ec2 create-security-group \
-      --description "Security group for cloud-compute" \
+      --description 'Security group for cloud-compute' \
       --group-name "${AWS_SECURITY_GROUP}"
 
     aws ec2 authorize-security-group-ingress \
@@ -199,7 +199,7 @@ aws_create_security_group() {
 # Shutdown and delete AWS EC2 instance.
 #######################################
 aws_destroy() {
-  if [[ "$(aws_instance_id)" != "None" ]]; then
+  if [[ "$(aws_instance_id)" != 'None' ]]; then
     aws ec2 terminate-instances --instance-ids "$(aws_instance_id)"
   fi
 }
@@ -211,7 +211,7 @@ aws_destroy() {
 #######################################
 aws_instance_id() {
   aws ec2 describe-instances \
-    --filters "Name=tag:Name,Values=${INSTANCE_NAME}" "Name=instance-state-name,Values=pending,running" \
+    --filters "Name=tag:Name,Values=${INSTANCE_NAME}" 'Name=instance-state-name,Values=pending,running' \
     --output text \
     --query 'Reservations[0].Instances[0].InstanceId'
 }
@@ -221,7 +221,7 @@ aws_instance_id() {
 #######################################
 aws_launch() {
   local image
-  local size="t2.micro"
+  local size='t2.micro'
   local user
 
   # Parse command line arguments.
@@ -232,18 +232,18 @@ aws_launch() {
         shift 2
         ;;
       opensuse)
-        image="ami-0174313b5af8423d7"
-        user="ec2-user"
+        image='ami-0174313b5af8423d7'
+        user='ec2-user'
         shift 1
         ;;
       ubuntu)
-        image="ami-03d5c68bab01f3496"
-        user="ubuntu"
+        image='ami-03d5c68bab01f3496'
+        user='ubuntu'
         shift 1
         ;;
       windows)
-        image="ami-06eae680a1f3c6b6b"
-        user="Administrator"
+        image='ami-06eae680a1f3c6b6b'
+        user='Administrator'
         shift 1
         ;;
       *)
@@ -253,10 +253,10 @@ aws_launch() {
   done
 
   if [[ -z "${image:-}" ]]; then
-    error_usage "OS argument is missing"
+    error_usage 'OS argument is missing'
   fi
 
-  if [[ "$(aws_instance_id)" == "None" ]]; then
+  if [[ "$(aws_instance_id)" == 'None' ]]; then
     aws_create_security_group
 
     aws ec2 run-instances \
@@ -281,7 +281,7 @@ connect() {
       assert_cmd aws
       aws_connect "$@"
       ;;
-    "do")
+    'do')
       shift 1
       assert_cmd doctl
       do_connect "$@"
@@ -292,7 +292,7 @@ connect() {
       gcp_connect "$@"
       ;;
     -h | --help)
-      usage "connect"
+      usage 'connect'
       ;;
     *)
       error_usage "Unsupported cloud provider '${1:-}'"
@@ -310,7 +310,7 @@ destroy() {
       assert_cmd aws
       aws_destroy "$@"
       ;;
-    "do")
+    'do')
       shift 1
       assert_cmd doctl
       do_destroy "$@"
@@ -321,7 +321,7 @@ destroy() {
       gcp_destroy "$@"
       ;;
     -h | --help)
-      usage "destroy"
+      usage 'destroy'
       ;;
     *)
       error_usage "Unsupported cloud provider '${1:-}'"
@@ -362,7 +362,7 @@ do_destroy() {
 #######################################
 do_launch() {
   local image
-  local size="s-1vcpu-1gb"
+  local size='s-1vcpu-1gb'
 
   # Parse command line arguments.
   while [[ "$#" -gt 0 ]]; do
@@ -372,15 +372,15 @@ do_launch() {
         shift 2
         ;;
       fedora)
-        image="fedora-34-x64"
+        image='fedora-34-x64'
         shift 1
         ;;
       freebsd)
-        image="freebsd-12-x64-zfs"
+        image='freebsd-12-x64-zfs'
         shift 1
         ;;
       ubuntu)
-        image="ubuntu-21-04-x64"
+        image='ubuntu-21-04-x64'
         shift 1
         ;;
       *)
@@ -390,7 +390,7 @@ do_launch() {
   done
 
   if [[ -z "${image:-}" ]]; then
-    error_usage "OS argument is missing"
+    error_usage 'OS argument is missing'
   fi
 
   if ! doctl compute droplet get "${INSTANCE_NAME}" &> /dev/null; then
@@ -410,8 +410,8 @@ do_launch() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red="\033[1;31m"
-  local default="\033[0m"
+  local bold_red='\033[1;31m'
+  local default='\033[0m'
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   exit 1
@@ -423,8 +423,8 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red="\033[1;31m"
-  local default="\033[0m"
+  local bold_red='\033[1;31m'
+  local default='\033[0m'
 
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   printf "Run 'cloud-compute --help' for usage.\n" >&2
@@ -468,7 +468,7 @@ gcp_destroy() {
 gcp_launch() {
   local image_family
   local image_project
-  local size="e2-micro"
+  local size='e2-micro'
   local user
 
   # Parse command line arguments.
@@ -479,23 +479,23 @@ gcp_launch() {
         shift 2
         ;;
       rhel)
-        image_family="rhel-8"
-        image_project="rhel-cloud"
+        image_family='rhel-8'
+        image_project='rhel-cloud'
         shift 1
         ;;
       sles)
-        image_family="sles-15"
-        image_project="suse-cloud"
+        image_family='sles-15'
+        image_project='suse-cloud'
         shift 1
         ;;
       ubuntu)
-        image_family="ubuntu-2104"
-        image_project="ubuntu-os-cloud"
+        image_family='ubuntu-2104'
+        image_project='ubuntu-os-cloud'
         shift 1
         ;;
       windows)
-        image_family="windows-2019"
-        image_project="windows-cloud"
+        image_family='windows-2019'
+        image_project='windows-cloud'
         shift 1
         ;;
       *)
@@ -505,7 +505,7 @@ gcp_launch() {
   done
 
   if [[ -z "${image_family:-}" ]]; then
-    error_usage "OS argument is missing"
+    error_usage 'OS argument is missing'
   fi
 
   if ! gcloud compute instances describe --zone us-west1-a "${INSTANCE_NAME}" &> /dev/null; then
@@ -530,7 +530,7 @@ launch() {
       assert_cmd aws
       aws_launch "$@"
       ;;
-    "do")
+    'do')
       shift 1
       assert_cmd doctl
       do_launch "$@"
@@ -541,7 +541,7 @@ launch() {
       gcp_launch "$@"
       ;;
     -h | --help)
-      usage "launch"
+      usage 'launch'
       ;;
     *)
       error_usage "Unsupported cloud provider '${1:-}'"
@@ -555,7 +555,7 @@ launch() {
 #   Cloud Compute version string.
 #######################################
 version() {
-  echo "Cloud Compute 0.0.1"
+  echo 'Cloud Compute 0.0.1'
 }
 
 #######################################
@@ -581,7 +581,7 @@ main() {
       launch "$@"
       ;;
     -h | --help)
-      usage "main"
+      usage 'main'
       ;;
     -v | --version)
       version
