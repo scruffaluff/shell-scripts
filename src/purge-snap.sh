@@ -28,6 +28,7 @@ USAGE:
     purge-snap [OPTIONS]
 
 OPTIONS:
+        --debug      Show Bash debug traces
     -h, --help       Print help information
     -v, --version    Print version information
 EOF
@@ -143,17 +144,25 @@ version() {
 #######################################
 main() {
   # Parse command line arguments.
-  case "${1:-}" in
-    -h | --help)
-      usage 'main'
-      ;;
-    -v | --version)
-      version
-      ;;
-    *)
-      purge_snaps
-      ;;
-  esac
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --debug)
+        set -o xtrace
+        shift 1
+        ;;
+      -h | --help)
+        usage 'main'
+        exit 0
+        ;;
+      -v | --version)
+        version
+        exit 0
+        ;;
+      *) ;;
+    esac
+  done
+
+  purge_snaps
 }
 
 # Only run main if invoked as script. Otherwise import functions as library.

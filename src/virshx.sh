@@ -36,6 +36,7 @@ USAGE:
     virshx [OPTIONS] [SUBCOMMAND]
 
 OPTIONS:
+        --debug      Show Bash debug traces
     -h, --help       Print help information
     -v, --version    Print version information
 
@@ -130,21 +131,29 @@ version() {
 #######################################
 main() {
   # Parse command line arguments.
-  case "${1:-}" in
-    -h | --help)
-      usage 'main'
-      ;;
-    -v | --version)
-      version
-      ;;
-    delete)
-      shift 1
-      delete "$@"
-      ;;
-    *)
-      error_usage "No such subcommand '${1:-}'"
-      ;;
-  esac
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --debug)
+        set -o xtrace
+        shift 1
+        ;;
+      -h | --help)
+        usage 'main'
+        exit 0
+        ;;
+      -v | --version)
+        version
+        exit 0
+        ;;
+      delete)
+        shift 1
+        delete "$@"
+        ;;
+      *)
+        error_usage "No such subcommand '${1:-}'"
+        ;;
+    esac
+  done
 }
 
 # Only run main if invoked as script. Otherwise import functions as library.

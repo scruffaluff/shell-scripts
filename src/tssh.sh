@@ -25,6 +25,7 @@ USAGE:
     tssh [OPTIONS]
 
 OPTIONS:
+        --debug      Show Bash debug traces
     -h, --help       Print help information
     -v, --version    Print version information
 EOF
@@ -88,17 +89,26 @@ version() {
 #######################################
 main() {
   # Parse command line arguments.
-  case "${1:-}" in
-    -h | --help)
-      usage
-      ;;
-    -v | --version)
-      version
-      ;;
-    *)
-      connect "$@"
-      ;;
-  esac
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --debug)
+        set -o xtrace
+        shift 1
+        ;;
+      -h | --help)
+        usage
+        exit 0
+        ;;
+      -v | --version)
+        version
+        exit 0
+        ;;
+      *)
+        connect "$@"
+        exit 0
+        ;;
+    esac
+  done
 }
 
 # Only run main if invoked as script. Otherwise import functions as library.

@@ -39,6 +39,7 @@ USAGE:
     shell-scripts-install [OPTIONS] NAME
 
 OPTIONS:
+        --debug                 Show Bash debug traces
     -d, --dest <PATH>           Directory to install scripts
     -h, --help                  Print help information
     -l, --list                  List all available scripts
@@ -228,6 +229,10 @@ main() {
   # Parse command line arguments.
   while [[ "$#" -gt 0 ]]; do
     case "$1" in
+      --debug)
+        set -o xtrace
+        shift 1
+        ;;
       -d | --dest)
         dst_dir="$2"
         shift 2
