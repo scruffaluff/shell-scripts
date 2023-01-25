@@ -41,6 +41,23 @@ EOF
 }
 
 #######################################
+# Assert that command can be found in system path.
+# Will exit script with an error code if command is not in system path.
+# Arguments:
+#   Command to check availabilty.
+# Outputs:
+#   Writes error message to stderr if command is not in system path.
+#######################################
+assert_cmd() {
+  # Flags:
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
+  if [[ ! -x "$(command -v "$1")" ]]; then
+    error "Cannot find required $1 command on computer"
+  fi
+}
+
+#######################################
 # Print error message and exit script with error code.
 # Outputs:
 #   Writes error message to stderr.
@@ -94,6 +111,9 @@ install_tmate() {
   elif [[ -x "$(command -v zypper)" ]]; then
     ${1:+sudo} zypper install -y curl openssh tar xz
   fi
+
+  assert_cmd curl
+  assert_cmd tar
 
   curl -LSfs "https://github.com/tmate-io/tmate/releases/download/${tmate_version}/tmate-${tmate_version}-static-linux-${tmate_arch}.tar.xz" -o /tmp/tmate.tar.xz
   tar xvf /tmp/tmate.tar.xz -C /tmp --strip-components 1

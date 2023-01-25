@@ -65,8 +65,6 @@ jobs:
       - name: Install Node packages
         run: npm install
       - name: Run Bash unit tests with Bats
-        env:
-          GITLAB_CI_LINT_TOKEN: ${{ secrets.GITLAB_CI_LINT_TOKEN }}
         run: npm run bats:test
 
   test-powershell:
