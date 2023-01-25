@@ -156,7 +156,8 @@ upgrade() {
   fi
 
   if [[ -x "$(command -v npm)" ]]; then
-    npm update -g --loglevel error
+    npm update --global --loglevel error
+    npm install --global npm
   fi
 
   if [[ -x "$(command -v pipx)" ]]; then
