@@ -32,7 +32,7 @@ jobs:
           key: >-
             node-18_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
       - name: Install Node packages
-        run: npm install
+        run: npm ci
       - name: Check format of configuration files
         run: npm run prettier:test
       - name: Install Shfmt
@@ -63,7 +63,7 @@ jobs:
           key: >-
             node-18_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
       - name: Install Node packages
-        run: npm install
+        run: npm ci
       - name: Run Bash unit tests with Bats
         run: npm run bats:test
 

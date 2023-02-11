@@ -108,18 +108,6 @@ purge_snaps() {
     ${use_sudo:+sudo} snap remove --purge "${snap}"
   done
 
-  directories=(
-    "${HOME}/snap"
-    '/snap'
-    '/var/snap'
-    '/var/lib/snapd'
-    '/var/cache/snapd'
-    '/usr/lib/snapd'
-  )
-  for directory in "${directories[@]}"; do
-    ${use_sudo:+sudo} rm -fr "${directory}"
-  done
-
   # Delete Snap system daemons and services.
   ${use_sudo:+sudo} systemctl stop -T snapd.socket
   ${use_sudo:+sudo} systemctl stop -T snapd.service
