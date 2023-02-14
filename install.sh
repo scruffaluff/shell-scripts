@@ -88,15 +88,12 @@ configure_shell() {
     zsh)
       profile="${HOME}/.zshrc"
       ;;
-    ksh)
-      profile="${HOME}/.profile"
-      ;;
     fish)
       export_cmd="set -x PATH \"$1\" \$PATH"
       profile="${HOME}/.config/fish/config.fish"
       ;;
     *)
-      error "Shell ${shell_name} is not supported."
+      profile="${HOME}/.profile"
       ;;
   esac
 
