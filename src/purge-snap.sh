@@ -150,7 +150,14 @@ main() {
     esac
   done
 
-  purge_snaps
+  # Purge snaps if installed.
+  #
+  # Flags:
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
+  if [[ -x "$(command -v snap)" ]]; then
+    purge_snaps
+  fi
 }
 
 main "$@"
