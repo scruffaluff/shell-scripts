@@ -139,7 +139,7 @@ find_scripts() {
   assert_cmd jq
 
   response="$(curl -LSfs "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$1?recursive=true")"
-  echo "${response}" | jq -r '.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
+  echo "${response}" | jq --raw-output '.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
 }
 
 #######################################

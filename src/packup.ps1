@@ -11,7 +11,7 @@ $ErrorActionPreference = 'Stop'
 # Script entrypoint.
 Function Main() {
     If (Get-Command choco -ErrorAction SilentlyContinue) {
-        choco upgrade -y all
+        choco upgrade --yes all
     }
 
     If (Get-Command scoop -ErrorAction SilentlyContinue) {
@@ -21,7 +21,7 @@ Function Main() {
     }
 
     If (Get-Command npm -ErrorAction SilentlyContinue) {
-        npm update -g --loglevel error
+        npm update --global --loglevel error
     }
 
     If (Get-Command pipx -ErrorAction SilentlyContinue) {

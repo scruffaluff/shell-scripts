@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "bats:test": "bats -r tests",
+    "bats:test": "bats --recursive tests",
     "prettier:format": "prettier --write .",
     "prettier:test": "prettier --check .",
     "shellcheck:test": "bash scripts/shellcheck.sh",

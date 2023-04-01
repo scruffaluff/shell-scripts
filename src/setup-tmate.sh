@@ -102,21 +102,21 @@ install_tmate() {
     ${1:+sudo} apk add curl openssh-client xz
   elif [[ -x "$(command -v apt-get)" ]]; then
     ${1:+sudo} apt-get update
-    ${1:+sudo} apt-get install -y curl openssh-client xz-utils
+    ${1:+sudo} apt-get install --yes curl openssh-client xz-utils
   elif [[ -x "$(command -v dnf)" ]]; then
-    ${1:+sudo} dnf install -y curl openssh xz
+    ${1:+sudo} dnf install --assumeyes curl openssh xz
   elif [[ -x "$(command -v pacman)" ]]; then
-    ${1:+sudo} pacman -Suy --noconfirm
-    ${1:+sudo} pacman -S --noconfirm curl openssh xz
+    ${1:+sudo} pacman --noconfirm --refresh --sync --sysupgrade
+    ${1:+sudo} pacman --noconfirm --sync curl openssh xz
   elif [[ -x "$(command -v zypper)" ]]; then
-    ${1:+sudo} zypper install -y curl openssh tar xz
+    ${1:+sudo} zypper install --no-confirm curl openssh tar xz
   fi
 
   assert_cmd curl
   assert_cmd tar
 
   curl -LSfs "https://github.com/tmate-io/tmate/releases/download/${tmate_version}/tmate-${tmate_version}-static-linux-${tmate_arch}.tar.xz" -o /tmp/tmate.tar.xz
-  tar xvf /tmp/tmate.tar.xz -C /tmp --strip-components 1
+  tar xvf /tmp/tmate.tar.xz --directory /tmp --strip-components 1
   ${1:+sudo} install /tmp/tmate /usr/local/bin/tmate
   rm /tmp/tmate /tmp/tmate.tar.xz
 }
@@ -127,7 +127,7 @@ install_tmate() {
 #   Setup Tmate version string.
 #######################################
 version() {
-  echo 'SetupTmate 0.0.1'
+  echo 'SetupTmate 0.0.2'
 }
 
 #######################################

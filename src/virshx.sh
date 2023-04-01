@@ -81,7 +81,7 @@ delete() {
     error_usage 'DOMAIN argument missing'
   fi
 
-  snapshots="$(virsh snapshot-list "$1" | tail -n +3 | cut -d' ' -f2)"
+  snapshots="$(virsh snapshot-list "$1" | tail --lines +3 | cut --delimiter ' ' --fields 2)"
   for snapshot in ${snapshots}; do
     virsh snapshot-delete "$1" "${snapshot}"
   done
@@ -123,7 +123,7 @@ error_usage() {
 #   Virshx version string.
 #######################################
 version() {
-  echo 'Virshx 0.0.1'
+  echo 'Virshx 0.0.2'
 }
 
 #######################################

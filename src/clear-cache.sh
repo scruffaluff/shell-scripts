@@ -113,7 +113,7 @@ clear_cache() {
   fi
 
   if [[ -x "$(command -v pacman)" ]]; then
-    ${use_sudo:+sudo} pacman -Sc
+    ${use_sudo:+sudo} pacman --clean --sync
   fi
 
   if [[ -x "$(command -v pkg)" ]]; then
@@ -147,7 +147,7 @@ clear_cache() {
 #   ClearCache version string.
 #######################################
 version() {
-  echo 'ClearCache 0.0.1'
+  echo 'ClearCache 0.0.2'
 }
 
 #######################################

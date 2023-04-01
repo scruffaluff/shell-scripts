@@ -100,7 +100,7 @@ purge_snaps() {
   # Flags:
   #   --lines +2: Select the 2nd line to the end of the output.
   #   --field 1: Take only the first part of the output.
-  snaps="$(snap list | tail --lines +2 | cut --field 1 --delimiter ' ')"
+  snaps="$(snap list | tail --lines +2 | cut --delimiter ' ' --field 1)"
 
   for snap in "${snaps[@]}"; do
     # Do not quote the sudo parameter expansion. Bash will error due to be being
@@ -109,12 +109,12 @@ purge_snaps() {
   done
 
   # Delete Snap system daemons and services.
-  ${use_sudo:+sudo} systemctl stop -T snapd.socket
-  ${use_sudo:+sudo} systemctl stop -T snapd.service
+  ${use_sudo:+sudo} systemctl stop --show-transaction snapd.socket
+  ${use_sudo:+sudo} systemctl stop --show-transaction snapd.service
   ${use_sudo:+sudo} systemctl disable snapd.service
 
   # Delete Snap package and prevent reinstallation.
-  ${use_sudo:+sudo} apt-get purge -y snapd
+  ${use_sudo:+sudo} apt-get purge --yes snapd
   ${use_sudo:+sudo} apt-mark hold snapd
 }
 
@@ -124,7 +124,7 @@ purge_snaps() {
 #   Packup version string.
 #######################################
 version() {
-  echo "PurgeSnap 0.0.1"
+  echo "PurgeSnap 0.0.2"
 }
 
 #######################################

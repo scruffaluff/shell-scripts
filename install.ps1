@@ -40,7 +40,7 @@ Function ErrorUsage($Message) {
 # Find all scripts inside GitHub repository.
 Function FindScripts($Version) {
     $Response = $(Invoke-WebRequest -UseBasicParsing -Uri "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true")
-    Write-Output "$Response" | jq -r '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".ps1\")'
+    Write-Output "$Response" | jq --raw-output '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".ps1\")'
 }
 
 # Print log message to stdout if logging is enabled.
@@ -58,7 +58,7 @@ Function Main() {
     $Target = 'Machine'
     $Version = 'main'
 
-    While ($ArgIdx -lt $Args[0].Count) {
+    While ($ArgIdx -LT $Args[0].Count) {
         Switch ($Args[0][$ArgIdx]) {
             { $_ -In '-d', '--dest' } {
                 $DestDir = $Args[0][$ArgIdx + 1]
@@ -133,6 +133,6 @@ Function Main() {
 }
 
 # Only run Main if invoked as script. Otherwise import functions as library.
-If ($MyInvocation.InvocationName -ne '.') {
+If ($MyInvocation.InvocationName -NE '.') {
     Main $Args
 }

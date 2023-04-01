@@ -123,8 +123,8 @@ upgrade() {
     # DEBIAN_FRONTEND variable setting is ineffective if on a separate line,
     # since the command is executed as sudo.
     ${use_sudo:+sudo} apt-get update
-    ${use_sudo:+sudo} DEBIAN_FRONTEND=noninteractive apt-get full-upgrade -y --allow-downgrades
-    ${use_sudo:+sudo} apt-get autoremove -y
+    ${use_sudo:+sudo} DEBIAN_FRONTEND=noninteractive apt-get full-upgrade --yes --allow-downgrades
+    ${use_sudo:+sudo} apt-get autoremove --yes
   fi
 
   if [[ -x "$(command -v brew)" ]]; then
@@ -134,16 +134,16 @@ upgrade() {
 
   if [[ -x "$(command -v dnf)" ]]; then
     dnf_check_update "${use_sudo}"
-    ${use_sudo:+sudo} dnf upgrade -y
-    ${use_sudo:+sudo} dnf autoremove -y
+    ${use_sudo:+sudo} dnf upgrade --assumeyes
+    ${use_sudo:+sudo} dnf autoremove --assumeyes
   fi
 
   if [[ -x "$(command -v flatpak)" ]]; then
-    ${use_sudo:+sudo} flatpak update -y
+    ${use_sudo:+sudo} flatpak update --assumeyes
   fi
 
   if [[ -x "$(command -v pacman)" ]]; then
-    ${use_sudo:+sudo} pacman --noconfirm -Suy
+    ${use_sudo:+sudo} pacman --noconfirm --refresh --sync --sysupgrade
   fi
 
   if [[ -x "$(command -v pkg)" ]]; then
@@ -151,13 +151,13 @@ upgrade() {
   fi
 
   if [[ -x "$(command -v zypper)" ]]; then
-    ${use_sudo:+sudo} zypper update -y
-    ${use_sudo:+sudo} zypper autoremove -y
+    ${use_sudo:+sudo} zypper update --no-confirm
+    ${use_sudo:+sudo} zypper autoremove --no-confirm
   fi
 
   if [[ -x "$(command -v npm)" ]]; then
     npm update --global --loglevel error
-    npm install --global npm
+    npm install --global npm@latest
   fi
 
   if [[ -x "$(command -v pipx)" ]]; then
@@ -171,7 +171,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo "Packup 0.1.1"
+  echo "Packup 0.2.0"
 }
 
 #######################################
