@@ -97,7 +97,7 @@ clear_cache() {
   # Do not quote the sudo parameter expansion. Bash will error due to be being
   # unable to find the "" command.
   if [[ -x "$(command -v apt-get)" ]]; then
-    ${use_sudo:+sudo} apt-get clean
+    ${use_sudo:+sudo} apt-get clean --yes
   fi
 
   if [[ -x "$(command -v brew)" ]]; then
@@ -105,11 +105,11 @@ clear_cache() {
   fi
 
   if [[ -x "$(command -v dnf)" ]]; then
-    ${use_sudo:+sudo} dnf clean all
+    ${use_sudo:+sudo} dnf clean --assumeyes all
   fi
 
   if [[ -x "$(command -v flatpak)" ]]; then
-    ${use_sudo:+sudo} flatpak uninstall --unused
+    ${use_sudo:+sudo} flatpak uninstall --assumeyes --unused
   fi
 
   if [[ -x "$(command -v pacman)" ]]; then
@@ -117,11 +117,11 @@ clear_cache() {
   fi
 
   if [[ -x "$(command -v pkg)" ]]; then
-    ${use_sudo:+sudo} pkg clean
+    ${use_sudo:+sudo} pkg clean --all --yes
   fi
 
   if [[ -x "$(command -v zypper)" ]]; then
-    ${use_sudo:+sudo} zypper clean
+    ${use_sudo:+sudo} zypper clean --all
   fi
 
   if [[ -x "$(command -v docker)" ]]; then
