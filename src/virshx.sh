@@ -74,14 +74,15 @@ assert_cmd() {
 #######################################
 delete() {
   local snapshots
-
   assert_cmd virsh
 
   if [[ -z "${1:-}" ]]; then
     error_usage 'DOMAIN argument missing'
   fi
 
-  snapshots="$(virsh snapshot-list "$1" | tail --lines +3 | cut --delimiter ' ' --fields 2)"
+  snapshots="$(
+    virsh snapshot-list "$1" | tail --lines +3 | cut --delimiter ' ' --fields 2
+  )"
   for snapshot in ${snapshots}; do
     virsh snapshot-delete "$1" "${snapshot}"
   done
@@ -96,9 +97,7 @@ delete() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red='\033[1;31m'
-  local default='\033[0m'
-
+  local bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   exit 1
 }
@@ -109,9 +108,7 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red='\033[1;31m'
-  local default='\033[0m'
-
+  local bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   printf "Run 'virshx --help' for usage.\n" >&2
   exit 2

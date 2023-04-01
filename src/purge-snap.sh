@@ -62,9 +62,7 @@ assert_cmd() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red='\033[1;31m'
-  local default='\033[0m'
-
+  local bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   exit 1
 }
@@ -75,9 +73,7 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red='\033[1;31m'
-  local default='\033[0m'
-
+  local bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   printf "Run 'packup --help' for usage.\n" >&2
   exit 2
@@ -87,7 +83,7 @@ error_usage() {
 # Remove all traces of Snap from system.
 #######################################
 purge_snaps() {
-  local use_sudo
+  local snaps use_sudo
 
   # Use sudo for system installation if user is not root.
   if [[ "${EUID}" -ne 0 ]]; then

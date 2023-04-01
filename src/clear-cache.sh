@@ -61,9 +61,7 @@ assert_cmd() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red='\033[1;31m'
-  local default='\033[0m'
-
+  local bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   exit 1
 }
@@ -74,9 +72,7 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red='\033[1;31m'
-  local default='\033[0m'
-
+  local bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   printf "Run 'clear-cache --help' for usage.\n" >&2
   exit 2

@@ -6,6 +6,8 @@
 # Script entrypoint.
 #######################################
 main() {
+  local bats_files sh_files
+
   bats_files="$(find . -type f -name '*.bats' -not -path '*/node_modules/*')";
   for file in ${bats_files}; do
     shellcheck --shell bash "${file}"

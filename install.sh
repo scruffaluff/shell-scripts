@@ -17,9 +17,7 @@ set -eou pipefail
 # versions of Bash.
 #######################################
 handle_panic() {
-  local bold_red='\033[1;31m'
-  local default='\033[0m'
-
+  local bold_red='\033[1;31m' default='\033[0m'
   message="$0 panicked on line $2 with exit code $1"
   printf "${bold_red}error${default}: %s\n" "${message}" >&2
 }
@@ -75,10 +73,7 @@ assert_cmd() {
 #   Parent directory of Scripts script.
 #######################################
 configure_shell() {
-  local export_cmd="export PATH=\"$1:\$PATH\""
-  local profile
-  local shell_name
-
+  local export_cmd="export PATH=\"$1:\$PATH\"" profile shell_name
   shell_name="$(basename "${SHELL}")"
 
   case "${shell_name}" in
@@ -97,7 +92,8 @@ configure_shell() {
       ;;
   esac
 
-  printf '\n# Added by Shell Scripts installer.\n%s\n' "${export_cmd}" >> "${profile}"
+  printf '\n# Added by Shell Scripts installer.\n%s\n' "${export_cmd}" \
+    >> "${profile}"
 }
 
 #######################################
@@ -106,9 +102,7 @@ configure_shell() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red='\033[1;31m'
-  local default='\033[0m'
-
+  local bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   exit 1
 }
@@ -119,9 +113,7 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red='\033[1;31m'
-  local default='\033[0m'
-
+  local bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   printf "Run 'shell-scripts-install --help' for usage\n" >&2
   exit 2
@@ -138,8 +130,11 @@ find_scripts() {
   local response
   assert_cmd jq
 
-  response="$(curl -LSfs "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$1?recursive=true")"
-  echo "${response}" | jq --raw-output '.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
+  response="$(
+    curl -LSfs "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$1?recursive=true"
+  )"
+  echo "${response}" \
+    | jq --raw-output '.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
 }
 
 #######################################
@@ -172,10 +167,7 @@ log() {
 #   Log message to stdout.
 #######################################
 install_script() {
-  local dst_file
-  local src_url
-  local use_sudo
-
+  local dst_file src_url use_sudo
   dst_file="$3/$4"
   src_url="$2/$4.sh"
 
@@ -215,13 +207,8 @@ install_script() {
 # Script entrypoint.
 #######################################
 main() {
-  local dst_dir='/usr/local/bin'
-  local list
-  local match_found
-  local name
-  local src_url
-  local user_install
-  local version='main'
+  local dst_dir='/usr/local/bin' list_scripts match_found name src_url user_install \
+    version='main'
 
   # Parse command line arguments.
   while [[ "$#" -gt 0 ]]; do
@@ -239,12 +226,12 @@ main() {
         exit 0
         ;;
       -l | --list)
-        list=1
+        list_scripts='true'
         shift 1
         ;;
       -u | --user)
         dst_dir="${HOME}/.local/bin"
-        user_install=1
+        user_install='true'
         shift 1
         ;;
       -v | --version)
@@ -264,7 +251,9 @@ main() {
   src_prefix="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${version}/src"
   scripts="$(find_scripts "${version}")"
 
-  if [[ "${list:-}" -eq 1 ]]; then
+  # Flags:
+  #   -n: Check if the string has nonzero length.
+  if [[ -n "${list_scripts:-}" ]]; then
     echo "${scripts}"
   else
     for script in ${scripts}; do
@@ -272,10 +261,13 @@ main() {
       #   -n: Check if the string has nonzero length.
       if [[ -n "${name:-}" && "${script}" =~ ${name} ]]; then
         match_found='true'
-        install_script "${user_install:-}" "${src_prefix}" "${dst_dir}" "${script}"
+        install_script "${user_install:-}" "${src_prefix}" "${dst_dir}" \
+          "${script}"
       fi
     done
 
+    # Flags:
+    #   -z: Check if string has zero length.
     if [[ -z "${match_found:-}" ]]; then
       error_usage "No script name match found for '${name:-}'"
     fi

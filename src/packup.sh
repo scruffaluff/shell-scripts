@@ -66,6 +66,7 @@ assert_cmd() {
 #   Whether to use sudo command.
 #######################################
 dnf_check_update() {
+  local code
   ${1:+sudo} dnf check-update || {
     code="$?"
     [[ "${code}" -eq 100 ]] && return 0
@@ -79,9 +80,7 @@ dnf_check_update() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red='\033[1;31m'
-  local default='\033[0m'
-
+  local bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   exit 1
 }
@@ -92,9 +91,7 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red='\033[1;31m'
-  local default='\033[0m'
-
+  local bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   printf "Run 'packup --help' for usage.\n" >&2
   exit 2
@@ -123,7 +120,8 @@ upgrade() {
     # DEBIAN_FRONTEND variable setting is ineffective if on a separate line,
     # since the command is executed as sudo.
     ${use_sudo:+sudo} apt-get update
-    ${use_sudo:+sudo} DEBIAN_FRONTEND=noninteractive apt-get full-upgrade --yes --allow-downgrades
+    ${use_sudo:+sudo} DEBIAN_FRONTEND=noninteractive apt-get full-upgrade \
+      --yes --allow-downgrades
     ${use_sudo:+sudo} apt-get autoremove --yes
   fi
 

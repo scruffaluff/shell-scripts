@@ -63,9 +63,7 @@ assert_cmd() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red='\033[1;31m'
-  local default='\033[0m'
-
+  local bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "$1" >&2
   exit 1
 }
@@ -74,8 +72,7 @@ error() {
 # Install Tmate.
 #######################################
 install_tmate() {
-  local arch_type tmate_arch
-  local tmate_version='2.4.0'
+  local arch_type tmate_arch tmate_version='2.4.0'
 
   # Short form machine flag '-m' should be used since processor flag and long
   # form machine flag '--machine' are non-portable. For more information, visit
@@ -134,7 +131,7 @@ version() {
 # Installs Tmate and creates a remote session.
 #######################################
 setup_tmate() {
-  local use_sudo=''
+  local ssh_connect use_sudo='' web_connect
 
   # Check if user is not root.
   if [[ "${EUID}" -ne 0 ]]; then

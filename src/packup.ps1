@@ -22,6 +22,7 @@ Function Main() {
 
     If (Get-Command npm -ErrorAction SilentlyContinue) {
         npm update --global --loglevel error
+        npm install --global npm@latest
     }
 
     If (Get-Command pipx -ErrorAction SilentlyContinue) {

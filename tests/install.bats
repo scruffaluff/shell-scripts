@@ -31,8 +31,7 @@ setup() {
 }
 
 @test 'Installer passes local path to Curl' {
-  local actual
-  local expected
+  local actual expected
 
   expected="curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/develop/src/otherscript.sh -o ${HOME}/.local/bin/otherscript"
   actual="$(install.sh --user --version develop other)"
@@ -40,8 +39,7 @@ setup() {
 }
 
 @test 'JSON parser finds all Bash shell scripts' {
-  local actual
-  local expected
+  local actual expected
 
   expected=$'mockscript\notherscript'
   actual="$(install.sh --list)"
@@ -49,8 +47,7 @@ setup() {
 }
 
 @test 'Installer uses sudo when destination is not writable' {
-  local actual
-  local expected
+  local actual expected
 
   # Mock functions for child processes by printing received arguments.
   #
