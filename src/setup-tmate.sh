@@ -70,8 +70,39 @@ error() {
 
 #######################################
 # Install Tmate.
+# Arguments:
+#   Whether to use sudo command.
 #######################################
 install_tmate() {
+  local os_type
+  assert_cmd uname
+
+  # Do not use long form --kernel-name flag for uname. It is not supported on
+  # MacOS.
+  os_type="$(uname -s)"
+  case "${os_type}" in
+    Darwin)
+      brew install tmate
+      ;;
+    FreeBSD)
+      ${1:+sudo} pkg update
+      ${1:+sudo} pkg install --yes tmate
+      ;;
+    Linux)
+      install_tmate_linux "$1"
+      ;;
+    *)
+      error "Operating system ${os_type} is not supported"
+      ;;
+  esac
+}
+
+#######################################
+# Install Tmate for Linux.
+# Arguments:
+#   Whether to use sudo command.
+#######################################
+install_tmate_linux() {
   local arch_type tmate_arch tmate_version='2.4.0'
 
   # Short form machine flag '-m' should be used since processor flag and long
@@ -109,9 +140,6 @@ install_tmate() {
     ${1:+sudo} zypper install --no-confirm curl openssh tar xz
   fi
 
-  assert_cmd curl
-  assert_cmd tar
-
   curl -LSfs "https://github.com/tmate-io/tmate/releases/download/${tmate_version}/tmate-${tmate_version}-static-linux-${tmate_arch}.tar.xz" -o /tmp/tmate.tar.xz
   tar xvf /tmp/tmate.tar.xz --directory /tmp --strip-components 1
   ${1:+sudo} install /tmp/tmate /usr/local/bin/tmate
@@ -136,7 +164,7 @@ setup_tmate() {
   # Check if user is not root.
   if [[ "${EUID}" -ne 0 ]]; then
     assert_cmd sudo
-    use_sudo=1
+    use_sudo='true'
   fi
 
   # Install Tmate if not available.
@@ -164,7 +192,7 @@ setup_tmate() {
     # Check if script should exit.
     #
     # Flags:
-    #   -f: Check if file exists and is a socket.
+    #   -S: Check if file exists and is a socket.
     #   -f: Check if file exists and is a regular file.
     if [[ ! -S /tmp/tmate.sock || -f /close-tmate ]]; then
       break
