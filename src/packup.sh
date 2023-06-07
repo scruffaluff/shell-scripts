@@ -154,8 +154,10 @@ upgrade() {
   fi
 
   if [[ -x "$(command -v npm)" ]]; then
-    npm update --global --loglevel error
+    # The "npm install" command is run before "npm update" command to avoid
+    # messages about newer versions of NPM being available.
     npm install --global npm@latest
+    npm update --global --loglevel error
   fi
 
   if [[ -x "$(command -v pipx)" ]]; then
@@ -169,7 +171,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo "Packup 0.2.0"
+  echo "Packup 0.2.1"
 }
 
 #######################################

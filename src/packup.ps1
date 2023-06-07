@@ -21,8 +21,10 @@ Function Main() {
     }
 
     If (Get-Command npm -ErrorAction SilentlyContinue) {
-        npm update --global --loglevel error
+        # The "npm install" command is run before "npm update" command to avoid
+        # messages about newer versions of NPM being available.
         npm install --global npm@latest
+        npm update --global --loglevel error
     }
 
     If (Get-Command pipx -ErrorAction SilentlyContinue) {
