@@ -1,3 +1,9 @@
+---
+prev:
+  text: Home
+  link: /
+---
+
 # Installation
 
 Shell Scripts provides Bash and PowerShell install scripts to download any

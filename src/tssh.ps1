@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    SSH for temporary remote connections.
+    SSH for one time remote connections.
 #>
 
 # Exit immediately if a PowerShell Cmdlet encounters an error.

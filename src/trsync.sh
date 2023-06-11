@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# RSync for temporary remote connections.
+# Rsync for one time remote connections.
 
 # Exit immediately if a command exits or pipes a non-zero return code.
 #
@@ -19,7 +19,7 @@ set -eou pipefail
 usage() {
   cat 1>&2 << EOF
 $(version)
-RSync for temporary remote connections
+Rsync for one time remote connections
 
 USAGE:
     trsync [OPTIONS]
@@ -72,9 +72,9 @@ sync() {
 }
 
 #######################################
-# Print TRSync version string.
+# Print TRsync version string.
 # Outputs:
-#   TRSync version string.
+#   TRsync version string.
 #######################################
 version() {
   echo 'trsync 0.0.1'

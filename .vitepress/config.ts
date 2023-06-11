@@ -8,15 +8,23 @@
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
-  base: "/shell-scripts",
+  base: "/shell-scripts/",
   description: "Bounciness and tinyness in a loving package.",
+  lastUpdated: true,
   outDir: "site",
   srcDir: "docs",
   themeConfig: {
+    footer: {
+      message: "Released under the MIT License.",
+      copyright: "Copyright © 2021-Present Macklan Weinstein",
+    },
     nav: [
       { text: "Home", link: "/" },
       { text: "Install", link: "/install" },
     ],
+    search: {
+      provider: "local",
+    },
     socialLinks: [
       { icon: "github", link: "https://github.com/scruffaluff/shell-scripts" },
     ],

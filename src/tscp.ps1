@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    SCP for temporary remote connections.
+    SCP for one time remote connections.
 #>
 
 # Exit immediately if a PowerShell Cmdlet encounters an error.

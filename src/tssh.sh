@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# SSH for temporary remote connections.
+# SSH for one time remote connections.
 
 # Exit immediately if a command exits or pipes a non-zero return code.
 #
@@ -19,7 +19,7 @@ set -eou pipefail
 usage() {
   cat 1>&2 << EOF
 $(version)
-SSH for temporary remote connections
+SSH for one time remote connections
 
 USAGE:
     tssh [OPTIONS]
