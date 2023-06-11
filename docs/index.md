@@ -1,15 +1,10 @@
+---
+next:
+  text: Install
+  link: /install
+---
+
 # Shell Scripts
-
-![](https://img.shields.io/github/repo-size/scruffaluff/shell-scripts)
-![](https://img.shields.io/github/license/scruffaluff/shell-scripts)
-
----
-
-**Documentation**: https://scruffaluff.github.io/shell-scripts
-
-**Source Code**: https://github.com/scruffaluff/shell-scripts
-
----
 
 Shell Scripts is a collection of Bash and PowerShell utility scripts. These
 scripts are designed for my personal usage, but should be easily installable on
@@ -30,20 +25,3 @@ Windows systems.
 | trsync      | Rsync for one time remote connections.                              |
 | tscp        | SCP for one time remote connections.                                |
 | tssh        | SSH for one time remote connections.                                |
-
-## Install
-
-For instructions on installing the utility scripts for your operating system,
-see the [Install](https://scruffaluff.github.io/shell-scripts/install) section
-of the documentation.
-
-## Contributing
-
-For guidance on setting up a development environment and how to make a
-contribution, see the
-[Contributing Guide](https://github.com/scruffaluff/shell-scripts/blob/main/CONTRIBUTING.md).
-
-## License
-
-Shell Scripts is distributed under a
-[MIT license](https://github.com/scruffaluff/shell-scripts/blob/main/LICENSE.md).

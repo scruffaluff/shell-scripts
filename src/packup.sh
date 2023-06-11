@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Invokes upgrade commands to all installed package managers.
+# Invokes upgrade commands to several package managers.
 
 # Exit immediately if a command exits or pipes a non-zero return code.
 #

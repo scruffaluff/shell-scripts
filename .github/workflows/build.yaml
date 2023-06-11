@@ -24,25 +24,29 @@ jobs:
       - name: Install Node interpreter
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
       - name: Cache Node packages
         uses: actions/cache@v3
         with:
           path: node_modules
           key: >-
-            node-18_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
+            node-20_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
       - name: Install Node packages
-        run: npm ci
+        run: |
+          node --version
+          npm --version
+          npm ci
       - name: Check format of configuration files
         run: npm run prettier:test
       - name: Install Shfmt
         run: |
-          sudo curl -LSfs https://github.com/mvdan/sh/releases/download/v3.6.0/shfmt_v3.6.0_linux_amd64 -o /usr/local/bin/shfmt
-          sudo chmod 755 /usr/local/bin/shfmt
+          shfmt_version="$(curl -LSfs https://formulae.brew.sh/api/formula/shfmt.json | jq --raw-output .versions.stable)"
+          sudo curl -LSfs "https://github.com/mvdan/sh/releases/download/v${shfmt_version}/shfmt_v${shfmt_version}_linux_amd64" --output "/usr/local/bin/shfmt"
+          sudo chmod 755 "/usr/local/bin/shfmt"
       - name: Check format of shell scripts
         run: npm run shfmt:test
       - name: Install ShellCheck
-        run: sudo apt install --yes shellcheck
+        run: sudo apt-get install --yes shellcheck
       - name: Run ShellCheck on shell scripts
         run: npm run shellcheck:test
 
@@ -55,15 +59,18 @@ jobs:
       - name: Install Node interpreter
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
       - name: Cache Node packages
         uses: actions/cache@v3
         with:
           path: node_modules
           key: >-
-            node-18_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
+            node-20_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
       - name: Install Node packages
-        run: npm ci
+        run: |
+          node --version
+          npm --version
+          npm ci
       - name: Run Bash unit tests with Bats
         run: npm run bats:test
 

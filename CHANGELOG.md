@@ -9,4 +9,4 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Cloud Compute, Packup, TRSync, Tssh, and Virshx scripts.
+- Cloud Compute, Packup, TRsync, Tssh, and Virshx scripts.

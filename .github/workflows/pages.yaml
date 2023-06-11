@@ -21,17 +21,20 @@ jobs:
       - name: Install Node interpreter
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20
       - name: Cache Node packages
         uses: actions/cache@v3
         with:
           path: node_modules
           key: >-
-            node-16_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
+            node-20_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
       - name: Install Node packages
-        run: npm ci
+        run: |
+          node --version
+          npm --version
+          npm ci
       - name: Build documentation
-        run: npm run vuepress:build
+        run: npm run vitepress:build
       - name: Publish documentation
         uses: peaceiris/actions-gh-pages@v3
         with:

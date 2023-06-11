@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Frees up disk space by clearing caches of package managers.
+# Frees up disk space by clearing caches of several package managers.
 
 # Exit immediately if a command exits or pipes a non-zero return code.
 #
