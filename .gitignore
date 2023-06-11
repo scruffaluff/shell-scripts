@@ -4,9 +4,10 @@
 
 .DS_Store
 .local/
-build/
-dist/
-docs/index.md
-node_modules/
+.vitepress/cache/
+.vitepress/dist/
 /site/
 /tmp/
+build/
+docs/index.md
+node_modules/

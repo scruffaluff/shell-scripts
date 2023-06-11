@@ -7,8 +7,8 @@
     "shellcheck:test": "bash scripts/shellcheck.sh",
     "shfmt:format": "node scripts/shfmt.js format",
     "shfmt:test": "node scripts/shfmt.js test",
-    "vuepress:build": "node scripts/build_docs.js",
-    "vuepress:serve": "vuepress dev docs"
+    "vitepress:dev": "vitepress dev .",
+    "vitepress:build": "vitepress build ."
   },
   "devDependencies": {
     "bats": "^1.8.0",
@@ -16,7 +16,7 @@
     "bats-support": "https://github.com/ztombol/bats-support",
     "mustache": "^4.1.0",
     "prettier": "^2.8.0",
-    "vuepress": "^1.9.0",
-    "vuepress-plugin-code-copy": "^1.0.6"
+    "vitepress": "1.0.0-beta.2",
+    "vue": "^3.3.0"
   }
 }
