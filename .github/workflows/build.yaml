@@ -30,7 +30,7 @@ on:
 
 jobs:
   lint:
-    if: ${{ github.event_name != "workflow_dispatch" || inputs.job == "lint" }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.job == 'lint' }}
     name: Check code with formatter and linter
     runs-on: ubuntu-latest
     steps:
@@ -66,14 +66,14 @@ jobs:
         run: npm run shellcheck:test
       - name: Setup tmate session if job failed
         if: >-
-          ${{ failure() && github.event_name == "workflow_dispatch" &&
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
           inputs.debug }}
         timeout-minutes: 60
         uses: mxschmitt/action-tmate@v3
 
   test-bash:
     if: >-
-      ${{ github.event_name != "workflow_dispatch" || inputs.job == "test-bash"
+      ${{ github.event_name != 'workflow_dispatch' || inputs.job == 'test-bash'
       }}
     name: Run unit tests for Bash scripts
     runs-on: ubuntu-latest
@@ -99,15 +99,15 @@ jobs:
         run: npm run bats:test
       - name: Setup tmate session if job failed
         if: >-
-          ${{ failure() && github.event_name == "workflow_dispatch" &&
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
           inputs.debug }}
         timeout-minutes: 60
         uses: mxschmitt/action-tmate@v3
 
   test-powershell:
     if: >-
-      ${{ github.event_name != "workflow_dispatch" || inputs.job ==
-      "test-powershell" }}
+      ${{ github.event_name != 'workflow_dispatch' || inputs.job ==
+      'test-powershell' }}
     name: Run linter and unit tests for PowerShell scripts
     runs-on: windows-latest
     steps:
@@ -127,7 +127,7 @@ jobs:
         shell: pwsh
       - name: Setup tmate session if job failed
         if: >-
-          ${{ failure() && github.event_name == "workflow_dispatch" &&
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
           inputs.debug }}
         timeout-minutes: 60
         uses: mxschmitt/action-tmate@v3

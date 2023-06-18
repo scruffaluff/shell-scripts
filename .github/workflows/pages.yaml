@@ -48,7 +48,7 @@ jobs:
           publish_dir: site
       - name: Setup tmate session if job failed
         if: >-
-          ${{ failure() && github.event_name == "workflow_dispatch" &&
+          ${{ failure() && github.event_name == 'workflow_dispatch' &&
           inputs.debug }}
         timeout-minutes: 60
         uses: mxschmitt/action-tmate@v3
