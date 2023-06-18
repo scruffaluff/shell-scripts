@@ -17,7 +17,7 @@ set -eou pipefail
 #   Writes help information to stdout.
 #######################################
 usage() {
-  case "$1" in
+  case "${1}" in
     delete)
       cat 1>&2 << EOF
 Virshx delete
@@ -47,7 +47,7 @@ See 'virshx <subcommand> --help' for more information on a specific command.
 EOF
       ;;
     *)
-      error "No such usage option '$1'"
+      error "No such usage option '${1}'"
       ;;
   esac
 }
@@ -64,8 +64,8 @@ assert_cmd() {
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [[ ! -x "$(command -v "$1")" ]]; then
-    error "Cannot find required $1 command on computer"
+  if [[ ! -x "$(command -v "${1}")" ]]; then
+    error "Cannot find required ${1} command on computer"
   fi
 }
 
@@ -81,14 +81,14 @@ delete() {
   fi
 
   snapshots="$(
-    virsh snapshot-list "$1" | tail --lines +3 | cut --delimiter ' ' --fields 2
+    virsh snapshot-list "${1}" | tail --lines +3 | cut --delimiter ' ' --fields 2
   )"
   for snapshot in ${snapshots}; do
-    virsh snapshot-delete "$1" "${snapshot}"
+    virsh snapshot-delete "${1}" "${snapshot}"
   done
 
   # Virsh will not delete a domain's storage if it has NVRAM.
-  virsh undefine --nvram --remove-all-storage "$1"
+  virsh undefine --nvram --remove-all-storage "${1}"
 }
 
 #######################################
@@ -98,7 +98,7 @@ delete() {
 #######################################
 error() {
   local bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "$1" >&2
+  printf "${bold_red}error${default}: %s\n" "${1}" >&2
   exit 1
 }
 
@@ -109,7 +109,7 @@ error() {
 #######################################
 error_usage() {
   local bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "$1" >&2
+  printf "${bold_red}error${default}: %s\n" "${1}" >&2
   printf "Run 'virshx --help' for usage.\n" >&2
   exit 2
 }
@@ -129,7 +129,7 @@ version() {
 main() {
   # Parse command line arguments.
   while [[ "$#" -gt 0 ]]; do
-    case "$1" in
+    case "${1}" in
       --debug)
         set -o xtrace
         shift 1

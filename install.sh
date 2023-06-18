@@ -18,7 +18,7 @@ set -eou pipefail
 #######################################
 handle_panic() {
   local bold_red='\033[1;31m' default='\033[0m'
-  message="$0 panicked on line $2 with exit code $1"
+  message="$0 panicked on line ${2} with exit code ${1}"
   printf "${bold_red}error${default}: %s\n" "${message}" >&2
 }
 
@@ -58,8 +58,8 @@ assert_cmd() {
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [[ ! -x "$(command -v "$1")" ]]; then
-    error "Cannot find required $1 command on computer."
+  if [[ ! -x "$(command -v "${1}")" ]]; then
+    error "Cannot find required ${1} command on computer."
   fi
 }
 
@@ -73,7 +73,7 @@ assert_cmd() {
 #   Parent directory of Scripts script.
 #######################################
 configure_shell() {
-  local export_cmd="export PATH=\"$1:\$PATH\"" profile shell_name
+  local export_cmd="export PATH=\"${1}:\$PATH\"" profile shell_name
   shell_name="$(basename "${SHELL}")"
 
   case "${shell_name}" in
@@ -84,7 +84,7 @@ configure_shell() {
       profile="${HOME}/.zshrc"
       ;;
     fish)
-      export_cmd="set -x PATH \"$1\" \$PATH"
+      export_cmd="set -x PATH \"${1}\" \$PATH"
       profile="${HOME}/.config/fish/config.fish"
       ;;
     *)
@@ -103,7 +103,7 @@ configure_shell() {
 #######################################
 error() {
   local bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "$1" >&2
+  printf "${bold_red}error${default}: %s\n" "${1}" >&2
   exit 1
 }
 
@@ -114,7 +114,7 @@ error() {
 #######################################
 error_usage() {
   local bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "$1" >&2
+  printf "${bold_red}error${default}: %s\n" "${1}" >&2
   printf "Run 'shell-scripts-install --help' for usage\n" >&2
   exit 2
 }
@@ -131,7 +131,7 @@ find_scripts() {
   assert_cmd jq
 
   response="$(
-    curl -LSfs "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$1?recursive=true"
+    curl -LSfs "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/${1}?recursive=true"
   )"
   echo "${response}" |
     jq --raw-output '.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
@@ -168,8 +168,8 @@ log() {
 #######################################
 install_script() {
   local dst_file src_url use_sudo
-  dst_file="$3/$4"
-  src_url="$2/$4.sh"
+  dst_file="${3}/${4}"
+  src_url="${2}/${4}.sh"
 
   # Use sudo for system installation if user did not give the --user, does not
   # own the file, and is not root.
@@ -177,16 +177,16 @@ install_script() {
   # Flags:
   #   -w: Check if file exists and is writable.
   #   -z: Check if the string has zero length or is null.
-  if [[ -z "$1" && ! -w "${dst_file}" && "${EUID}" -ne 0 ]]; then
+  if [[ -z "${1}" && ! -w "${dst_file}" && "${EUID}" -ne 0 ]]; then
     assert_cmd sudo
     use_sudo=1
   fi
 
-  log "Installing script $4"
+  log "Installing script ${4}"
 
   # Do not quote the sudo parameter expansion. Bash will error due to be being
   # unable to find the "" command.
-  ${use_sudo:+sudo} mkdir -p "$3"
+  ${use_sudo:+sudo} mkdir -p "${3}"
   ${use_sudo:+sudo} curl -LSfs "${src_url}" -o "${dst_file}"
   ${use_sudo:+sudo} chmod 755 "${dst_file}"
 
@@ -195,12 +195,12 @@ install_script() {
   # Flags:
   #   -e: Check if file exists.
   #   -v: Only show file path of command.
-  if [[ ! -e "$(command -v "$4")" ]]; then
-    configure_shell "$3"
-    export PATH="$3:${PATH}"
+  if [[ ! -e "$(command -v "${4}")" ]]; then
+    configure_shell "${3}"
+    export PATH="${3}:${PATH}"
   fi
 
-  log "Installed $("$4" --version)"
+  log "Installed $("${4}" --version)"
 }
 
 #######################################
@@ -212,13 +212,13 @@ main() {
 
   # Parse command line arguments.
   while [[ "$#" -gt 0 ]]; do
-    case "$1" in
+    case "${1}" in
       --debug)
         set -o xtrace
         shift 1
         ;;
       -d | --dest)
-        dst_dir="$2"
+        dst_dir="${2}"
         shift 2
         ;;
       -h | --help)
@@ -235,11 +235,11 @@ main() {
         shift 1
         ;;
       -v | --version)
-        version="$2"
+        version="${2}"
         shift 2
         ;;
       *)
-        name="$1"
+        name="${1}"
         shift 1
         ;;
     esac

@@ -17,7 +17,7 @@ set -eou pipefail
 #   Writes help information to stdout.
 #######################################
 usage() {
-  case "$1" in
+  case "${1}" in
     main)
       cat 1>&2 << EOF
 $(version)
@@ -33,7 +33,7 @@ OPTIONS:
 EOF
       ;;
     *)
-      error "No such usage option '$1'"
+      error "No such usage option '${1}'"
       ;;
   esac
 }
@@ -50,8 +50,8 @@ assert_cmd() {
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [[ ! -x "$(command -v "$1")" ]]; then
-    error "Cannot find required $1 command on computer"
+  if [[ ! -x "$(command -v "${1}")" ]]; then
+    error "Cannot find required ${1} command on computer"
   fi
 }
 
@@ -81,7 +81,7 @@ dnf_check_update() {
 #######################################
 error() {
   local bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "$1" >&2
+  printf "${bold_red}error${default}: %s\n" "${1}" >&2
   exit 1
 }
 
@@ -92,7 +92,7 @@ error() {
 #######################################
 error_usage() {
   local bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "$1" >&2
+  printf "${bold_red}error${default}: %s\n" "${1}" >&2
   printf "Run 'packup --help' for usage.\n" >&2
   exit 2
 }
@@ -153,14 +153,16 @@ upgrade() {
     ${use_sudo:+sudo} zypper autoremove --no-confirm
   fi
 
-  if [[ -x "$(command -v npm)" ]]; then
-    # The "npm install" command is run before "npm update" command to avoid
+  # Flags:
+  #   -O: Check if current user owns the file.
+  if [[ -x "$(command -v npm)" && -O "$(which npm)" ]]; then
+    # The 'npm install' command is run before 'npm update' command to avoid
     # messages about newer versions of NPM being available.
     npm install --global npm@latest
     npm update --global --loglevel error
   fi
 
-  if [[ -x "$(command -v pipx)" ]]; then
+  if [[ -x "$(command -v pipx)" && -O "$(which pipx)" ]]; then
     pipx upgrade-all
   fi
 }
@@ -171,7 +173,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo "Packup 0.2.1"
+  echo 'Packup 0.2.1'
 }
 
 #######################################
@@ -180,7 +182,7 @@ version() {
 main() {
   # Parse command line arguments.
   while [[ "$#" -gt 0 ]]; do
-    case "$1" in
+    case "${1}" in
       --debug)
         set -o xtrace
         shift 1
