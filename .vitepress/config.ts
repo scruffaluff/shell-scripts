@@ -5,29 +5,29 @@
 // information on VitePress configuration, visit
 // https://vitepress.dev/reference/site-config.
 
-import { defineConfig } from "vitepress";
+import { defineConfig } from 'vitepress';
 
 export default defineConfig({
-  base: "/shell-scripts/",
-  description: "Bounciness and tinyness in a loving package.",
+  base: '/shell-scripts/',
+  description: 'Bounciness and tinyness in a loving package.',
   lastUpdated: true,
-  outDir: "site",
-  srcDir: "docs",
+  outDir: 'site',
+  srcDir: 'docs',
   themeConfig: {
     footer: {
-      message: "Released under the MIT License.",
-      copyright: "Copyright © 2021-Present Macklan Weinstein",
+      message: 'Released under the MIT License.',
+      copyright: 'Copyright © 2021-Present Macklan Weinstein',
     },
     nav: [
-      { text: "Home", link: "/" },
-      { text: "Install", link: "/install" },
+      { text: 'Home', link: '/' },
+      { text: 'Install', link: '/install' },
     ],
     search: {
-      provider: "local",
+      provider: 'local',
     },
     socialLinks: [
-      { icon: "github", link: "https://github.com/scruffaluff/shell-scripts" },
+      { icon: 'github', link: 'https://github.com/scruffaluff/shell-scripts' },
     ],
   },
-  title: "Shell Scripts",
+  title: 'Shell Scripts',
 });

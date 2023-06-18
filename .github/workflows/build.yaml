@@ -9,10 +9,10 @@ name: build
 on:
   pull_request:
     branches:
-      - "**"
+      - '**'
   push:
     branches:
-      - "**"
+      - '**'
 
 jobs:
   lint:
@@ -24,7 +24,7 @@ jobs:
       - name: Install Node interpreter
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: '20'
       - name: Cache Node packages
         uses: actions/cache@v3
         with:
@@ -41,8 +41,8 @@ jobs:
       - name: Install Shfmt
         run: |
           shfmt_version="$(curl -LSfs https://formulae.brew.sh/api/formula/shfmt.json | jq --raw-output .versions.stable)"
-          sudo curl -LSfs "https://github.com/mvdan/sh/releases/download/v${shfmt_version}/shfmt_v${shfmt_version}_linux_amd64" --output "/usr/local/bin/shfmt"
-          sudo chmod 755 "/usr/local/bin/shfmt"
+          sudo curl -LSfs "https://github.com/mvdan/sh/releases/download/v${shfmt_version}/shfmt_v${shfmt_version}_linux_amd64" --output /usr/local/bin/shfmt
+          sudo chmod 755 /usr/local/bin/shfmt
       - name: Check format of shell scripts
         run: npm run shfmt:test
       - name: Install ShellCheck
@@ -59,7 +59,7 @@ jobs:
       - name: Install Node interpreter
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: '20'
       - name: Cache Node packages
         uses: actions/cache@v3
         with:
