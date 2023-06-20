@@ -9,7 +9,7 @@ import { defineConfig } from "vitepress";
 
 export default defineConfig({
   base: "/shell-scripts/",
-  description: "Bounciness and tinyness in a loving package.",
+  description: "Personal collection of Bash and PowerShell utility scripts.",
   lastUpdated: true,
   outDir: "site",
   srcDir: "docs",
