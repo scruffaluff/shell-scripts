@@ -17,7 +17,7 @@ on:
     inputs:
       debug:
         default: false
-        description: Use Tmate session for debugging on failure
+        description: Use Tmate session for debugging
         type: boolean
       job:
         default: test
@@ -75,7 +75,7 @@ jobs:
     if: >-
       ${{ github.event_name != 'workflow_dispatch' || inputs.job == 'test-bash'
       }}
-    name: Run unit tests for Bash scripts
+    name: Run tests for Bash scripts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code repository
@@ -95,7 +95,7 @@ jobs:
           node --version
           npm --version
           npm ci
-      - name: Run Bash unit tests with Bats
+      - name: Run Bash tests with Bats
         run: npm run bats:test
       - name: Setup Tmate session if debug enabled
         if: >-
@@ -108,7 +108,7 @@ jobs:
     if: >-
       ${{ github.event_name != 'workflow_dispatch' || inputs.job ==
       'test-powershell' }}
-    name: Run linter and unit tests for PowerShell scripts
+    name: Run linter and tests for PowerShell scripts
     runs-on: windows-latest
     steps:
       - name: Checkout code repository
@@ -122,8 +122,8 @@ jobs:
       - name: Install Pester
         run: Install-Module -Name Pester -Force
         shell: pwsh
-      - name: Run PowerShell unit tests with Pester
-        run: Invoke-Pester -Output Detailed ./tests/unit/
+      - name: Run PowerShell tests with Pester
+        run: Invoke-Pester -Output Detailed tests
         shell: pwsh
       - name: Setup Tmate session if debug enabled
         if: >-
