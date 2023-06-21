@@ -118,24 +118,7 @@ find_scripts() {
     curl -LSfs "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/${1}?recursive=true"
   )"
   echo "${response}" |
-    jq --raw-output '.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
-}
-
-#######################################
-# Print log message to stdout if logging is enabled.
-# Globals:
-#   SHELL_SCRIPTS_NOLOG
-# Outputs:
-#   Log message to stdout.
-#######################################
-log() {
-  # Log if environment variable is not set.
-  #
-  # Flags:
-  #   -z: Check if string has zero length.
-  if [ -z "${SHELL_SCRIPTS_NOLOG:-}" ]; then
-    echo "$@"
-  fi
+    jq --raw-output ".tree[] | select(.type == 'blob') | .path | select(startswith('src/')) | select(endswith('.sh')) | ltrimstr('src/') | rtrimstr('.sh')"
 }
 
 #######################################
@@ -165,7 +148,7 @@ install_script() {
     use_sudo=1
   fi
 
-  log "Installing script ${4}"
+  log "Installing script ${4}..."
 
   # Do not quote the sudo parameter expansion. Script will error due to be being
   # unable to find the "" command.
@@ -183,7 +166,24 @@ install_script() {
     export PATH="${3}:${PATH}"
   fi
 
-  log "Installed $("${4}" --version)"
+  log "Installed $("${4}" --version)."
+}
+
+#######################################
+# Print log message to stdout if logging is enabled.
+# Globals:
+#   SHELL_SCRIPTS_NOLOG
+# Outputs:
+#   Log message to stdout.
+#######################################
+log() {
+  # Log if environment variable is not set.
+  #
+  # Flags:
+  #   -z: Check if string has zero length.
+  if [ -z "${SHELL_SCRIPTS_NOLOG:-}" ]; then
+    echo "$@"
+  fi
 }
 
 #######################################

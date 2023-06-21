@@ -128,7 +128,10 @@ Function Main() {
         ForEach ($Script in $Scripts) {
             If ($Name -And ("$Script" -Eq "$Name")) {
                 $MatchFound = 1
+                Log "Installing script $Name..."
+
                 DownloadFile "$SrcPrefix/$Script.ps1" "$DestDir/$Script.ps1"
+                Log "Installed $(& $Name --version)."
             }
         }
 
