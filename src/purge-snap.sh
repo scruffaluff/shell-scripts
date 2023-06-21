@@ -1,15 +1,14 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 #
 # Removes all traces of the Snap package manager. Forked from
 # https://github.com/MasterGeekMX/snap-to-flatpak/blob/004790749abb6fbc82e7bebc6f6420c5b3be0fbc/snap-to-flatpak.sh.
 
-# Exit immediately if a command exits or pipes a non-zero return code.
+# Exit immediately if a command exits with non-zero return code.
 #
 # Flags:
-#   -e: Exit immediately when a command pipeline fails.
-#   -o: Persist nonzero exit codes through a Bash pipe.
+#   -e: Exit immediately when a command fails.
 #   -u: Throw an error when an unset variable is encountered.
-set -eou pipefail
+set -eu
 
 #######################################
 # Show CLI help information.
@@ -21,16 +20,14 @@ usage() {
   case "${1}" in
     main)
       cat 1>&2 << EOF
-$(version)
 Deletes all Snap packages, uninstalls Snap, and prevents reinstall of Snap.
 
-USAGE:
-    purge-snap [OPTIONS]
+Usage: purge-snap [OPTIONS]
 
-OPTIONS:
-        --debug      Show Bash debug traces
-    -h, --help       Print help information
-    -v, --version    Print version information
+Options:
+      --debug     Show shell debug traces
+  -h, --help      Print help information
+  -v, --version   Print version information
 EOF
       ;;
     *)
@@ -51,7 +48,7 @@ assert_cmd() {
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [[ ! -x "$(command -v "${1}")" ]]; then
+  if [ ! -x "$(command -v "${1}")" ]; then
     error "Cannot find required ${1} command on computer"
   fi
 }
@@ -62,7 +59,7 @@ assert_cmd() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red='\033[1;31m' default='\033[0m'
+  bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
   exit 1
 }
@@ -73,7 +70,7 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red='\033[1;31m' default='\033[0m'
+  bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
   printf "Run 'packup --help' for usage.\n" >&2
   exit 2
@@ -83,10 +80,9 @@ error_usage() {
 # Remove all traces of Snap from system.
 #######################################
 purge_snaps() {
-  local snaps use_sudo
-
-  # Use sudo for system installation if user is not root.
-  if [[ "${EUID}" -ne 0 ]]; then
+  # Use sudo for system installation if user is not root. Do not use long form
+  # --user flag for id. It is not supported on MacOS.
+  if [ "$(id -u)" -ne 0 ]; then
     assert_cmd sudo
     use_sudo=1
   fi
@@ -98,11 +94,13 @@ purge_snaps() {
   #   --field 1: Take only the first part of the output.
   snaps="$(snap list | tail --lines +2 | cut --delimiter ' ' --field 1)"
 
-  for snap in "${snaps[@]}"; do
-    # Do not quote the sudo parameter expansion. Bash will error due to be being
-    # unable to find the "" command.
+  while IFS= read -r snap; do
+    # Do not quote the sudo parameter expansion. Script will error due to be
+    # being unable to find the "" command.
     ${use_sudo:+sudo} snap remove --purge "${snap}"
-  done
+  done << EOF
+${snaps}
+EOF
 
   # Delete Snap system daemons and services.
   ${use_sudo:+sudo} systemctl stop --show-transaction snapd.socket
@@ -120,7 +118,7 @@ purge_snaps() {
 #   Packup version string.
 #######################################
 version() {
-  echo 'PurgeSnap 0.0.2'
+  echo 'PurgeSnap 0.1.0'
 }
 
 #######################################
@@ -128,7 +126,7 @@ version() {
 #######################################
 main() {
   # Parse command line arguments.
-  while [[ "$#" -gt 0 ]]; do
+  while [ "${#}" -gt 0 ]; do
     case "${1}" in
       --debug)
         set -o xtrace
@@ -151,7 +149,7 @@ main() {
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [[ -x "$(command -v snap)" ]]; then
+  if [ -x "$(command -v snap)" ]; then
     purge_snaps
   fi
 }

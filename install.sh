@@ -1,26 +1,13 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 #
-# Install Scripts for MacOS or Linux systems.
+# Install shell scripts for MacOS or Linux systems.
 
-# Exit immediately if a command exits or pipes a non-zero return code.
+# Exit immediately if a command exits with non-zero return code.
 #
 # Flags:
-#   -e: Exit immediately when a command pipeline fails.
-#   -o: Persist nonzero exit codes through a Bash pipe.
+#   -e: Exit immediately when a command fails.
 #   -u: Throw an error when an unset variable is encountered.
-set -eou pipefail
-
-#######################################
-# Notify user of unexpected error with diagnostic information.
-#
-# Line number reporting will only be highest calling function for earlier
-# versions of Bash.
-#######################################
-handle_panic() {
-  local bold_red='\033[1;31m' default='\033[0m'
-  message="$0 panicked on line ${2} with exit code ${1}"
-  printf "${bold_red}error${default}: %s\n" "${message}" >&2
-}
+set -eu
 
 #######################################
 # Show CLI help information.
@@ -30,19 +17,17 @@ handle_panic() {
 #######################################
 usage() {
   cat 1>&2 << EOF
-Shell Scripts Installer
-Installer script for Shell Scripts
+Installer script for Shell Scripts.
 
-USAGE:
-    shell-scripts-install [OPTIONS] NAME
+Usage: install [OPTIONS] NAME
 
-OPTIONS:
-        --debug                 Show Bash debug traces
-    -d, --dest <PATH>           Directory to install scripts
-    -h, --help                  Print help information
-    -l, --list                  List all available scripts
-    -u, --user                  Install scripts for current user
-    -v, --version <VERSION>     Version of scripts to install
+Options:
+      --debug               Show shell debug traces
+  -d, --dest <PATH>         Directory to install scripts
+  -h, --help                Print help information
+  -l, --list                List all available scripts
+  -u, --user                Install scripts for current user
+  -v, --version <VERSION>   Version of scripts to install
 EOF
 }
 
@@ -58,7 +43,7 @@ assert_cmd() {
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [[ ! -x "$(command -v "${1}")" ]]; then
+  if [ ! -x "$(command -v "${1}")" ]; then
     error "Cannot find required ${1} command on computer."
   fi
 }
@@ -73,7 +58,7 @@ assert_cmd() {
 #   Parent directory of Scripts script.
 #######################################
 configure_shell() {
-  local export_cmd="export PATH=\"${1}:\$PATH\"" profile shell_name
+  export_cmd="export PATH=\"${1}:\$PATH\""
   shell_name="$(basename "${SHELL}")"
 
   case "${shell_name}" in
@@ -102,7 +87,7 @@ configure_shell() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red='\033[1;31m' default='\033[0m'
+  bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
   exit 1
 }
@@ -113,7 +98,7 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red='\033[1;31m' default='\033[0m'
+  bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
   printf "Run 'shell-scripts-install --help' for usage\n" >&2
   exit 2
@@ -127,7 +112,6 @@ error_usage() {
 #   Array of script name stems.
 #######################################
 find_scripts() {
-  local response
   assert_cmd jq
 
   response="$(
@@ -149,7 +133,7 @@ log() {
   #
   # Flags:
   #   -z: Check if string has zero length.
-  if [[ -z "${SHELL_SCRIPTS_NOLOG:-}" ]]; then
+  if [ -z "${SHELL_SCRIPTS_NOLOG:-}" ]; then
     echo "$@"
   fi
 }
@@ -167,7 +151,6 @@ log() {
 #   Log message to stdout.
 #######################################
 install_script() {
-  local dst_file src_url use_sudo
   dst_file="${3}/${4}"
   src_url="${2}/${4}.sh"
 
@@ -177,14 +160,14 @@ install_script() {
   # Flags:
   #   -w: Check if file exists and is writable.
   #   -z: Check if the string has zero length or is null.
-  if [[ -z "${1}" && ! -w "${dst_file}" && "${EUID}" -ne 0 ]]; then
+  if [ -z "${1}" ] && [ ! -w "${dst_file}" ] && [ "$(id -u)" -ne 0 ]; then
     assert_cmd sudo
     use_sudo=1
   fi
 
   log "Installing script ${4}"
 
-  # Do not quote the sudo parameter expansion. Bash will error due to be being
+  # Do not quote the sudo parameter expansion. Script will error due to be being
   # unable to find the "" command.
   ${use_sudo:+sudo} mkdir -p "${3}"
   ${use_sudo:+sudo} curl -LSfs "${src_url}" -o "${dst_file}"
@@ -195,7 +178,7 @@ install_script() {
   # Flags:
   #   -e: Check if file exists.
   #   -v: Only show file path of command.
-  if [[ ! -e "$(command -v "${4}")" ]]; then
+  if [ ! -e "$(command -v "${4}")" ]; then
     configure_shell "${3}"
     export PATH="${3}:${PATH}"
   fi
@@ -207,11 +190,10 @@ install_script() {
 # Script entrypoint.
 #######################################
 main() {
-  local dst_dir='/usr/local/bin' list_scripts match_found name src_url user_install \
-    version='main'
+  dst_dir='/usr/local/bin' version='main'
 
   # Parse command line arguments.
-  while [[ "$#" -gt 0 ]]; do
+  while [ "${#}" -gt 0 ]; do
     case "${1}" in
       --debug)
         set -o xtrace
@@ -253,13 +235,13 @@ main() {
 
   # Flags:
   #   -n: Check if the string has nonzero length.
-  if [[ -n "${list_scripts:-}" ]]; then
+  if [ -n "${list_scripts:-}" ]; then
     echo "${scripts}"
   else
     for script in ${scripts}; do
       # Flags:
       #   -n: Check if the string has nonzero length.
-      if [[ -n "${name:-}" && "${script}" =~ ${name} ]]; then
+      if [ -n "${name:-}" ] && [ "${script}" = "${name}" ]; then
         match_found='true'
         install_script "${user_install:-}" "${src_prefix}" "${dst_dir}" \
           "${script}"
@@ -268,12 +250,10 @@ main() {
 
     # Flags:
     #   -z: Check if string has zero length.
-    if [[ -z "${match_found:-}" ]]; then
-      error_usage "No script name match found for '${name:-}'"
+    if [ -z "${match_found:-}" ]; then
+      error_usage "No script name found for '${name:-}'"
     fi
   fi
 }
 
-# Variable BASH_SOURCE cannot be used to load script as a library. Piping the
-# script to Bash gives the same BASH_SOURCE result as sourcing the script.
 main "$@"

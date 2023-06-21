@@ -1,14 +1,13 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 #
 # Invokes upgrade commands to several package managers.
 
-# Exit immediately if a command exits or pipes a non-zero return code.
+# Exit immediately if a command exits with non-zero return code.
 #
 # Flags:
-#   -e: Exit immediately when a command pipeline fails.
-#   -o: Persist nonzero exit codes through a Bash pipe.
+#   -e: Exit immediately when a command fails.
 #   -u: Throw an error when an unset variable is encountered.
-set -eou pipefail
+set -eu
 
 #######################################
 # Show CLI help information.
@@ -20,16 +19,14 @@ usage() {
   case "${1}" in
     main)
       cat 1>&2 << EOF
-$(version)
 Invokes upgrade commands to all installed package managers.
 
-USAGE:
-    packup [OPTIONS]
+Usage: packup [OPTIONS]
 
-OPTIONS:
-        --debug      Show Bash debug traces
-    -h, --help       Print help information
-    -v, --version    Print version information
+Options:
+      --debug     Show shell debug traces
+  -h, --help      Print help information
+  -v, --version   Print version information
 EOF
       ;;
     *)
@@ -50,7 +47,7 @@ assert_cmd() {
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [[ ! -x "$(command -v "${1}")" ]]; then
+  if [ ! -x "$(command -v "${1}")" ]; then
     error "Cannot find required ${1} command on computer"
   fi
 }
@@ -66,10 +63,9 @@ assert_cmd() {
 #   Whether to use sudo command.
 #######################################
 dnf_check_update() {
-  local code
   ${1:+sudo} dnf check-update || {
     code="$?"
-    [[ "${code}" -eq 100 ]] && return 0
+    [ "${code}" -eq 100 ] && return 0
     return "${code}"
   }
 }
@@ -80,7 +76,7 @@ dnf_check_update() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red='\033[1;31m' default='\033[0m'
+  bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
   exit 1
 }
@@ -91,7 +87,7 @@ error() {
 #   Writes error message to stderr.
 #######################################
 error_usage() {
-  local bold_red='\033[1;31m' default='\033[0m'
+  bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
   printf "Run 'packup --help' for usage.\n" >&2
   exit 2
@@ -101,22 +97,21 @@ error_usage() {
 # Invoke upgrade commands to all installed package managers.
 #######################################
 upgrade() {
-  local use_sudo
-
-  # Use sudo for system installation if user is not root.
-  if [[ "${EUID}" -ne 0 ]]; then
+  # Use sudo for system installation if user is not root. Do not use long form
+  # --user flag for id. It is not supported on MacOS.
+  if [ "$(id -u)" -ne 0 ]; then
     assert_cmd sudo
     use_sudo=1
   fi
 
-  # Do not quote the sudo parameter expansion. Bash will error due to be being
+  # Do not quote the sudo parameter expansion. Script will error due to be being
   # unable to find the "" command.
-  if [[ -x "$(command -v apk)" ]]; then
+  if [ -x "$(command -v apk)" ]; then
     ${use_sudo:+sudo} apk update
     ${use_sudo:+sudo} apk upgrade
   fi
 
-  if [[ -x "$(command -v apt-get)" ]]; then
+  if [ -x "$(command -v apt-get)" ]; then
     # DEBIAN_FRONTEND variable setting is ineffective if on a separate line,
     # since the command is executed as sudo.
     ${use_sudo:+sudo} apt-get update
@@ -125,44 +120,44 @@ upgrade() {
     ${use_sudo:+sudo} apt-get autoremove --yes
   fi
 
-  if [[ -x "$(command -v brew)" ]]; then
+  if [ -x "$(command -v brew)" ]; then
     brew update
     brew upgrade
   fi
 
-  if [[ -x "$(command -v dnf)" ]]; then
+  if [ -x "$(command -v dnf)" ]; then
     dnf_check_update "${use_sudo}"
     ${use_sudo:+sudo} dnf upgrade --assumeyes
     ${use_sudo:+sudo} dnf autoremove --assumeyes
   fi
 
-  if [[ -x "$(command -v flatpak)" ]]; then
+  if [ -x "$(command -v flatpak)" ]; then
     ${use_sudo:+sudo} flatpak update --assumeyes
   fi
 
-  if [[ -x "$(command -v pacman)" ]]; then
+  if [ -x "$(command -v pacman)" ]; then
     ${use_sudo:+sudo} pacman --noconfirm --refresh --sync --sysupgrade
   fi
 
-  if [[ -x "$(command -v pkg)" ]]; then
+  if [ -x "$(command -v pkg)" ]; then
     ${use_sudo:+sudo} pkg update
   fi
 
-  if [[ -x "$(command -v zypper)" ]]; then
+  if [ -x "$(command -v zypper)" ]; then
     ${use_sudo:+sudo} zypper update --no-confirm
     ${use_sudo:+sudo} zypper autoremove --no-confirm
   fi
 
   # Flags:
   #   -O: Check if current user owns the file.
-  if [[ -x "$(command -v npm)" && -O "$(which npm)" ]]; then
+  if [ -x "$(command -v npm)" ] && [ -O "$(which npm)" ]; then
     # The 'npm install' command is run before 'npm update' command to avoid
     # messages about newer versions of NPM being available.
     npm install --global npm@latest
     npm update --global --loglevel error
   fi
 
-  if [[ -x "$(command -v pipx)" && -O "$(which pipx)" ]]; then
+  if [ -x "$(command -v pipx)" ] && [ -O "$(which pipx)" ]; then
     pipx upgrade-all
   fi
 }
@@ -173,7 +168,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo 'Packup 0.2.1'
+  echo 'Packup 0.3.0'
 }
 
 #######################################
@@ -181,7 +176,7 @@ version() {
 #######################################
 main() {
   # Parse command line arguments.
-  while [[ "$#" -gt 0 ]]; do
+  while [ "${#}" -gt 0 ]; do
     case "${1}" in
       --debug)
         set -o xtrace
@@ -202,7 +197,4 @@ main() {
   upgrade
 }
 
-# Only run main if invoked as script. Otherwise import functions as library.
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-  main "$@"
-fi
+main "$@"

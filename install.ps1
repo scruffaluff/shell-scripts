@@ -1,3 +1,8 @@
+<#
+.SYNOPSIS
+    Installs shell scripts for Windows systems.
+#>
+
 # If unable to execute due to policy rules, run
 # Set-ExecutionPolicy RemoteSigned -Scope CurrentUser.
 
@@ -7,18 +12,16 @@ $ErrorActionPreference = 'Stop'
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
-Shell Scripts Installer
-Installer script for Shell Scripts
+Installer script for Shell Scripts.
 
-USAGE:
-    shell-scripts-install [OPTIONS] NAME
+Usage: install [OPTIONS] NAME
 
-OPTIONS:
-    -d, --dest <PATH>           Directory to install scripts
-    -h, --help                  Print help information
-    -l, --list                  List all available scripts
-    -u, --user                  Install scripts for current user
-    -v, --version <VERSION>     Version of scripts to install
+Options:
+  -d, --dest <PATH>         Directory to install scripts
+  -h, --help                Print help information
+  -l, --list                List all available scripts
+  -u, --user                Install scripts for current user
+  -v, --version <VERSION>   Version of scripts to install
 '@
 }
 
@@ -39,8 +42,11 @@ Function ErrorUsage($Message) {
 
 # Find all scripts inside GitHub repository.
 Function FindScripts($Version) {
-    $Response = $(Invoke-WebRequest -UseBasicParsing -Uri "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true")
-    Write-Output "$Response" | jq --raw-output '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".ps1\")'
+    $Filter = '.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".ps1")) | ltrimstr("src/") | rtrimstr(".ps1")'
+    $Uri = "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true"
+
+    $Response = $(Invoke-WebRequest -UseBasicParsing -Uri "$Uri")
+    Write-Output "$Response" | jq --raw-output "$Filter"
 }
 
 # Print log message to stdout if logging is enabled.
