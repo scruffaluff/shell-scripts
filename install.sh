@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# Install shell scripts for MacOS or Linux systems.
+# Install shell scripts for FreeBSD, MacOS, or Linux systems.
 
 # Exit immediately if a command exits with non-zero return code.
 #
@@ -139,6 +139,8 @@ install_script() {
 
   # Use sudo for system installation if user did not give the --user, does not
   # own the file, and is not root.
+  #
+  # Do not use long form --user flag for id. It is not supported on MacOS.
   #
   # Flags:
   #   -w: Check if file exists and is writable.
