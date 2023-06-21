@@ -17,8 +17,7 @@ set -eu
 #######################################
 usage() {
   cat 1>&2 << EOF
-$(version)
-SCP for one time remote connections
+SCP for one time remote connections.
 
 Usage: tscp [OPTIONS]
 

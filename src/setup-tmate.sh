@@ -20,7 +20,6 @@ usage() {
   case "${1}" in
     main)
       cat 1>&2 << EOF
-$(version)
 Installs Tmate and creates a remote session. Users can close the session by
 creating the file /close-tmate.
 

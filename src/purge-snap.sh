@@ -20,7 +20,6 @@ usage() {
   case "${1}" in
     main)
       cat 1>&2 << EOF
-$(version)
 Deletes all Snap packages, uninstalls Snap, and prevents reinstall of Snap.
 
 Usage: purge-snap [OPTIONS]

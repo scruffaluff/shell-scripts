@@ -19,7 +19,6 @@ usage() {
   case "${1}" in
     main)
       cat 1>&2 << EOF
-$(version)
 Invokes upgrade commands to all installed package managers.
 
 Usage: packup [OPTIONS]

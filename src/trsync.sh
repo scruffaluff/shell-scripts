@@ -17,8 +17,7 @@ set -eu
 #######################################
 usage() {
   cat 1>&2 << EOF
-$(version)
-Rsync for one time remote connections
+Rsync for one time remote connections.
 
 Usage: trsync [OPTIONS]
 

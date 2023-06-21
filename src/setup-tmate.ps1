@@ -7,6 +7,20 @@
 # Exit immediately if a PowerShell Cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
 
+# Show CLI help information.
+Function Usage() {
+    Write-Output @'
+Installs Tmate and creates a remote session. Users can close the session by
+creating the file /close-tmate.
+
+Usage: setup-tmate [OPTIONS]
+
+Options:
+  -h, --help      Print help information
+  -v, --version   Print version information
+'@
+}
+
 Function InstallTmate($URL) {
     If (-Not (Get-Command choco -ErrorAction SilentlyContinue)) {
         RemoteScript 'https://chocolatey.org/install.ps1'
@@ -29,8 +43,31 @@ Function RemoteScript($URL) {
     Invoke-WebRequest -UseBasicParsing -Uri "$URL" | Invoke-Expression
 }
 
+# Print SetupTmate version string.
+Function Version() {
+    Write-Output 'SetupTmate 0.1.0'
+}
+
 # Script entrypoint.
 Function Main() {
+    $ArgIdx = 0
+
+    While ($ArgIdx -LT $Args[0].Count) {
+        Switch ($Args[0][$ArgIdx]) {
+            { $_ -In '-h', '--help' } {
+                Usage
+                Exit 0
+            }
+            { $_ -In '-v', '--version' } {
+                Version
+                Exit 0
+            }
+            Default {
+                $ArgIdx += 1
+            }
+        }
+    }
+
     $Env:Path = 'C:\tools\msys64\usr\bin;' + "$Env:Path"
     If (-Not (Get-Command tmate -ErrorAction SilentlyContinue)) {
         InstallTmate

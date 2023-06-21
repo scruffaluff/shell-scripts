@@ -19,7 +19,6 @@ usage() {
   case "${1}" in
     main)
       cat 1>&2 << EOF
-$(version)
 Frees up disk space by clearing caches of package managers.
 
 Usage: clear-cache [OPTIONS]

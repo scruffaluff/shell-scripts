@@ -12,18 +12,16 @@ $ErrorActionPreference = 'Stop'
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
-Shell Scripts Installer
-Installer script for Shell Scripts
+Installer script for Shell Scripts.
 
-USAGE:
-    shell-scripts-install [OPTIONS] NAME
+Usage: install [OPTIONS] NAME
 
-OPTIONS:
-    -d, --dest <PATH>           Directory to install scripts
-    -h, --help                  Print help information
-    -l, --list                  List all available scripts
-    -u, --user                  Install scripts for current user
-    -v, --version <VERSION>     Version of scripts to install
+Options:
+  -d, --dest <PATH>         Directory to install scripts
+  -h, --help                Print help information
+  -l, --list                List all available scripts
+  -u, --user                Install scripts for current user
+  -v, --version <VERSION>   Version of scripts to install
 '@
 }
 

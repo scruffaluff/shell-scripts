@@ -17,8 +17,7 @@ set -eu
 #######################################
 usage() {
   cat 1>&2 << EOF
-Shell Scripts Installer
-Installer script for Shell Scripts
+Installer script for Shell Scripts.
 
 Usage: install [OPTIONS] NAME
 
