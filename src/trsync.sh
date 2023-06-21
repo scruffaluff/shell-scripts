@@ -72,9 +72,9 @@ sync() {
 }
 
 #######################################
-# Print TRsync version string.
+# Print Trsync version string.
 # Outputs:
-#   TRsync version string.
+#   Trsync version string.
 #######################################
 version() {
   echo 'Trsync 0.1.0'

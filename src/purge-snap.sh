@@ -83,7 +83,8 @@ error_usage() {
 # Remove all traces of Snap from system.
 #######################################
 purge_snaps() {
-  # Use sudo for system installation if user is not root.
+  # Use sudo for system installation if user is not root. Do not use long form
+  # --user flag for id. It is not supported on MacOS.
   if [ "$(id -u)" -ne 0 ]; then
     assert_cmd sudo
     use_sudo=1
@@ -100,7 +101,9 @@ purge_snaps() {
     # Do not quote the sudo parameter expansion. Script will error due to be
     # being unable to find the "" command.
     ${use_sudo:+sudo} snap remove --purge "${snap}"
-  done < "${snaps}"
+  done << EOF
+${snaps}
+EOF
 
   # Delete Snap system daemons and services.
   ${use_sudo:+sudo} systemctl stop --show-transaction snapd.socket

@@ -100,7 +100,8 @@ error_usage() {
 # Invoke upgrade commands to all installed package managers.
 #######################################
 upgrade() {
-  # Use sudo for system installation if user is not root.
+  # Use sudo for system installation if user is not root. Do not use long form
+  # --user flag for id. It is not supported on MacOS.
   if [ "$(id -u)" -ne 0 ]; then
     assert_cmd sudo
     use_sudo=1
