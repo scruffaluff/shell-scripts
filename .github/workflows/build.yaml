@@ -24,8 +24,8 @@ on:
         description: CI job to run
         options:
           - lint
-          - test-bash
-          - test-powershell
+          - posix
+          - powershell
         type: choice
 
 jobs:
@@ -71,11 +71,10 @@ jobs:
         timeout-minutes: 60
         uses: mxschmitt/action-tmate@v3
 
-  test-bash:
+  posix:
     if: >-
-      ${{ github.event_name != 'workflow_dispatch' || inputs.job == 'test-bash'
-      }}
-    name: Run tests for Bash scripts
+      ${{ github.event_name != 'workflow_dispatch' || inputs.job == 'posix' }}
+    name: Run tests for POSIX shell scripts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code repository
@@ -95,7 +94,7 @@ jobs:
           node --version
           npm --version
           npm ci
-      - name: Run Bash tests with Bats
+      - name: Run POSIX shell tests with Bats
         run: npm run bats:test
       - name: Setup Tmate session if debug enabled
         if: >-
@@ -104,10 +103,10 @@ jobs:
         timeout-minutes: 60
         uses: mxschmitt/action-tmate@v3
 
-  test-powershell:
+  powershell:
     if: >-
-      ${{ github.event_name != 'workflow_dispatch' || inputs.job ==
-      'test-powershell' }}
+      ${{ github.event_name != 'workflow_dispatch' || inputs.job == 'powershell'
+      }}
     name: Run linter and tests for PowerShell scripts
     runs-on: windows-latest
     steps:

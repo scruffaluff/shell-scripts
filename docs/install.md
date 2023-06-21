@@ -6,22 +6,22 @@ prev:
 
 # Installation
 
-Shell Scripts provides Bash and PowerShell install scripts to download any
-collection of scripts from the repository. The following command shows the list
-of downloadable scripts from the repository.
+Shell Scripts provides POSIX shell and PowerShell install scripts to download
+any collection of scripts from the repository. The following command shows the
+list of downloadable scripts from the repository.
 
 ::: code-group
 
-```bash [FreeBSD]
-curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | bash -s -- --list
+```sh [FreeBSD]
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- --list
 ```
 
-```bash [Linux]
-curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | bash -s -- --list
+```sh [Linux]
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- --list
 ```
 
-```bash [MacOS]
-curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | bash -s -- --list
+```sh [MacOS]
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- --list
 ```
 
 ```powershell [Windows]
@@ -35,16 +35,16 @@ installed by replacing the `packup` argument.
 
 ::: code-group
 
-```bash [FreeBSD]
-curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | bash -s -- packup
+```sh [FreeBSD]
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- packup
 ```
 
-```bash [Linux]
-curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | bash -s -- packup
+```sh [Linux]
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- packup
 ```
 
-```bash [MacOS]
-curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | bash -s -- packup
+```sh [MacOS]
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- packup
 ```
 
 ```powershell [Windows]

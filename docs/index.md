@@ -6,15 +6,15 @@ next:
 
 # Shell Scripts
 
-Shell Scripts is a collection of Bash and PowerShell utility scripts. These
-scripts are designed for my personal usage, but should be easily installable on
-any system.
+Shell Scripts is a collection of POSIX shell and PowerShell utility scripts.
+These scripts are designed for my personal usage, but should be easily
+installable on any system.
 
 ## Scripts
 
 The following table shows the avaible shell scripts. Each script is aviable in
-both Bash and PowerShell versions if its functionality applies to both Unix and
-Windows systems.
+both POSIX shell and PowerShell versions if its functionality applies to both
+Unix and Windows systems.
 
 | Name        | Description                                                         |
 | ----------- | ------------------------------------------------------------------- |

@@ -4,7 +4,7 @@
     "bats:test": "bats --recursive tests",
     "prettier:format": "prettier --write .",
     "prettier:test": "prettier --check .",
-    "shellcheck:test": "bash scripts/shellcheck.sh",
+    "shellcheck:test": "./scripts/shellcheck.sh",
     "shfmt:format": "node scripts/shfmt.js format",
     "shfmt:test": "node scripts/shfmt.js test",
     "vitepress:dev": "vitepress dev .",
