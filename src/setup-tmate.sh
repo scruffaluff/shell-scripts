@@ -3,13 +3,12 @@
 # Installs Tmate and creates a session suitable for CI pipelines. Based on logic
 # from https://github.com/mxschmitt/action-tmate.
 
-# Exit immediately if a command exits or pipes a non-zero return code.
+# Exit immediately if a command exits with non-zero return code.
 #
 # Flags:
-#   -e: Exit immediately when a command pipeline fails.
-#   -o: Persist nonzero exit codes through a shell pipe.
+#   -e: Exit immediately when a command fails.
 #   -u: Throw an error when an unset variable is encountered.
-set -eou pipefail
+set -eu
 
 #######################################
 # Show CLI help information.
