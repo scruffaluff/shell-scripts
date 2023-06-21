@@ -6,6 +6,6 @@ BeforeAll {
 
 Describe 'Install' {
     It 'Missing name argument throws error' {
-        { & "$Install" --user } | Should -Throw "Error: No script name match found for ''"
+        { & "$Install" --user } | Should -Throw "Error: Script argument required"
     }
 }

@@ -19,7 +19,7 @@ usage() {
   cat 1>&2 << EOF
 Installer script for Shell Scripts.
 
-Usage: install [OPTIONS] NAME
+Usage: install [OPTIONS] SCRIPT
 
 Options:
       --debug               Show shell debug traces
@@ -100,7 +100,7 @@ error() {
 error_usage() {
   bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
-  printf "Run 'shell-scripts-install --help' for usage\n" >&2
+  printf "Run 'install --help' for usage\n" >&2
   exit 2
 }
 
@@ -118,7 +118,7 @@ find_scripts() {
     curl -LSfs "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/${1}?recursive=true"
   )"
   echo "${response}" |
-    jq --raw-output ".tree[] | select(.type == 'blob') | .path | select(startswith('src/')) | select(endswith('.sh')) | ltrimstr('src/') | rtrimstr('.sh')"
+    jq --raw-output '.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
 }
 
 #######################################

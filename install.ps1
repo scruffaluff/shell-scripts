@@ -14,7 +14,7 @@ Function Usage() {
     Write-Output @'
 Installer script for Shell Scripts.
 
-Usage: install [OPTIONS] NAME
+Usage: install [OPTIONS] SCRIPT
 
 Options:
   -d, --dest <PATH>         Directory to install scripts
@@ -36,13 +36,13 @@ Function DownloadFile($SrcURL, $DstFile) {
 # Print error message and exit script with usage error code.
 Function ErrorUsage($Message) {
     Throw "Error: $Message"
-    Write-Error "Run 'shell-scripts-install --help' for usage"
+    Write-Error "Run 'install --help' for usage"
     Exit 2
 }
 
 # Find all scripts inside GitHub repository.
 Function FindScripts($Version) {
-    $Filter = '.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".ps1")) | ltrimstr("src/") | rtrimstr(".ps1")'
+    $Filter = '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".ps1\")'
     $Uri = "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true"
 
     $Response = $(Invoke-WebRequest -UseBasicParsing -Uri "$Uri")
@@ -97,13 +97,11 @@ Function Main() {
         }
     }
 
-    $SrcPrefix = "https://raw.githubusercontent.com/scruffaluff/shell-scripts/$Version/src"
-    $Scripts = $(FindScripts "$Version")
-
     If ($List) {
+        $Scripts = $(FindScripts "$Version")
         Write-Output $Scripts
-    } 
-    Else {
+    }
+    ElseIf ($Name) {
         If (-Not $DestDir) {
             If ($Target -Eq 'User') {
                 $DestDir = "C:\Users\$Env:UserName\Documents\PowerShell\Scripts"
@@ -124,7 +122,10 @@ Function Main() {
             $Env:Path = $PrependedPath
         }
 
+        $Scripts = $(FindScripts "$Version")
         $MatchFound = 0
+        $SrcPrefix = "https://raw.githubusercontent.com/scruffaluff/shell-scripts/$Version/src"
+
         ForEach ($Script in $Scripts) {
             If ($Name -And ("$Script" -Eq "$Name")) {
                 $MatchFound = 1
@@ -138,6 +139,9 @@ Function Main() {
         If (-Not $MatchFound) {
             Throw "Error: No script name match found for '$Name'"
         }
+    }
+    Else {
+        ErrorUsage "Script argument required"
     }
 }
 
