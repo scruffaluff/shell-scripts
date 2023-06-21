@@ -20,13 +20,12 @@ usage() {
 $(version)
 SSH for one time remote connections
 
-USAGE:
-    tssh [OPTIONS]
+Usage: tssh [OPTIONS]
 
-OPTIONS:
-        --debug      Show shell debug traces
-    -h, --help       Print help information
-    -v, --version    Print version information
+Options:
+      --debug     Show shell debug traces
+  -h, --help      Print help information
+  -v, --version   Print version information
 EOF
 }
 

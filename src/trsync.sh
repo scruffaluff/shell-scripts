@@ -20,13 +20,12 @@ usage() {
 $(version)
 Rsync for one time remote connections
 
-USAGE:
-    trsync [OPTIONS]
+Usage: trsync [OPTIONS]
 
-OPTIONS:
-        --debug      Show shell debug traces
-    -h, --help       Print help information
-    -v, --version    Print version information
+Options:
+      --debug     Show shell debug traces
+  -h, --help      Print help information
+  -v, --version   Print version information
 EOF
 }
 

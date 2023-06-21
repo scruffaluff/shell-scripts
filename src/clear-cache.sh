@@ -22,13 +22,12 @@ usage() {
 $(version)
 Frees up disk space by clearing caches of package managers.
 
-USAGE:
-    clear-cache [OPTIONS]
+Usage: clear-cache [OPTIONS]
 
-OPTIONS:
-        --debug      Show shell debug traces
-    -h, --help       Print help information
-    -v, --version    Print version information
+Options:
+      --debug     Show shell debug traces
+  -h, --help      Print help information
+  -v, --version   Print version information
 EOF
       ;;
     *)

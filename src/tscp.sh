@@ -20,13 +20,12 @@ usage() {
 $(version)
 SCP for one time remote connections
 
-USAGE:
-    tscp [OPTIONS]
+Usage: tscp [OPTIONS]
 
-OPTIONS:
-        --debug      Show shell debug traces
-    -h, --help       Print help information
-    -v, --version    Print version information
+Options:
+      --debug     Show shell debug traces
+  -h, --help      Print help information
+  -v, --version   Print version information
 EOF
 }
 

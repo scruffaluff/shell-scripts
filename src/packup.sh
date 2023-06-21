@@ -22,13 +22,12 @@ usage() {
 $(version)
 Invokes upgrade commands to all installed package managers.
 
-USAGE:
-    packup [OPTIONS]
+Usage: packup [OPTIONS]
 
-OPTIONS:
-        --debug      Show shell debug traces
-    -h, --help       Print help information
-    -v, --version    Print version information
+Options:
+      --debug     Show shell debug traces
+  -h, --help      Print help information
+  -v, --version   Print version information
 EOF
       ;;
     *)

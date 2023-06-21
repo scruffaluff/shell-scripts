@@ -24,13 +24,12 @@ $(version)
 Installs Tmate and creates a remote session. Users can close the session by
 creating the file /close-tmate.
 
-USAGE:
-    setup-tmate [OPTIONS]
+Usage: setup-tmate [OPTIONS]
 
-OPTIONS:
-        --debug      Show shell debug traces
-    -h, --help       Print help information
-    -v, --version    Print version information
+Options:
+      --debug     Show shell debug traces
+  -h, --help      Print help information
+  -v, --version   Print version information
 EOF
       ;;
     *)
