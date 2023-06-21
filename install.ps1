@@ -1,3 +1,10 @@
+<#
+.SYNOPSIS
+    Installs shell scripts for Windows systems.
+#>
+[CmdletBinding()]
+Param()
+
 # If unable to execute due to policy rules, run
 # Set-ExecutionPolicy RemoteSigned -Scope CurrentUser.
 

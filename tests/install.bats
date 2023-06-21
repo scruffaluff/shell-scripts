@@ -34,7 +34,7 @@ setup() {
   local actual expected
 
   expected="curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/develop/src/otherscript.sh -o ${HOME}/.local/bin/otherscript"
-  actual="$(install.sh --user --version develop otherscript)"
+  actual="$(bash install.sh --user --version develop otherscript)"
   assert_equal "${actual}" "${expected}"
 }
 
@@ -42,7 +42,7 @@ setup() {
   local actual expected
 
   expected=$'mockscript\notherscript'
-  actual="$(install.sh --list)"
+  actual="$(bash install.sh --list)"
   assert_equal "${actual}" "${expected}"
 }
 
@@ -60,6 +60,6 @@ setup() {
   export -f sudo
 
   expected='sudo mkdir -p /bin'
-  actual="$(install.sh --dest /bin mockscript)"
+  actual="$(bash install.sh --dest /bin mockscript)"
   assert_equal "${actual}" "${expected}"
 }

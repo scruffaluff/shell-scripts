@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# Install Scripts for MacOS or Linux systems.
+# Install shell scripts for MacOS or Linux systems.
 
 # Exit immediately if a command exits with non-zero return code.
 #
