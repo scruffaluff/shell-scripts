@@ -2,8 +2,6 @@
 .SYNOPSIS
     Frees up disk space by clearing caches of package managers.
 #>
-[CmdletBinding()]
-Param()
 
 # Exit immediately if a PowerShell Cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'

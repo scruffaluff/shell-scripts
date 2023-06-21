@@ -2,8 +2,6 @@
 .SYNOPSIS
     Invokes upgrade commands to all installed package managers.
 #>
-[CmdletBinding()]
-Param()
 
 # Exit immediately if a PowerShell Cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'

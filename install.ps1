@@ -2,8 +2,6 @@
 .SYNOPSIS
     Installs shell scripts for Windows systems.
 #>
-[CmdletBinding()]
-Param()
 
 # If unable to execute due to policy rules, run
 # Set-ExecutionPolicy RemoteSigned -Scope CurrentUser.
@@ -46,8 +44,11 @@ Function ErrorUsage($Message) {
 
 # Find all scripts inside GitHub repository.
 Function FindScripts($Version) {
-    $Response = $(Invoke-WebRequest -UseBasicParsing -Uri "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true")
-    Write-Output "$Response" | jq --raw-output '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".ps1\")'
+    $Filter = '.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".ps1")) | ltrimstr("src/") | rtrimstr(".ps1")'
+    $Uri = "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true"
+
+    $Response = $(Invoke-WebRequest -UseBasicParsing -Uri "$Uri")
+    Write-Output "$Response" | jq --raw-output "$Filter"
 }
 
 # Print log message to stdout if logging is enabled.

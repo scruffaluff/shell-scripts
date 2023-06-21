@@ -3,8 +3,6 @@
     Installs Tmate and creates a session suitable for CI. Based on logic from
     https://github.com/mxschmitt/action-tmate.
 #>
-[CmdletBinding()]
-Param()
 
 # Exit immediately if a PowerShell Cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
@@ -65,7 +63,7 @@ Function Main() {
             Break
         }
 
-        Sleep 5
+        sleep 5
     }
 }
 
