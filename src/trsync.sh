@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 #
 # Rsync for one time remote connections.
 
@@ -6,7 +6,7 @@
 #
 # Flags:
 #   -e: Exit immediately when a command pipeline fails.
-#   -o: Persist nonzero exit codes through a Bash pipe.
+#   -o: Persist nonzero exit codes through a shell pipe.
 #   -u: Throw an error when an unset variable is encountered.
 set -eou pipefail
 
@@ -25,7 +25,7 @@ USAGE:
     trsync [OPTIONS]
 
 OPTIONS:
-        --debug      Show Bash debug traces
+        --debug      Show shell debug traces
     -h, --help       Print help information
     -v, --version    Print version information
 EOF
@@ -43,7 +43,7 @@ assert_cmd() {
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [[ ! -x "$(command -v "${1}")" ]]; then
+  if [ ! -x "$(command -v "${1}")" ]; then
     error "Cannot find required ${1} command on computer"
   fi
 }
@@ -54,7 +54,7 @@ assert_cmd() {
 #   Writes error message to stderr.
 #######################################
 error() {
-  local bold_red='\033[1;31m' default='\033[0m'
+  bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
   exit 1
 }
@@ -77,7 +77,7 @@ sync() {
 #   TRsync version string.
 #######################################
 version() {
-  echo 'trsync 0.0.1'
+  echo 'Trsync 0.1.0'
 }
 
 #######################################
@@ -85,7 +85,7 @@ version() {
 #######################################
 main() {
   # Parse command line arguments.
-  while [[ "$#" -gt 0 ]]; do
+  while [ "${#}" -gt 0 ]; do
     case "${1}" in
       --debug)
         set -o xtrace
@@ -107,7 +107,4 @@ main() {
   done
 }
 
-# Only run main if invoked as script. Otherwise import functions as library.
-if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-  main "$@"
-fi
+main "$@"

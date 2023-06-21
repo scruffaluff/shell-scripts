@@ -34,11 +34,11 @@ setup() {
   local actual expected
 
   expected="curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/develop/src/otherscript.sh -o ${HOME}/.local/bin/otherscript"
-  actual="$(install.sh --user --version develop other)"
+  actual="$(install.sh --user --version develop otherscript)"
   assert_equal "${actual}" "${expected}"
 }
 
-@test 'JSON parser finds all Bash shell scripts' {
+@test 'JSON parser finds all POSIX shell shell scripts' {
   local actual expected
 
   expected=$'mockscript\notherscript'
@@ -60,6 +60,6 @@ setup() {
   export -f sudo
 
   expected='sudo mkdir -p /bin'
-  actual="$(install.sh --dest /bin script)"
+  actual="$(install.sh --dest /bin mockscript)"
   assert_equal "${actual}" "${expected}"
 }

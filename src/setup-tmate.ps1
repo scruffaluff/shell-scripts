@@ -49,8 +49,8 @@ Function Main() {
     #   -S: Set Tmate socket path.
     tmate -S /tmp/tmate.sock new-session -d
     tmate -S /tmp/tmate.sock wait tmate-ready
-    $SSHConnect = "$(bash -l -c "tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'")"
-    $WebConnect = "$(bash -l -c "tmate -S /tmp/tmate.sock display -p '#{tmate_web}'")"
+    $SSHConnect = "$(sh -l -c "tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'")"
+    $WebConnect = "$(sh -l -c "tmate -S /tmp/tmate.sock display -p '#{tmate_web}'")"
 
     While ($True) {
         Write-Output "SSH: $SSHConnect"
@@ -58,7 +58,7 @@ Function Main() {
 
         # Check if script should exit.
         If (
-            (-Not (bash -l -c 'ls /tmp/tmate.sock 2> /dev/null')) -Or 
+            (-Not (sh -l -c 'ls /tmp/tmate.sock 2> /dev/null')) -Or 
             (Test-Path -Path 'C:/tools/msys64/close-tmate') -Or 
             (Test-Path -Path './close-tmate')
         ) {
