@@ -90,6 +90,10 @@ clear_cache() {
 
   # Do not quote the sudo parameter expansion. Script will error due to be being
   # unable to find the "" command.
+  if [ -x "$(command -v apk)" ]; then
+    ${use_sudo:+sudo} apk cache clean
+  fi
+
   if [ -x "$(command -v apt-get)" ]; then
     ${use_sudo:+sudo} apt-get clean --yes
   fi
