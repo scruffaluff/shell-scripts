@@ -31,7 +31,7 @@ on:
 jobs:
   lint:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.job == 'lint' }}
-    name: Check code with formatter and linter
+    name: Run formatter on configuration files
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code repository
@@ -53,17 +53,6 @@ jobs:
           npm ci
       - name: Check format of configuration files
         run: npm run prettier:test
-      - name: Install Shfmt
-        run: |
-          shfmt_version="$(curl -LSfs https://formulae.brew.sh/api/formula/shfmt.json | jq --raw-output .versions.stable)"
-          sudo curl -LSfs "https://github.com/mvdan/sh/releases/download/v${shfmt_version}/shfmt_v${shfmt_version}_linux_amd64" --output /usr/local/bin/shfmt
-          sudo chmod 755 /usr/local/bin/shfmt
-      - name: Check format of shell scripts
-        run: npm run shfmt:test
-      - name: Install ShellCheck
-        run: sudo apt-get install --yes shellcheck
-      - name: Run ShellCheck on shell scripts
-        run: npm run shellcheck:test
       - name: Setup Tmate session if debug enabled
         if: >-
           ${{ always() && github.event_name == 'workflow_dispatch' &&
@@ -74,7 +63,7 @@ jobs:
   posix:
     if: >-
       ${{ github.event_name != 'workflow_dispatch' || inputs.job == 'posix' }}
-    name: Run tests for POSIX shell scripts
+    name: Run linter and tests for POSIX shell scripts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code repository
@@ -94,6 +83,17 @@ jobs:
           node --version
           npm --version
           npm ci
+      - name: Install Shfmt
+        run: |
+          shfmt_version="$(curl -LSfs https://formulae.brew.sh/api/formula/shfmt.json | jq --raw-output .versions.stable)"
+          sudo curl -LSfs "https://github.com/mvdan/sh/releases/download/v${shfmt_version}/shfmt_v${shfmt_version}_linux_amd64" --output /usr/local/bin/shfmt
+          sudo chmod 755 /usr/local/bin/shfmt
+      - name: Check format of POSIX shell scripts
+        run: npm run shfmt:test
+      - name: Install ShellCheck
+        run: sudo apt-get install --yes shellcheck
+      - name: Run ShellCheck on POSIX shell scripts
+        run: npm run shellcheck:test
       - name: Run POSIX shell tests with Bats
         run: npm run bats:test
       - name: Setup Tmate session if debug enabled
@@ -119,6 +119,9 @@ jobs:
         run: >-
           Invoke-ScriptAnalyzer -EnableExit -Recurse -Path . -Settings
           CodeFormatting
+        shell: pwsh
+      - name: Run PSScriptAnalyzer code lints on all PowerShell scripts
+        run: Invoke-ScriptAnalyzer -EnableExit -Recurse -Path .
         shell: pwsh
       - name: Install Pester
         run: Install-Module -Name Pester -Force
