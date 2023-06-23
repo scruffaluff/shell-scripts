@@ -84,6 +84,8 @@ clear_cache() {
   if [ "$(id -u)" -ne 0 ]; then
     assert_cmd sudo
     use_sudo='true'
+  else
+    use_sudo=''
   fi
 
   # Do not quote the sudo parameter expansion. Script will error due to be being
@@ -139,7 +141,7 @@ clear_cache() {
 #   ClearCache version string.
 #######################################
 version() {
-  echo 'ClearCache 0.1.0'
+  echo 'ClearCache 0.1.1'
 }
 
 #######################################

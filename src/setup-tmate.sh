@@ -152,20 +152,20 @@ install_tmate_linux() {
 #   Setup Tmate version string.
 #######################################
 version() {
-  echo 'SetupTmate 0.2.0'
+  echo 'SetupTmate 0.2.1'
 }
 
 #######################################
 # Installs Tmate and creates a remote session.
 #######################################
 setup_tmate() {
-  use_sudo=''
-
   # Use sudo for system installation if user is not root. Do not use long form
   # --user flag for id. It is not supported on MacOS.
   if [ "$(id -u)" -ne 0 ]; then
     assert_cmd sudo
     use_sudo='true'
+  else
+    use_sudo=''
   fi
 
   # Install Tmate if not available.

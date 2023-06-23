@@ -147,7 +147,9 @@ install_script() {
   #   -z: Check if the string has zero length or is null.
   if [ -z "${1}" ] && [ ! -w "${dst_file}" ] && [ "$(id -u)" -ne 0 ]; then
     assert_cmd sudo
-    use_sudo=1
+    use_sudo='true'
+  else
+    use_sudo=''
   fi
 
   log "Installing script ${4}..."

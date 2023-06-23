@@ -84,7 +84,9 @@ purge_snaps() {
   # --user flag for id. It is not supported on MacOS.
   if [ "$(id -u)" -ne 0 ]; then
     assert_cmd sudo
-    use_sudo=1
+    use_sudo='true'
+  else
+    use_sudo=''
   fi
 
   # Find all installed Snap packages.
@@ -118,7 +120,7 @@ EOF
 #   Packup version string.
 #######################################
 version() {
-  echo 'PurgeSnap 0.1.0'
+  echo 'PurgeSnap 0.1.1'
 }
 
 #######################################

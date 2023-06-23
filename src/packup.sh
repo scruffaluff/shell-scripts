@@ -101,7 +101,9 @@ upgrade() {
   # --user flag for id. It is not supported on MacOS.
   if [ "$(id -u)" -ne 0 ]; then
     assert_cmd sudo
-    use_sudo=1
+    use_sudo='true'
+  else
+    use_sudo=''
   fi
 
   # Do not quote the sudo parameter expansion. Script will error due to be being
@@ -168,7 +170,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo 'Packup 0.3.0'
+  echo 'Packup 0.3.1'
 }
 
 #######################################
