@@ -59,7 +59,7 @@ Function Log($Message) {
 # Script entrypoint.
 Function Main() {
     $ArgIdx = 0
-    $Dest = ''
+    $DestDir = ''
     $List = 0
     $Target = 'Machine'
     $Version = 'main'
