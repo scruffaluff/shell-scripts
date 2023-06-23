@@ -147,15 +147,6 @@ install_tmate_linux() {
 }
 
 #######################################
-# Print Setup Tmate version string.
-# Outputs:
-#   Setup Tmate version string.
-#######################################
-version() {
-  echo 'SetupTmate 0.2.1'
-}
-
-#######################################
 # Installs Tmate and creates a remote session.
 #######################################
 setup_tmate() {
@@ -201,6 +192,15 @@ setup_tmate() {
 
     sleep 5
   done
+}
+
+#######################################
+# Print Setup Tmate version string.
+# Outputs:
+#   Setup Tmate version string.
+#######################################
+version() {
+  echo 'SetupTmate 0.2.1'
 }
 
 #######################################
