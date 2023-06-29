@@ -60,7 +60,7 @@ Function Log($Message) {
 Function Main() {
     $ArgIdx = 0
     $DestDir = ''
-    $List = 0
+    $List = $False
     $Target = 'Machine'
     $Version = 'main'
 
@@ -76,7 +76,7 @@ Function Main() {
                 Exit 0
             }
             { $_ -In '-l', '--list' } {
-                $List = 1
+                $List = $True
                 $ArgIdx += 1
                 Break
             }
@@ -123,12 +123,12 @@ Function Main() {
         }
 
         $Scripts = $(FindScripts "$Version")
-        $MatchFound = 0
+        $MatchFound = $False
         $SrcPrefix = "https://raw.githubusercontent.com/scruffaluff/shell-scripts/$Version/src"
 
         ForEach ($Script in $Scripts) {
             If ($Name -And ("$Script" -Eq "$Name")) {
-                $MatchFound = 1
+                $MatchFound = $True
                 Log "Installing script $Name..."
 
                 DownloadFile "$SrcPrefix/$Script.ps1" "$DestDir/$Script.ps1"

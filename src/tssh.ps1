@@ -21,12 +21,13 @@ Options:
 
 # Print Tssh version string.
 Function Version() {
-    Write-Output 'Tssh 0.1.0'
+    Write-Output 'Tssh 0.1.1'
 }
 
 # Script entrypoint.
 Function Main() {
     $ArgIdx = 0
+    $CmdArgs = @()
 
     While ($ArgIdx -LT $Args[0].Count) {
         Switch ($Args[0][$ArgIdx]) {
@@ -39,6 +40,7 @@ Function Main() {
                 Exit 0
             }
             Default {
+                $CmdArgs += $Args[0][$ArgIdx]
                 $ArgIdx += 1
             }
         }
@@ -49,7 +51,7 @@ Function Main() {
         -o LogLevel=ERROR `
         -o StrictHostKeyChecking=no `
         -o UserKnownHostsFile=$Nul `
-        $Args
+        $CmdArgs
 }
 
 # Only run Main if invoked as script. Otherwise import functions as library.
