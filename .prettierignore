@@ -2,6 +2,7 @@
 #
 # For more information, visit https://prettier.io/docs/en/ignore.html.
 
+.cache/
 .git/
 .vitepress/cache/
 .vitepress/dist/

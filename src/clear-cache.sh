@@ -122,7 +122,8 @@ clear_cache() {
     ${use_sudo:+sudo} zypper clean --all
   fi
 
-  if [ -x "$(command -v docker)" ]; then
+  # Check if Docker client is install and Docker daemon is up and running.
+  if [ -x "$(command -v docker)" ] && docker ps > /dev/null 2>&1; then
     ${use_sudo:+sudo} docker system prune --force --volumes
   fi
 
@@ -145,7 +146,7 @@ clear_cache() {
 #   ClearCache version string.
 #######################################
 version() {
-  echo 'ClearCache 0.1.1'
+  echo 'ClearCache 0.1.2'
 }
 
 #######################################

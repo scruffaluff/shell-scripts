@@ -3,6 +3,7 @@
 # For more information, visit
 # https://docs.github.com/actions/learn-github-actions.
 
+---
 name: build
 
 # Makes workflow run on any push or pull request.
@@ -28,6 +29,9 @@ on:
           - powershell
         type: choice
 
+env:
+  NPM_CONFIG_CACHE: "${{ github.workspace }}/.cache/npm"
+
 jobs:
   lint:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.job == 'lint' }}
@@ -36,16 +40,18 @@ jobs:
     steps:
       - name: Checkout code repository
         uses: actions/checkout@v3
+      - name: Cache Node packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            .cache
+            node_modules
+          key: >-
+            node-20_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
       - name: Install Node interpreter
         uses: actions/setup-node@v3
         with:
           node-version: "20"
-      - name: Cache Node packages
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: >-
-            node-20_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
       - name: Install Node packages
         run: |
           node --version
@@ -68,16 +74,18 @@ jobs:
     steps:
       - name: Checkout code repository
         uses: actions/checkout@v3
+      - name: Cache Node packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            .cache
+            node_modules
+          key: >-
+            node-20_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
       - name: Install Node interpreter
         uses: actions/setup-node@v3
         with:
           node-version: "20"
-      - name: Cache Node packages
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: >-
-            node-20_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
       - name: Install Node packages
         run: |
           node --version
