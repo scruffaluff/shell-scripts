@@ -46,11 +46,13 @@ Function Main() {
         }
     }
 
+    # Don't use PowerShell $Null for UserKnownHostsFile. It causes SSH to use
+    # ~/.ssh/known_hosts as a backup.
     scp `
         -o IdentitiesOnly=no `
         -o LogLevel=ERROR `
         -o StrictHostKeyChecking=no `
-        -o UserKnownHostsFile=$Nul `
+        -o UserKnownHostsFile=NUL `
         $CmdArgs
 }
 
