@@ -72,6 +72,24 @@ error_usage() {
 }
 
 #######################################
+# Create a virtual machine from a ISO disk.
+#######################################
+install_iso() {
+  virt-install \
+    --arch x86_64 \
+    --cpu host \
+    --disk bus=virtio,size=64 \
+    --graphics none \
+    --location "${2}" \
+    --memory 4096 \
+    --name "${1}" \
+    --network default,model=virtio \
+    --osinfo linux2022 \
+    --vcpus 2 \
+    --virt-type kvm
+}
+
+#######################################
 # Create a virtual machine from a qcow2 disk.
 #######################################
 install_qcow2() {
@@ -90,23 +108,28 @@ install_qcow2() {
     stty -echo
     read -r password
     stty echo
+    printf "\n"
   else
     password="${4}"
   fi
+
+  destpath="${HOME}/.local/share/libvirt/images/$(basename "${2}")"
+  cp "${2}" "${destpath}"
+  qemu-img resize "${destpath}" 64G
 
   user_data="$(cloud_init "${1}" "${username}" "${password}")"
   virt-install --import \
     --arch x86_64 \
     --cloud-init "user-data=${user_data}" \
     --cpu host \
-    --disk "${2},bus=virtio" \
+    --disk "${destpath},bus=virtio" \
     --graphics none \
     --memory 4096 \
     --name "${1}" \
     --network default,model=virtio \
+    --osinfo linux2022 \
     --vcpus 2 \
-    --virt-type kvm \
-    --osinfo linux2022
+    --virt-type kvm
 }
 
 #######################################
@@ -172,6 +195,9 @@ main() {
 
   setup_host
   case "${extension}" in
+    iso)
+      install_iso "${domain}" "${filepath}"
+      ;;
     qcow2)
       install_qcow2 "${domain}" "${filepath}" "${username:-}" "${password:-}"
       ;;
