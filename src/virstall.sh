@@ -19,13 +19,15 @@ usage() {
   cat 1>&2 << EOF
 Create a virtual machine from an ISO or Qcow2 file.
 
-Usage: virstall [OPTIONS] DOMAIN FILEPATH
+Usage: virstall [OPTIONS] FILEPATH
 
 Options:
       --debug                 Show shell debug traces
+  -d, --domain <DOMAIN>       Virtual machine name
   -h, --help                  Print help information
-  -u, --username <USERNAME>   Cloud init username
+  -o, --osinfo <OSINFO>           Virt-install osinfo
   -p, --password <PASSWORD>   Cloud init password
+  -u, --username <USERNAME>   Cloud init username
   -v, --version               Print version information
 EOF
 }
@@ -77,14 +79,16 @@ error_usage() {
 install_iso() {
   virt-install \
     --arch x86_64 \
+    --cdrom "${3}" \
+    --console pty,target_type=virtio \
     --cpu host \
     --disk bus=virtio,size=64 \
-    --location "${2}" \
-    --memory 4096 \
+    --graphics spice \
+    --memory 8192 \
     --name "${1}" \
     --network default,model=virtio \
-    --osinfo linux2022 \
-    --vcpus 2 \
+    --osinfo "${2}" \
+    --vcpus 4 \
     --virt-type kvm
 }
 
@@ -96,24 +100,24 @@ install_qcow2() {
   #
   # Flags:
   #   -z: Check if string has zero length.
-  if [ -z "${3:-}" ]; then
+  if [ -z "${4:-}" ]; then
     printf 'Enter username: '
     read -r username
   else
-    username="${3}"
+    username="${4}"
   fi
-  if [ -z "${4:-}" ]; then
+  if [ -z "${5:-}" ]; then
     printf 'Enter password: '
     stty -echo
     read -r password
     stty echo
     printf "\n"
   else
-    password="${4}"
+    password="${5}"
   fi
 
   destpath="${HOME}/.local/share/libvirt/images/${1}.qcow2"
-  cp "${2}" "${destpath}"
+  cp "${3}" "${destpath}"
   qemu-img resize "${destpath}" 64G
 
   user_data="$(cloud_init "${1}" "${username}" "${password}")"
@@ -123,11 +127,11 @@ install_qcow2() {
     --cpu host \
     --disk "${destpath},bus=virtio" \
     --graphics none \
-    --memory 4096 \
+    --memory 8192 \
     --name "${1}" \
     --network default,model=virtio \
-    --osinfo linux2022 \
-    --vcpus 2 \
+    --osinfo "${2}" \
+    --vcpus 4 \
     --virt-type kvm
 }
 
@@ -151,6 +155,10 @@ version() {
 # Script entrypoint.
 #######################################
 main() {
+  # Random name generator taken from https://stackoverflow.com/a/10823731.
+  domain="$(hexdump -v -n 4 -e '/1 "%02X"' /dev/urandom)"
+  osinfo='generic'
+
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
     case "${1}" in
@@ -161,6 +169,14 @@ main() {
       -h | --help)
         usage
         exit 0
+        ;;
+      -d | --domain)
+        domain="${2}"
+        shift 2
+        ;;
+      -o | --osinfo)
+        osinfo="${2}"
+        shift 2
         ;;
       -p | --password)
         password="${2}"
@@ -175,11 +191,7 @@ main() {
         exit 0
         ;;
       *)
-        if [ -z "${domain:-}" ]; then
-          domain="${1}"
-        else
-          filepath="${1}"
-        fi
+        filepath="${1}"
         shift 1
         ;;
     esac
@@ -187,18 +199,18 @@ main() {
 
   # Flags:
   #   -z: Check if string has zero length.
-  if [ -z "${domain:-}" ] || [ -z "${filepath:-}" ]; then
-    error_usage 'Domain name and disk filepath are required'
+  if [ -z "${filepath:-}" ]; then
+    error_usage 'Disk filepath argument is required'
   fi
   extension="${filepath##*.}"
 
   setup_host
   case "${extension}" in
     iso)
-      install_iso "${domain}" "${filepath}"
+      install_iso "${domain}" "${osinfo}" "${filepath}"
       ;;
     qcow2)
-      install_qcow2 "${domain}" "${filepath}" "${username:-}" "${password:-}"
+      install_qcow2 "${domain}" "${osinfo}" "${filepath}" "${username:-}" "${password:-}"
       ;;
     *)
       error_usage "File type ${extension} is not supported"
