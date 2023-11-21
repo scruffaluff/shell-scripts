@@ -79,7 +79,6 @@ install_iso() {
     --arch x86_64 \
     --cpu host \
     --disk bus=virtio,size=64 \
-    --graphics none \
     --location "${2}" \
     --memory 4096 \
     --name "${1}" \
@@ -113,7 +112,7 @@ install_qcow2() {
     password="${4}"
   fi
 
-  destpath="${HOME}/.local/share/libvirt/images/$(basename "${2}")"
+  destpath="${HOME}/.local/share/libvirt/images/${1}.qcow2"
   cp "${2}" "${destpath}"
   qemu-img resize "${destpath}" 64G
 
