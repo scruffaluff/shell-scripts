@@ -217,9 +217,11 @@ install_() {
 # Create a virtual machine from an ISO disk.
 #######################################
 install_cdrom() {
-  cdrom="${HOME}/.local/share/libvirt/cdroms/${1}.iso"
-  cp "${3}" "${cdrom}"
+  folder="${HOME}/.local/share/libvirt/cdroms"
+  cdrom="${folder}/${1}.iso"
 
+  mkdir -p "${folder}"
+  cp "${3}" "${cdrom}"
   virt-install \
     --arch x86_64 \
     --cdrom "${cdrom}" \
@@ -362,6 +364,7 @@ setup() {
     ${use_sudo:+sudo} apk update
     ${use_sudo:+sudo} apk add qemu-guest-agent spice-vdagent
     ${use_sudo:+sudo} rc-update add qemu-guest-agent
+    ${use_sudo:+sudo} rc-update add spice-vdagentd
   fi
 
   if [ -x "$(command -v apt-get)" ]; then
@@ -387,10 +390,12 @@ setup() {
 
   if [ -x "$(command -v pkg)" ]; then
     ${use_sudo:+sudo} pkg update
-    ${use_sudo:+sudo} pkg install --yes qemu-guest-agent spice-vdagent
+    ${use_sudo:+sudo} pkg install --yes qemu-guest-agent
+    ${use_sudo:+sudo} service qemu-guest-agent start
+    ${use_sudo:+sudo} sysrc qemu_guest_agent_enable="YES"
 
     # Enable serial console on next boot.
-    ${use_sudo:+sudo} tee --append /boot/loader.config > /dev/null << EOF
+    ${use_sudo:+sudo} tee --append /boot/loader.conf > /dev/null << EOF
 boot_multicons="YES"
 boot_serial="YES"
 comconsole_speed="115200"
