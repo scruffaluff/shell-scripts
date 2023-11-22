@@ -29,23 +29,6 @@ Options:
   -o, --osinfo <OSINFO>       Virt-install osinfo
   -p, --password <PASSWORD>   Cloud init password
   -u, --username <USERNAME>   Cloud init username
-
-Notes:
-- To remove the ISO after installation, use 'virsh edit domain'. Search for
-  'cdrom' in the XML and remove the corresponding disk.
-- Connection to the guest console might not be enabled by default. To enable a
-  serial console perform the following steps in the guest machine.
-  - FreeBSD: Append following lines to /boot/loader.config
-    boot_multicons="YES"
-    boot_serial="YES"
-    comconsole_speed="115200"
-    console="comconsole,vidconsole"
-  - Linux (systemd): Run 'systemctl enable --now serial-getty@ttyS0.service'.
-- Copy and pasting text between the host and guest machine might not be enabled
-  by default. To copy and paste between the host and guest machines, install the
-  'spice-vdagent' on the guest machine and then reboot.
-- guestmount --inspector --add ~/.local/share/libvirt/images/alpine.qcow2 ~/.local/share/libvirt/mounts/alpine
-- Libvirt stores disk images in '~/.local/share/libvirt/images'.
 EOF
       ;;
     main)
@@ -61,12 +44,51 @@ Options:
 
 Subcommands:
   install   Create a virtual machine from a cdrom or disk file
+  mount     Mount guest filesystem to host machine
+  setup     Configure guest machine or upload Virshx
+  unmount   Unmount guest filesystem from host machine
+EOF
+      ;;
+    mount)
+      cat 1>&2 << EOF
+Mount guest filesystem to host machine.
+
+Usage: virshx mount [OPTIONS] DOMAIN
+
+Options:
+  -h, --help    Print help information
+EOF
+      ;;
+    unmount)
+      cat 1>&2 << EOF
+Unmount guest filesystem from host machine.
+
+Usage: virshx unmount [OPTIONS] DOMAIN
+
+Options:
+  -h, --help    Print help information
 EOF
       ;;
     *)
       error "No such usage option '${1}'"
       ;;
   esac
+}
+
+# Assert that command can be found in system path.
+# Will exit script with an error code if command is not in system path.
+# Arguments:
+#   Command to check availabilty.
+# Outputs:
+#   Writes error message to stderr if command is not in system path.
+#######################################
+assert_cmd() {
+  # Flags:
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
+  if [ ! -x "$(command -v "${1}")" ]; then
+    error "Cannot find required ${1} command on computer"
+  fi
 }
 
 #######################################
@@ -108,6 +130,17 @@ error_usage() {
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
   printf "Run \'virshx %s--help\' for usage.\n" "${2:+${2} }" >&2
   exit 2
+}
+
+#######################################
+# Get full normalized path for file.
+# Alternative to realpath command, since it is not built into MacOS.
+#######################################
+fullpath() {
+  # Flags:
+  #   -P: Resolve any symbolic links in the path.
+  working_dir="$(cd "$(dirname "${1}")" && pwd -P)"
+  echo "${working_dir}/$(basename "${1}")"
 }
 
 #######################################
@@ -184,9 +217,12 @@ install_() {
 # Create a virtual machine from an ISO disk.
 #######################################
 install_cdrom() {
+  cdrom="${HOME}/.local/share/libvirt/cdroms/${1}.iso"
+  cp "${3}" "${cdrom}"
+
   virt-install \
     --arch x86_64 \
-    --cdrom "${3}" \
+    --cdrom "${cdrom}" \
     --cpu host \
     --disk bus=virtio,format=qcow2,size=64 \
     --graphics spice \
@@ -253,6 +289,155 @@ install_disk() {
 }
 
 #######################################
+# Mount guest filesystem to host machine.
+#######################################
+mount_() {
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'mount'
+        exit 0
+        ;;
+      *)
+        domain="${1}"
+        shift 1
+        ;;
+    esac
+  done
+
+  # Flags:
+  #   -z: Check if string has zero length.
+  if [ -z "${domain:-}" ]; then
+    error_usage 'Domain name is required' 'mount'
+  fi
+
+  path="${HOME}/.local/share/libvirt/mounts/${domain}"
+  mkdir -p "${path}"
+
+  guestmount --inspector --add \
+    "${HOME}/.local/share/libvirt/images/${domain}.qcow2" "${path}"
+
+  echo "Filesystem for ${domain} is mounted at ${path}"
+}
+
+#######################################
+# Configure guest filesystem.
+#######################################
+setup() {
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'unmount'
+        exit 0
+        ;;
+      *)
+        domain="${1}"
+        shift 1
+        ;;
+    esac
+  done
+
+  # Flags:
+  #   -n: Check if string has nonzero length.
+  if [ -n "${domain:-}" ]; then
+    virt-copy-in --domain "${domain}" "$(fullpath "$0")" /usr/local/bin/
+    echo "Uploaded Virshx to ${domain} machine at path /usr/local/bin/virshx"
+    exit 0
+  fi
+
+  # Use sudo for system installation if user is not root. Do not use long form
+  # --user flag for id. It is not supported on MacOS.
+  if [ "$(id -u)" -ne 0 ]; then
+    assert_cmd sudo
+    use_sudo='true'
+  else
+    use_sudo=''
+  fi
+
+  # Do not quote the sudo parameter expansion. Script will error due to be being
+  # unable to find the "" command.
+  if [ -x "$(command -v apk)" ]; then
+    ${use_sudo:+sudo} apk update
+    ${use_sudo:+sudo} apk add qemu-guest-agent spice-vdagent
+    ${use_sudo:+sudo} rc-update add qemu-guest-agent
+  fi
+
+  if [ -x "$(command -v apt-get)" ]; then
+    # DEBIAN_FRONTEND variable setting is ineffective if on a separate line,
+    # since the command is executed as sudo.
+    ${use_sudo:+sudo} apt-get update
+    ${use_sudo:+sudo} DEBIAN_FRONTEND=noninteractive apt-get install --yes \
+      qemu-guest-agent spice-vdagent
+  fi
+
+  if [ -x "$(command -v dnf)" ]; then
+    ${use_sudo:+sudo} dnf check-update || {
+      code="$?"
+      [ "${code}" -ne 100 ] && exit "${code}"
+    }
+    ${use_sudo:+sudo} dnf install --assumeyes qemu-guest-agent spice-vdagent
+  fi
+
+  if [ -x "$(command -v pacman)" ]; then
+    ${use_sudo:+sudo} pacman --noconfirm --refresh --sync --sysupgrade
+    ${use_sudo:+sudo} pacman --noconfirm --sync qemu-guest-agent spice-vdagent
+  fi
+
+  if [ -x "$(command -v pkg)" ]; then
+    ${use_sudo:+sudo} pkg update
+    ${use_sudo:+sudo} pkg install --yes qemu-guest-agent spice-vdagent
+
+    # Enable serial console on next boot.
+    ${use_sudo:+sudo} tee --append /boot/loader.config > /dev/null << EOF
+boot_multicons="YES"
+boot_serial="YES"
+comconsole_speed="115200"
+console="comconsole,vidconsole"
+EOF
+  fi
+
+  if [ -x "$(command -v zypper)" ]; then
+    ${use_sudo:+sudo} zypper update --no-confirm
+    ${use_sudo:+sudo} zypper install --no-confirm qemu-guest-agent spice-vdagent
+  fi
+
+  if [ -x "$(command -v systemctl)" ]; then
+    ${use_sudo:+sudo} systemctl enable --now qemu-guest-agent.service
+    ${use_sudo:+sudo} systemctl enable --now serial-getty@ttyS0.service
+    ${use_sudo:+sudo} systemctl enable --now spice-vdagentd.service
+  fi
+}
+
+#######################################
+# Unmount guest filesystem from host machine.
+#######################################
+unmount_() {
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'unmount'
+        exit 0
+        ;;
+      *)
+        domain="${1}"
+        shift 1
+        ;;
+    esac
+  done
+
+  # Flags:
+  #   -z: Check if string has zero length.
+  if [ -z "${domain:-}" ]; then
+    error_usage 'Domain name is required' 'unmount'
+  fi
+
+  guestunmount "${HOME}/.local/share/libvirt/mounts/${domain}"
+}
+
+#######################################
 # Print Virshx version string.
 # Outputs:
 #   Virshx version string.
@@ -281,8 +466,24 @@ main() {
         exit 0
         ;;
       install)
-        install_ "$@"
         shift 1
+        install_ "$@"
+        exit 0
+        ;;
+      mount)
+        shift 1
+        mount_ "$@"
+        exit 0
+        ;;
+      setup)
+        shift 1
+        setup "$@"
+        exit 0
+        ;;
+      unmount)
+        shift 1
+        unmount_ "$@"
+        exit 0
         ;;
       *)
         error_usage "No such subcommand or option '${1}'"
