@@ -96,6 +96,11 @@ assert_cmd() {
 # Generate cloud init data.
 #######################################
 cloud_init() {
+  if [ -f "${HOME}/.ssh/virshx" ]; then
+    ssh-keygen -N '' -q -f "${HOME}/.ssh/virshx" -t ed25519 -C virshx
+  fi
+  pub_key="$(cat "${HOME}/.ssh/virshx.pub")"
+
   path="$(mktemp --suffix .yaml)"
   cat << EOF > "${path}"
 #cloud-config
@@ -105,6 +110,8 @@ users:
   - lock_passwd: false
     name: "${2}"
     plain_text_passwd: "${3}"
+    ssh_authorized_keys:
+      - ${pub_key}"
     sudo: ALL=(ALL) NOPASSWD:ALL
 EOF
   printf "%s" "${path}"
@@ -340,31 +347,34 @@ qemu_() {
 
       # Boot a new virtual machine.
       #
-      # Use command qemu-system-x86_64 -cpu help to show all CPU options.
-      #
-      # Research --netdev user,hostfwd=tcp::2222-:22,id=unet. It might allow ssh
-      # passthrough with host port 2222.
+      # Research --audio driver=pipewire to pass audio back to the host.
       #
       # Flags:
+      #   --enable-kvm: Enable KVM full virtualization.
       #   -m 4G: Allocate 4 gigabytes of memory.
-      #   --boot order=dc: Set machine boot order to CDROM then disk. Only needed for
-      #     first boot when installing from an ISO file.
-      #   --cdrom FILE: Attach ISO file as CDROM drive. Only needed on first boot
-      #     when installing from an ISO file.
+      #   --boot order=dc: Set machine boot order to CDROM then disk. Only
+      #     needed for first boot when installing from an ISO file.
+      #   --cdrom FILE: Attach ISO file as CDROM drive. Only needed on first
+      #     boot when installing from an ISO file.
       #   --cpu host: Emulate the host processor with all features.
-      #   --display spice-app: Diaply machine on host with a SPICE window. Option gtk
-      #     has less intuitive keybindings. Research option curses.
-      #   --machine accel=kvm,type=q35: Use modern q353 chipset.
+      #   --display spice-app: Diaply machine on host with a SPICE window.
+      #     Option gtk has less intuitive keybindings. Research option curses.
+      #   --drive file=FILE,if=virtio:
+      #   --machine q35,accel=kvm: Use modern q35 chipset with KVM acceleration.
+      #   --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci: Create a user
+      #     mode network on a Virtio NIC which does not need admin privileges
+      #     and redirect UDP/TCP connections on host port 2222 to guest port 22.
       #   --smp 4: Allocate virtual 4 CPU cores.
       #   --vga virtio: Create graphics card with Virtio.
       qemu-system-x86_64 --enable-kvm \
         -m 4G \
-        --boot once=dc \
+        --boot once=d \
         --cdrom "${filepath}" \
         --cpu host \
         --display spice-app \
-        --hda "${diskpath}" \
-        --machine accel=kvm,type=q35 \
+        --drive "file=${filepath},if=virtio" \
+        --machine q35,accel=kvm \
+        --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci \
         --smp 4 \
         --vga virtio
       ;;
@@ -373,8 +383,9 @@ qemu_() {
         -m 4G \
         --cpu host \
         --display spice-app \
-        --hda "${filepath}" \
-        --machine accel=kvm,type=q35 \
+        --drive "file=${filepath},if=virtio" \
+        --machine q35,accel=kvm \
+        --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci \
         --smp 4 \
         --vga virtio
       ;;
@@ -527,6 +538,11 @@ main() {
         usage 'main'
         exit 0
         ;;
+      -q | --qemu)
+        shift 1
+        qemu_ "$@"
+        exit 0
+        ;;
       -v | --version)
         version
         exit 0
@@ -539,11 +555,6 @@ main() {
       mount)
         shift 1
         mount_ "$@"
-        exit 0
-        ;;
-      qemu)
-        shift 1
-        qemu_ "$@"
         exit 0
         ;;
       setup)
