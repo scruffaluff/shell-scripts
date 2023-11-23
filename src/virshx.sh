@@ -45,6 +45,7 @@ Options:
 Subcommands:
   install   Create a virtual machine from a cdrom or disk file
   mount     Mount guest filesystem to host machine
+  qemu      Create a virtual machine directly with QEMU
   setup     Configure guest machine or upload Virshx
   unmount   Unmount guest filesystem from host machine
 EOF
@@ -203,7 +204,7 @@ install_() {
     iso)
       install_cdrom "${domain}" "${osinfo}" "${filepath}"
       ;;
-    qcow2 | raw | vmdk)
+    img | qcow2 | raw | vmdk)
       install_disk "${domain}" "${osinfo}" "${filepath}" "${extension}" \
         "${username:-}" "${password:-}"
       ;;
@@ -321,6 +322,66 @@ mount_() {
     "${HOME}/.local/share/libvirt/images/${domain}.qcow2" "${path}"
 
   echo "Filesystem for ${domain} is mounted at ${path}"
+}
+
+#######################################
+# Create virtual machine directly with QEMU.
+#######################################
+qemu_() {
+  filepath="${1?Disk or ISO argument required}"
+  extension="${filepath##*.}"
+
+  case "${extension}" in
+    iso)
+      # Create a 32 gigabyte hard drive in qcow2 format.
+      diskpath='debian.qcow2'
+      echo "Creating virtual machine disk at ${diskpath}"
+      qemu-img create -f qcow2 "${diskpath}" 32G
+
+      # Boot a new virtual machine.
+      #
+      # Use command qemu-system-x86_64 -cpu help to show all CPU options.
+      #
+      # Research --netdev user,hostfwd=tcp::2222-:22,id=unet. It might allow ssh
+      # passthrough with host port 2222.
+      #
+      # Flags:
+      #   -m 4G: Allocate 4 gigabytes of memory.
+      #   --boot order=dc: Set machine boot order to CDROM then disk. Only needed for
+      #     first boot when installing from an ISO file.
+      #   --cdrom FILE: Attach ISO file as CDROM drive. Only needed on first boot
+      #     when installing from an ISO file.
+      #   --cpu host: Emulate the host processor with all features.
+      #   --display spice-app: Diaply machine on host with a SPICE window. Option gtk
+      #     has less intuitive keybindings. Research option curses.
+      #   --machine accel=kvm,type=q35: Use modern q353 chipset.
+      #   --smp 4: Allocate virtual 4 CPU cores.
+      #   --vga virtio: Create graphics card with Virtio.
+      qemu-system-x86_64 --enable-kvm \
+        -m 4G \
+        --boot once=dc \
+        --cdrom "${filepath}" \
+        --cpu host \
+        --display spice-app \
+        --hda "${diskpath}" \
+        --machine accel=kvm,type=q35 \
+        --smp 4 \
+        --vga virtio
+      ;;
+    img | qcow2 | raw | vmdk)
+      qemu-system-x86_64 --enable-kvm \
+        -m 4G \
+        --cpu host \
+        --display spice-app \
+        --hda "${filepath}" \
+        --machine accel=kvm,type=q35 \
+        --smp 4 \
+        --vga virtio
+      ;;
+    *)
+      error_usage "File type ${extension} is not supported"
+      ;;
+  esac
 }
 
 #######################################
@@ -478,6 +539,11 @@ main() {
       mount)
         shift 1
         mount_ "$@"
+        exit 0
+        ;;
+      qemu)
+        shift 1
+        qemu_ "$@"
         exit 0
         ;;
       setup)
