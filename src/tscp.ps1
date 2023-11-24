@@ -51,7 +51,7 @@ Function Main() {
     scp `
         -o IdentitiesOnly=yes `
         -o LogLevel=ERROR `
-        -o PreferredAuthentications=publickey,password `
+        -o PreferredAuthentications='publickey,password' `
         -o StrictHostKeyChecking=no `
         -o UserKnownHostsFile=NUL `
         $CmdArgs
