@@ -45,7 +45,7 @@ Options:
 Subcommands:
   install   Create a virtual machine from a cdrom or disk file
   mount     Mount guest filesystem to host machine
-  qemu      Create a virtual machine directly with QEMU
+  run       Create a virtual machine directly with QEMU
   setup     Configure guest machine or upload Virshx
   unmount   Unmount guest filesystem from host machine
 EOF
@@ -60,11 +60,33 @@ Options:
   -h, --help    Print help information
 EOF
       ;;
+    run)
+      cat 1>&2 << EOF
+Create a virtual machine directly with QEMU.
+
+Usage: virshx run [OPTIONS] FILEPATH
+
+Options:
+  -c, --console           Use serial console instead of display window
+  -d, --display DISPLAY   Use QEMU display backend option
+  -h, --help              Print help information
+EOF
+      ;;
+    setup)
+      cat 1>&2 << EOF
+Configure guest machine or upload Virshx.
+
+Usage: virshx setup [OPTIONS] DOMAIN
+
+Options:
+  -h, --help    Print help information
+EOF
+      ;;
     unmount)
       cat 1>&2 << EOF
 Unmount guest filesystem from host machine.
 
-Usage: virshx unmount [OPTIONS] DOMAIN
+Usage: virshx setup [OPTIONS] DOMAIN
 
 Options:
   -h, --help    Print help information
@@ -96,10 +118,12 @@ assert_cmd() {
 # Generate cloud init data.
 #######################################
 cloud_init() {
-  if [ -f "${HOME}/.ssh/virshx" ]; then
-    ssh-keygen -N '' -q -f "${HOME}/.ssh/virshx" -t ed25519 -C virshx
+  mkdir -p "${HOME}/.virshx"
+  if [ -f "${HOME}/.virshx/key" ]; then
+    ssh-keygen -N '' -q -f "${HOME}/.virshx/key" -t ed25519 -C virshx
+    chmod 600 "${HOME}/.virshx/key" "${HOME}/.virshx/key.pub"
   fi
-  pub_key="$(cat "${HOME}/.ssh/virshx.pub")"
+  pub_key="$(cat "${HOME}/.virshx/key.pub")"
 
   path="$(mktemp --suffix .yaml)"
   cat << EOF > "${path}"
@@ -239,6 +263,7 @@ install_cdrom() {
     --memory 8192 \
     --name "${1}" \
     --osinfo "${2}" \
+    --qemu-commandline '--nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci' \
     --vcpus 4 \
     --virt-type kvm
 }
@@ -294,6 +319,7 @@ install_disk() {
     --memory 8192 \
     --name "${1}" \
     --osinfo "${2}" \
+    --qemu-commandline '--nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci' \
     --vcpus 4 \
     --virt-type kvm
 }
@@ -334,8 +360,38 @@ mount_() {
 #######################################
 # Create virtual machine directly with QEMU.
 #######################################
-qemu_() {
-  filepath="${1?Disk or ISO argument required}"
+run() {
+  console=''
+  display='spice-app,gl=on'
+
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'run'
+        exit 0
+        ;;
+      -c | --console)
+        console='true'
+        display='none'
+        shift 1
+        ;;
+      -d | --display)
+        display="${2}"
+        shift 2
+        ;;
+      *)
+        filepath="${1}"
+        shift 1
+        ;;
+    esac
+  done
+
+  # Flags:
+  #   -z: Check if string has zero length.
+  if [ -z "${filepath:-}" ]; then
+    error_usage 'Disk or ISO file is required' 'mount'
+  fi
   extension="${filepath##*.}"
 
   case "${extension}" in
@@ -371,10 +427,11 @@ qemu_() {
         --boot once=d \
         --cdrom "${filepath}" \
         --cpu host \
-        --display spice-app \
+        --display "${display}" \
         --drive "file=${filepath},if=virtio" \
         --machine q35,accel=kvm \
         --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci \
+        ${console:+--serial stdio} \
         --smp 4 \
         --vga virtio
       ;;
@@ -382,10 +439,11 @@ qemu_() {
       qemu-system-x86_64 --enable-kvm \
         -m 4G \
         --cpu host \
-        --display spice-app \
+        --display "${display}" \
         --drive "file=${filepath},if=virtio" \
         --machine q35,accel=kvm \
         --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci \
+        ${console:+--serial stdio} \
         --smp 4 \
         --vga virtio
       ;;
@@ -434,9 +492,13 @@ setup() {
   # unable to find the "" command.
   if [ -x "$(command -v apk)" ]; then
     ${use_sudo:+sudo} apk update
-    ${use_sudo:+sudo} apk add qemu-guest-agent spice-vdagent
+    ${use_sudo:+sudo} apk add openssh-server qemu-guest-agent spice-vdagent
     ${use_sudo:+sudo} rc-update add qemu-guest-agent
+    ${use_sudo:+sudo} service qemu-guest-agent start
+    # Starting spice-vdagentd service causes an error.
     ${use_sudo:+sudo} rc-update add spice-vdagentd
+    ${use_sudo:+sudo} rc-update add sshd
+    ${use_sudo:+sudo} service sshd start
   fi
 
   if [ -x "$(command -v apt-get)" ]; then
@@ -444,7 +506,7 @@ setup() {
     # since the command is executed as sudo.
     ${use_sudo:+sudo} apt-get update
     ${use_sudo:+sudo} DEBIAN_FRONTEND=noninteractive apt-get install --yes \
-      qemu-guest-agent spice-vdagent
+      openssh-server qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v dnf)" ]; then
@@ -452,16 +514,19 @@ setup() {
       code="$?"
       [ "${code}" -ne 100 ] && exit "${code}"
     }
-    ${use_sudo:+sudo} dnf install --assumeyes qemu-guest-agent spice-vdagent
+    ${use_sudo:+sudo} dnf install --assumeyes openssh-server qemu-guest-agent \
+      spice-vdagent
   fi
 
   if [ -x "$(command -v pacman)" ]; then
     ${use_sudo:+sudo} pacman --noconfirm --refresh --sync --sysupgrade
-    ${use_sudo:+sudo} pacman --noconfirm --sync qemu-guest-agent spice-vdagent
+    ${use_sudo:+sudo} pacman --noconfirm --sync openssh qemu-guest-agent \
+      spice-vdagent
   fi
 
   if [ -x "$(command -v pkg)" ]; then
     ${use_sudo:+sudo} pkg update
+    # Seems as though openssh-server is builtin to FreeBSD.
     ${use_sudo:+sudo} pkg install --yes qemu-guest-agent
     ${use_sudo:+sudo} service qemu-guest-agent start
     ${use_sudo:+sudo} sysrc qemu_guest_agent_enable="YES"
@@ -477,13 +542,15 @@ EOF
 
   if [ -x "$(command -v zypper)" ]; then
     ${use_sudo:+sudo} zypper update --no-confirm
-    ${use_sudo:+sudo} zypper install --no-confirm qemu-guest-agent spice-vdagent
+    ${use_sudo:+sudo} zypper install --no-confirm openssh-server \
+      qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v systemctl)" ]; then
     ${use_sudo:+sudo} systemctl enable --now qemu-guest-agent.service
     ${use_sudo:+sudo} systemctl enable --now serial-getty@ttyS0.service
     ${use_sudo:+sudo} systemctl enable --now spice-vdagentd.service
+    ${use_sudo:+sudo} systemctl enable --now ssh.service
   fi
 }
 
@@ -538,11 +605,6 @@ main() {
         usage 'main'
         exit 0
         ;;
-      -q | --qemu)
-        shift 1
-        qemu_ "$@"
-        exit 0
-        ;;
       -v | --version)
         version
         exit 0
@@ -555,6 +617,11 @@ main() {
       mount)
         shift 1
         mount_ "$@"
+        exit 0
+        ;;
+      run)
+        shift 1
+        run "$@"
         exit 0
         ;;
       setup)
