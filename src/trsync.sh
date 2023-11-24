@@ -64,7 +64,7 @@ sync() {
   assert_cmd ssh
 
   rsync \
-    -e 'ssh -o IdentitiesOnly=no -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
+    -e 'ssh -o IdentitiesOnly=yes -o LogLevel=ERROR -o PreferredAuthentications=publickey,password -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
     "$@"
 }
 
@@ -74,7 +74,7 @@ sync() {
 #   Trsync version string.
 #######################################
 version() {
-  echo 'Trsync 0.1.0'
+  echo 'Trsync 0.1.1'
 }
 
 #######################################

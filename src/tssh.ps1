@@ -21,7 +21,7 @@ Options:
 
 # Print Tssh version string.
 Function Version() {
-    Write-Output 'Tssh 0.1.1'
+    Write-Output 'Tssh 0.1.2'
 }
 
 # Script entrypoint.
@@ -49,8 +49,9 @@ Function Main() {
     # Don't use PowerShell $Null for UserKnownHostsFile. It causes SSH to use
     # ~/.ssh/known_hosts as a backup.
     ssh `
-        -o IdentitiesOnly=no `
+        -o IdentitiesOnly=yes `
         -o LogLevel=ERROR `
+        -o PreferredAuthentications=publickey,password `
         -o StrictHostKeyChecking=no `
         -o UserKnownHostsFile=NUL `
         $CmdArgs

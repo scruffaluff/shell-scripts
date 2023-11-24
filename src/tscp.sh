@@ -63,8 +63,9 @@ copy() {
   assert_cmd scp
 
   scp \
-    -o IdentitiesOnly=no \
+    -o IdentitiesOnly=yes \
     -o LogLevel=ERROR \
+    -o PreferredAuthentications=publickey,password \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \
     "$@"
@@ -76,7 +77,7 @@ copy() {
 #   Tscp version string.
 #######################################
 version() {
-  echo 'Tscp 0.1.1'
+  echo 'Tscp 0.1.2'
 }
 
 #######################################

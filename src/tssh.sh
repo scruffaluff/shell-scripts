@@ -63,8 +63,9 @@ connect() {
   assert_cmd ssh
 
   ssh \
-    -o IdentitiesOnly=no \
+    -o IdentitiesOnly=yes \
     -o LogLevel=ERROR \
+    -o PreferredAuthentications=publickey,password \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \
     "$@"
@@ -76,7 +77,7 @@ connect() {
 #   Tssh version string.
 #######################################
 version() {
-  echo 'Tssh 0.1.1'
+  echo 'Tssh 0.1.2'
 }
 
 #######################################
