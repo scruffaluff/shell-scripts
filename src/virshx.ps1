@@ -73,7 +73,7 @@ Function Run() {
 
     Switch ($Extension) {
         'iso' {
-            $DiskPath=$FilePath.Replace("$Extension", 'qcow2')
+            $DiskPath = $FilePath.Replace("$Extension", 'qcow2')
             Write-Output "Creating virtual machine disk at $DiskPath"
             qemu-img create -f qcow2 "$DiskPath" 32G
 
@@ -105,7 +105,7 @@ Function Run() {
                 --display "$Display" `
                 --drive "file=$DiskPath,if=virtio" `
                 --machine q35 `
-                --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci `
+                --nic 'user,hostfwd=tcp::2222-:22,model=virtio-net-pci' `
                 --serial "$Serial" `
                 --smp 4 `
                 --vga virtio
@@ -116,7 +116,7 @@ Function Run() {
                 --display "$Display" `
                 --drive "file=$FilePath,if=virtio" `
                 --machine q35 `
-                --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci `
+                --nic 'user,hostfwd=tcp::2222-:22,model=virtio-net-pci' `
                 --serial "$Serial" `
                 --smp 4 `
                 --vga virtio
@@ -156,7 +156,7 @@ Function Main() {
             }
         }
     }
-    
+
     Usage 'main'
 }
 
