@@ -184,13 +184,13 @@ install_() {
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
     case "${1}" in
-      -h | --help)
-        usage 'install'
-        exit 0
-        ;;
       -d | --domain)
         domain="${2}"
         shift 2
+        ;;
+      -h | --help)
+        usage 'install'
+        exit 0
         ;;
       -o | --osinfo)
         osinfo="${2}"
@@ -361,23 +361,36 @@ mount_() {
 # Create virtual machine directly with QEMU.
 #######################################
 run() {
-  console=''
+  arch="$(uname -m)"
+  arch="$(echo "${arch}" | sed s/amd64/x86_64/)"
+  arch="$(echo "${arch}" | sed s/x64/x86_64/)"
+  arch="$(echo "${arch}" | sed s/arm64/aarch64/)"
+  cdrom=''
   display='spice-app,gl=on'
+  serial='none'
 
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
     case "${1}" in
-      -h | --help)
-        usage 'run'
-        exit 0
+      -a | --arch)
+        arch="${2}"
+        shift 2
         ;;
       -c | --console)
-        console='true'
         display='none'
+        serial='stdio'
         shift 1
         ;;
       -d | --display)
         display="${2}"
+        shift 2
+        ;;
+      -h | --help)
+        usage 'run'
+        exit 0
+        ;;
+      -m | --machine)
+        machine="${2}"
         shift 2
         ;;
       *)
@@ -394,63 +407,66 @@ run() {
   fi
   extension="${filepath##*.}"
 
+  if [ -z "${machine:-}" ]; then
+    machine="$([ "${arch}" = 'x86_64' ] && echo 'q35' || echo 'virt')"
+  fi
+  if [ "$(uname -s)" = 'Linux' ]; then
+    kvm='true'
+    machine="${machine},accel=kvm"
+  else
+    kvm=''
+  fi
+
   case "${extension}" in
     iso)
-      # Create a 32 gigabyte hard drive in qcow2 format.
-      diskpath='debian.qcow2'
-      echo "Creating virtual machine disk at ${diskpath}"
-      qemu-img create -f qcow2 "${diskpath}" 32G
+      cdrom="${filepath}"
+      diskpath="${filepath%"${extension}"}qcow2"
 
-      # Boot a new virtual machine.
-      #
-      # Research --audio driver=pipewire to pass audio back to the host.
-      #
-      # Flags:
-      #   --enable-kvm: Enable KVM full virtualization.
-      #   -m 4G: Allocate 4 gigabytes of memory.
-      #   --boot order=dc: Set machine boot order to CDROM then disk. Only
-      #     needed for first boot when installing from an ISO file.
-      #   --cdrom FILE: Attach ISO file as CDROM drive. Only needed on first
-      #     boot when installing from an ISO file.
-      #   --cpu host: Emulate the host processor with all features.
-      #   --display spice-app: Diaply machine on host with a SPICE window.
-      #     Option gtk has less intuitive keybindings. Research option curses.
-      #   --drive file=FILE,if=virtio:
-      #   --machine q35,accel=kvm: Use modern q35 chipset with KVM acceleration.
-      #   --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci: Create a user
-      #     mode network on a Virtio NIC which does not need admin privileges
-      #     and redirect UDP/TCP connections on host port 2222 to guest port 22.
-      #   --smp 4: Allocate virtual 4 CPU cores.
-      #   --vga virtio: Create graphics card with Virtio.
-      qemu-system-x86_64 --enable-kvm \
-        -m 4G \
-        --boot once=d \
-        --cdrom "${filepath}" \
-        --cpu host \
-        --display "${display}" \
-        --drive "file=${filepath},if=virtio" \
-        --machine q35,accel=kvm \
-        --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci \
-        ${console:+--serial stdio} \
-        --smp 4 \
-        --vga virtio
+      echo "Creating a Qcow2 virtual machine disk at ${diskpath}"
+      qemu-img create -f qcow2 "${diskpath}" 32G
       ;;
     img | qcow2 | raw | vmdk)
-      qemu-system-x86_64 --enable-kvm \
-        -m 4G \
-        --cpu host \
-        --display "${display}" \
-        --drive "file=${filepath},if=virtio" \
-        --machine q35,accel=kvm \
-        --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci \
-        ${console:+--serial stdio} \
-        --smp 4 \
-        --vga virtio
+      diskpath="${filepath}"
       ;;
     *)
       error_usage "File type ${extension} is not supported"
       ;;
   esac
+
+  # Boot a new virtual machine.
+  #
+  # Research --audio driver=pipewire to pass audio back to the host.
+  #
+  # Flags:
+  #   --enable-kvm: Enable KVM full virtualization.
+  #   -m 4G: Allocate 4 gigabytes of memory.
+  #   --boot order=dc: Set machine boot order to CDROM then disk. Only
+  #     needed for first boot when installing from an ISO file.
+  #   --cdrom FILE: Attach ISO file as CDROM drive. Only needed on first
+  #     boot when installing from an ISO file.
+  #   --cpu host: Emulate the host processor with all features.
+  #   --display spice-app: Diaply machine on host with a SPICE window.
+  #     Option gtk has less intuitive keybindings. Research option curses.
+  #   --drive file=FILE,if=virtio:
+  #   --machine q35,accel=kvm: Use modern q35 chipset with KVM acceleration.
+  #   --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci: Create a user
+  #     mode network on a Virtio NIC which does not need admin privileges
+  #     and redirect UDP/TCP connections on host port 2222 to guest port 22.
+  #   --smp 4: Allocate virtual 4 CPU cores.
+  #   --vga virtio: Create graphics card with Virtio.
+  "qemu-system-${arch}" \
+    ${kvm:+--enable-kvm} \
+    -m 4G \
+    ${cdrom:+--boot once=d} \
+    ${cdrom:+--cdrom "${filepath}"} \
+    --cpu host \
+    --display "${display}" \
+    --drive "file=${diskpath},if=virtio" \
+    --machine "${machine}" \
+    --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci \
+    --serial "${serial}" \
+    --smp 4 \
+    --vga virtio
 }
 
 #######################################
