@@ -17,6 +17,17 @@ set -eu
 #######################################
 usage() {
   case "${1}" in
+    forward)
+      cat 1>&2 << EOF
+Forward host port to guest domain 22 port for SSH
+
+Usage: virshx forward [OPTIONS] DOMAIN
+
+Options:
+  -h, --help          Print help information
+  -p, --port <PORT>   Specify host port to foward (default 2022)
+EOF
+      ;;
     install)
       cat 1>&2 << EOF
 Create a virtual machine from a cdrom or disk file.
@@ -119,7 +130,7 @@ assert_cmd() {
 #######################################
 cloud_init() {
   mkdir -p "${HOME}/.virshx"
-  if [ -f "${HOME}/.virshx/key" ]; then
+  if [ ! -f "${HOME}/.virshx/key" ]; then
     ssh-keygen -N '' -q -f "${HOME}/.virshx/key" -t ed25519 -C virshx
     chmod 600 "${HOME}/.virshx/key" "${HOME}/.virshx/key.pub"
   fi
@@ -162,6 +173,39 @@ error_usage() {
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
   printf "Run \'virshx %s--help\' for usage.\n" "${2:+${2} }" >&2
   exit 2
+}
+
+#######################################
+# Setup SSH port forward to guest domain.
+#######################################
+forward() {
+  port='2022'
+
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'forward'
+        exit 0
+        ;;
+      -p | --port)
+        port="${2}"
+        shift 2
+        ;;
+      *)
+        domain="${1}"
+        shift 1
+        ;;
+    esac
+  done
+
+  # Flags:
+  #   -z: Check if string has zero length.
+  if [ -z "${domain:-}" ]; then
+    error_usage 'Domain argument is required' 'forward'
+  fi
+  virsh qemu-monitor-command --domain "${domain}" \
+    --hmp "hostfwd_add tcp::${port}-:22"
 }
 
 #######################################
@@ -263,7 +307,6 @@ install_cdrom() {
     --memory 8192 \
     --name "${1}" \
     --osinfo "${2}" \
-    --qemu-commandline '--nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci' \
     --vcpus 4 \
     --virt-type kvm
 }
@@ -319,7 +362,6 @@ install_disk() {
     --memory 8192 \
     --name "${1}" \
     --osinfo "${2}" \
-    --qemu-commandline '--nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci' \
     --vcpus 4 \
     --virt-type kvm
 }
@@ -449,9 +491,9 @@ run() {
   #     Option gtk has less intuitive keybindings. Research option curses.
   #   --drive file=FILE,if=virtio:
   #   --machine q35,accel=kvm: Use modern q35 chipset with KVM acceleration.
-  #   --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci: Create a user
+  #   --nic user,hostfwd=tcp::2022-:22,model=virtio-net-pci: Create a user
   #     mode network on a Virtio NIC which does not need admin privileges
-  #     and redirect UDP/TCP connections on host port 2222 to guest port 22.
+  #     and redirect UDP/TCP connections on host port 2022 to guest port 22.
   #   --smp 4: Allocate virtual 4 CPU cores.
   #   --vga virtio: Create graphics card with Virtio.
   "qemu-system-${arch}" \
@@ -463,7 +505,7 @@ run() {
     --display "${display}" \
     --drive "file=${diskpath},if=virtio" \
     --machine "${machine}" \
-    --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci \
+    --nic user,hostfwd=tcp::2022-:22,model=virtio-net-pci \
     --serial "${serial}" \
     --smp 4 \
     --vga virtio
@@ -623,6 +665,11 @@ main() {
         ;;
       -v | --version)
         version
+        exit 0
+        ;;
+      forward)
+        shift 1
+        forward "$@"
         exit 0
         ;;
       install)

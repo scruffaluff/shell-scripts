@@ -93,9 +93,9 @@ Function Run() {
             #     Option gtk has less intuitive keybindings. Research option curses.
             #   --drive file=FILE,if=virtio:
             #   --machine q35,accel=kvm: Use modern q35 chipset with KVM acceleration.
-            #   --nic user,hostfwd=tcp::2222-:22,model=virtio-net-pci: Create a user
+            #   --nic user,hostfwd=tcp::2022-:22,model=virtio-net-pci: Create a user
             #     mode network on a Virtio NIC which does not need admin privileges
-            #     and redirect UDP/TCP connections on host port 2222 to guest port 22.
+            #     and redirect UDP/TCP connections on host port 2022 to guest port 22.
             #   --smp 4: Allocate virtual 4 CPU cores.
             #   --vga virtio: Create graphics card with Virtio.
             qemu-system-x86_64 `
@@ -105,7 +105,7 @@ Function Run() {
                 --display "$Display" `
                 --drive "file=$DiskPath,if=virtio" `
                 --machine q35 `
-                --nic 'user,hostfwd=tcp::2222-:22,model=virtio-net-pci' `
+                --nic 'user,hostfwd=tcp::2022-:22,model=virtio-net-pci' `
                 --serial "$Serial" `
                 --smp 4 `
                 --vga virtio
@@ -116,7 +116,7 @@ Function Run() {
                 --display "$Display" `
                 --drive "file=$FilePath,if=virtio" `
                 --machine q35 `
-                --nic 'user,hostfwd=tcp::2222-:22,model=virtio-net-pci' `
+                --nic 'user,hostfwd=tcp::2022-:22,model=virtio-net-pci' `
                 --serial "$Serial" `
                 --smp 4 `
                 --vga virtio
