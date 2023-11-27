@@ -136,7 +136,7 @@ cloud_init() {
   fi
   pub_key="$(cat "${HOME}/.virshx/key.pub")"
 
-  path="$(mktemp --suffix .yaml)"
+  path="$(mktemp).yaml"
   cat << EOF > "${path}"
 #cloud-config
 
@@ -220,6 +220,17 @@ fullpath() {
 }
 
 #######################################
+# Get QEMU compatible architecture name.
+#######################################
+get_arch() {
+  arch="$(uname -m)"
+  arch="$(echo "${arch}" | sed s/amd64/x86_64/)"
+  arch="$(echo "${arch}" | sed s/x64/x86_64/)"
+  arch="$(echo "${arch}" | sed s/arm64/aarch64/)"
+  echo "${arch}"
+}
+
+#######################################
 # Create a virtual machine from a disk.
 #######################################
 install_() {
@@ -293,13 +304,14 @@ install_() {
 # Create a virtual machine from an ISO disk.
 #######################################
 install_cdrom() {
+  linux="$([ "$(uname -s)" = 'Linux' ] && echo 'true' || echo '')"
   folder="${HOME}/.local/share/libvirt/cdroms"
   cdrom="${folder}/${1}.iso"
 
   mkdir -p "${folder}"
   cp "${3}" "${cdrom}"
   virt-install \
-    --arch x86_64 \
+    --arch "$(get_arch)" \
     --cdrom "${cdrom}" \
     --cpu host \
     --disk bus=virtio,format=qcow2,size=64 \
@@ -308,13 +320,15 @@ install_cdrom() {
     --name "${1}" \
     --osinfo "${2}" \
     --vcpus 4 \
-    --virt-type kvm
+    ${linux:+--virt-type kvm}
 }
 
 #######################################
 # Create a virtual machine from a qcow2 disk.
 #######################################
 install_disk() {
+  linux="$([ "$(uname -s)" = 'Linux' ] && echo 'true' || echo '')"
+
   # Get username and password from user input if empty.
   #
   # Flags:
@@ -348,13 +362,15 @@ install_disk() {
   #   -f: Input file format.
   #   -O: Output file format.
   #   -p: Show progress bar.
-  destpath="${HOME}/.local/share/libvirt/images/${1}.qcow2"
+  folder="${HOME}/.local/share/libvirt/images"
+  destpath="${folder}/${1}.qcow2"
+  mkdir -p "${folder}"
   qemu-img convert -p -f "${4}" -O qcow2 "${3}" "${destpath}"
   qemu-img resize "${destpath}" 64G
 
   user_data="$(cloud_init "${1}" "${username}" "${password}")"
   virt-install --import \
-    --arch x86_64 \
+    --arch "$(get_arch)" \
     --cloud-init "user-data=${user_data}" \
     --cpu host \
     --disk "${destpath},bus=virtio" \
@@ -363,7 +379,7 @@ install_disk() {
     --name "${1}" \
     --osinfo "${2}" \
     --vcpus 4 \
-    --virt-type kvm
+    ${linux:+--virt-type kvm}
 }
 
 #######################################
@@ -403,10 +419,7 @@ mount_() {
 # Create virtual machine directly with QEMU.
 #######################################
 run() {
-  arch="$(uname -m)"
-  arch="$(echo "${arch}" | sed s/amd64/x86_64/)"
-  arch="$(echo "${arch}" | sed s/x64/x86_64/)"
-  arch="$(echo "${arch}" | sed s/arm64/aarch64/)"
+  arch="$(get_arch)"
   cdrom=''
   display='spice-app,gl=on'
   serial='none'
