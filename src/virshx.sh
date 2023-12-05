@@ -616,8 +616,9 @@ setup() {
     ${super:+"${super}"} service qemu-guest-agent start
     ${super:+"${super}"} sysrc qemu_guest_agent_enable="YES"
 
-    # Enable serial console on next boot.
-    ${super:+"${super}"} tee --append /boot/loader.conf > /dev/null << EOF
+    # Enable serial console on next boot. Do not use long form --append flag for
+    # tee. It is not supported on FreeBSD.
+    ${super:+"${super}"} tee -a /boot/loader.conf > /dev/null << EOF
 boot_multicons="YES"
 boot_serial="YES"
 comconsole_speed="115200"
@@ -661,8 +662,13 @@ upload() {
     esac
   done
 
-  virt-copy-in --domain "${domain}" "$(fullpath "$0")" /usr/local/bin/
-  echo "Uploaded Virshx to ${domain} machine at path /usr/local/bin/virshx"
+  if [ "$(virsh domstate "${domain}")" = 'running' ]; then
+    scp -i ~/.virshx/key -P 2022 "$(fullpath "$0")" localhost:/tmp/virshx
+    echo "Uploaded Virshx to ${domain} machine at path /tmp/virshx"
+  else
+    virt-copy-in --domain "${domain}" "$(fullpath "$0")" /usr/local/bin/
+    echo "Uploaded Virshx to ${domain} machine at path /usr/local/bin/virshx"
+  fi
 }
 
 #######################################
