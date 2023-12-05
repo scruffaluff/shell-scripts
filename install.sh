@@ -44,7 +44,12 @@ assert_cmd() {
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
   if [ ! -x "$(command -v "${1}")" ]; then
-    error "Cannot find required ${1} command on computer."
+    error "$(
+      cat << EOF
+Cannot find required '${1}' command on computer.
+Please install '${1}' and retry installation.
+EOF
+    )"
   fi
 }
 
@@ -122,9 +127,25 @@ find_scripts() {
 }
 
 #######################################
+# Find command to elevate as super user.
+#######################################
+find_super() {
+  # Flags:
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
+  if [ -x "$(command -v sudo)" ]; then
+    echo 'sudo'
+  elif [ -x "$(command -v doas)" ]; then
+    echo 'doas'
+  else
+    error 'Unable to find a command for super user elevation'
+  fi
+}
+
+#######################################
 # Print log message to stdout if logging is enabled.
 # Arguments:
-#   Wether to use sudo
+#   Super user command for installation
 #   Script URL prefix
 #   Destination path prefix
 #   Script name
@@ -137,8 +158,8 @@ install_script() {
   dst_file="${3}/${4}"
   src_url="${2}/${4}.sh"
 
-  # Use sudo for system installation if user did not give the --user, does not
-  # own the file, and is not root.
+  # Use super user elevation command for system installation if user did not
+  # give the --user, does not own the file, and is not root.
   #
   # Do not use long form --user flag for id. It is not supported on MacOS.
   #
@@ -146,19 +167,18 @@ install_script() {
   #   -w: Check if file exists and is writable.
   #   -z: Check if the string has zero length or is null.
   if [ -z "${1}" ] && [ ! -w "${dst_file}" ] && [ "$(id -u)" -ne 0 ]; then
-    assert_cmd sudo
-    use_sudo='true'
+    super="$(find_super)"
   else
-    use_sudo=''
+    super=''
   fi
 
   log "Installing script ${4}..."
 
-  # Do not quote the sudo parameter expansion. Script will error due to be being
-  # unable to find the "" command.
-  ${use_sudo:+sudo} mkdir -p "${3}"
-  ${use_sudo:+sudo} curl -LSfs "${src_url}" -o "${dst_file}"
-  ${use_sudo:+sudo} chmod 755 "${dst_file}"
+  # Do not quote the outer super parameter expansion. Shell will error due to be
+  # being unable to find the "" command.
+  ${super:+"${super}"} mkdir -p "${3}"
+  ${super:+"${super}"} curl -LSfs "${src_url}" -o "${dst_file}"
+  ${super:+"${super}"} chmod 755 "${dst_file}"
 
   # Add Scripts to shell profile if not in system path.
   #

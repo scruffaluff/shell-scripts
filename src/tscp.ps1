@@ -21,7 +21,7 @@ Options:
 
 # Print Tscp version string.
 Function Version() {
-    Write-Output 'Tscp 0.1.1'
+    Write-Output 'Tscp 0.2.0'
 }
 
 # Script entrypoint.
@@ -49,8 +49,9 @@ Function Main() {
     # Don't use PowerShell $Null for UserKnownHostsFile. It causes SSH to use
     # ~/.ssh/known_hosts as a backup.
     scp `
-        -o IdentitiesOnly=no `
+        -o IdentitiesOnly=yes `
         -o LogLevel=ERROR `
+        -o PreferredAuthentications='publickey,password' `
         -o StrictHostKeyChecking=no `
         -o UserKnownHostsFile=NUL `
         $CmdArgs

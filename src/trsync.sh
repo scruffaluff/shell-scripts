@@ -29,23 +29,6 @@ EOF
 }
 
 #######################################
-# Assert that command can be found in system path.
-# Will exit script with an error code if command is not in system path.
-# Arguments:
-#   Command to check availabilty.
-# Outputs:
-#   Writes error message to stderr if command is not in system path.
-#######################################
-assert_cmd() {
-  # Flags:
-  #   -v: Only show file path of command.
-  #   -x: Check if file exists and execute permission is granted.
-  if [ ! -x "$(command -v "${1}")" ]; then
-    error "Cannot find required ${1} command on computer"
-  fi
-}
-
-#######################################
 # Print error message and exit script with error code.
 # Outputs:
 #   Writes error message to stderr.
@@ -60,11 +43,8 @@ error() {
 # Sync files without saving remote details.
 #######################################
 sync() {
-  assert_cmd rsync
-  assert_cmd ssh
-
   rsync \
-    -e 'ssh -o IdentitiesOnly=no -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
+    -e 'ssh -o IdentitiesOnly=yes -o LogLevel=ERROR -o PreferredAuthentications=publickey,password -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
     "$@"
 }
 
@@ -74,7 +54,7 @@ sync() {
 #   Trsync version string.
 #######################################
 version() {
-  echo 'Trsync 0.1.0'
+  echo 'Trsync 0.2.0'
 }
 
 #######################################

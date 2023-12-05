@@ -17,9 +17,7 @@ set -eu
 #   Writes help information to stdout.
 #######################################
 usage() {
-  case "${1}" in
-    main)
-      cat 1>&2 << EOF
+  cat 1>&2 << EOF
 Deletes all Snap packages, uninstalls Snap, and prevents reinstall of Snap.
 
 Usage: purge-snap [OPTIONS]
@@ -29,11 +27,6 @@ Options:
   -h, --help      Print help information
   -v, --version   Print version information
 EOF
-      ;;
-    *)
-      error "No such usage option '${1}'"
-      ;;
-  esac
 }
 
 #######################################
@@ -77,16 +70,30 @@ error_usage() {
 }
 
 #######################################
+# Find command to elevate as super user.
+#######################################
+find_super() {
+  # Flags:
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
+  if [ -x "$(command -v sudo)" ]; then
+    echo 'sudo'
+  elif [ -x "$(command -v doas)" ]; then
+    echo 'doas'
+  else
+    error 'Unable to find a command for super user elevation'
+  fi
+}
+
+#######################################
 # Remove all traces of Snap from system.
 #######################################
 purge_snaps() {
-  # Use sudo for system installation if user is not root. Do not use long form
-  # --user flag for id. It is not supported on MacOS.
+  # Do not use long form -user flag for id. It is not supported on MacOS.
   if [ "$(id -u)" -ne 0 ]; then
-    assert_cmd sudo
-    use_sudo='true'
+    super="$(find_super)"
   else
-    use_sudo=''
+    super=''
   fi
 
   # Find all installed Snap packages.
@@ -97,21 +104,21 @@ purge_snaps() {
   snaps="$(snap list | tail --lines +2 | cut --delimiter ' ' --field 1)"
 
   while IFS= read -r snap; do
-    # Do not quote the sudo parameter expansion. Script will error due to be
-    # being unable to find the "" command.
-    ${use_sudo:+sudo} snap remove --purge "${snap}"
+    # Do not quote the outer super parameter expansion. Shell will error due to
+    # be being unable to find the "" command.
+    ${super:+"${super}"} snap remove --purge "${snap}"
   done << EOF
 ${snaps}
 EOF
 
   # Delete Snap system daemons and services.
-  ${use_sudo:+sudo} systemctl stop --show-transaction snapd.socket
-  ${use_sudo:+sudo} systemctl stop --show-transaction snapd.service
-  ${use_sudo:+sudo} systemctl disable snapd.service
+  ${super:+"${super}"} systemctl stop --show-transaction snapd.socket
+  ${super:+"${super}"} systemctl stop --show-transaction snapd.service
+  ${super:+"${super}"} systemctl disable snapd.service
 
   # Delete Snap package and prevent reinstallation.
-  ${use_sudo:+sudo} apt-get purge --yes snapd
-  ${use_sudo:+sudo} apt-mark hold snapd
+  ${super:+"${super}"} apt-get purge --yes snapd
+  ${super:+"${super}"} apt-mark hold snapd
 }
 
 #######################################
@@ -120,7 +127,7 @@ EOF
 #   Packup version string.
 #######################################
 version() {
-  echo 'PurgeSnap 0.1.1'
+  echo 'PurgeSnap 0.2.0'
 }
 
 #######################################
@@ -135,14 +142,16 @@ main() {
         shift 1
         ;;
       -h | --help)
-        usage 'main'
+        usage
         exit 0
         ;;
       -v | --version)
         version
         exit 0
         ;;
-      *) ;;
+      *)
+        error_usage "No such option '${1}'."
+        ;;
     esac
   done
 

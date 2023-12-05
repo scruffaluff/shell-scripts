@@ -29,23 +29,6 @@ EOF
 }
 
 #######################################
-# Assert that command can be found in system path.
-# Will exit script with an error code if command is not in system path.
-# Arguments:
-#   Command to check availabilty.
-# Outputs:
-#   Writes error message to stderr if command is not in system path.
-#######################################
-assert_cmd() {
-  # Flags:
-  #   -v: Only show file path of command.
-  #   -x: Check if file exists and execute permission is granted.
-  if [ ! -x "$(command -v "${1}")" ]; then
-    error "Cannot find required ${1} command on computer"
-  fi
-}
-
-#######################################
 # Print error message and exit script with error code.
 # Outputs:
 #   Writes error message to stderr.
@@ -60,11 +43,10 @@ error() {
 # Create SSH connection without saving remote details.
 #######################################
 copy() {
-  assert_cmd scp
-
   scp \
-    -o IdentitiesOnly=no \
+    -o IdentitiesOnly=yes \
     -o LogLevel=ERROR \
+    -o PreferredAuthentications=publickey,password \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \
     "$@"
@@ -76,7 +58,7 @@ copy() {
 #   Tscp version string.
 #######################################
 version() {
-  echo 'Tscp 0.1.1'
+  echo 'Tscp 0.2.0'
 }
 
 #######################################
