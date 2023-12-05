@@ -17,6 +17,16 @@ set -eu
 #######################################
 usage() {
   case "${1}" in
+    boot)
+      cat 1>&2 << EOF
+Download disk for domain and install with defaults
+
+Usage: virshx boot [OPTIONS] DOMAIN
+
+Options:
+  -h, --help          Print help information
+EOF
+      ;;
     forward)
       cat 1>&2 << EOF
 Forward host port to guest domain 22 port for SSH
@@ -30,7 +40,7 @@ EOF
       ;;
     install)
       cat 1>&2 << EOF
-Create a virtual machine from a cdrom or disk file.
+Create a virtual machine from a cdrom or disk file
 
 Usage: virshx install [OPTIONS] FILEPATH
 
@@ -44,7 +54,7 @@ EOF
       ;;
     main)
       cat 1>&2 << EOF
-Extra convenience commands for Virsh and Libvirt.
+Extra convenience commands for Virsh and Libvirt
 
 Usage: virshx [OPTIONS] [SUBCOMMAND]
 
@@ -54,26 +64,16 @@ Options:
   -v, --version     Print version information
 
 Subcommands:
+  boot      Download disk for domain and install with defaults
   install   Create a virtual machine from a cdrom or disk file
-  mount     Mount guest filesystem to host machine
   run       Create a virtual machine directly with QEMU
-  setup     Configure guest machine or upload Virshx
-  unmount   Unmount guest filesystem from host machine
-EOF
-      ;;
-    mount)
-      cat 1>&2 << EOF
-Mount guest filesystem to host machine.
-
-Usage: virshx mount [OPTIONS] DOMAIN
-
-Options:
-  -h, --help    Print help information
+  setup     Configure guest machine
+  upload    Upload Virshx to guest machine
 EOF
       ;;
     run)
       cat 1>&2 << EOF
-Create a virtual machine directly with QEMU.
+Create a virtual machine directly with QEMU
 
 Usage: virshx run [OPTIONS] FILEPATH
 
@@ -85,7 +85,7 @@ EOF
       ;;
     setup)
       cat 1>&2 << EOF
-Configure guest machine or upload Virshx.
+Configure guest machine
 
 Usage: virshx setup [OPTIONS] DOMAIN
 
@@ -93,11 +93,11 @@ Options:
   -h, --help    Print help information
 EOF
       ;;
-    unmount)
+    upload)
       cat 1>&2 << EOF
-Unmount guest filesystem from host machine.
+Upload Virshx to guest machine
 
-Usage: virshx setup [OPTIONS] DOMAIN
+Usage: virshx upload [OPTIONS] DOMAIN
 
 Options:
   -h, --help    Print help information
@@ -123,6 +123,50 @@ assert_cmd() {
   if [ ! -x "$(command -v "${1}")" ]; then
     error "Cannot find required ${1} command on computer"
   fi
+}
+
+#######################################
+# Download disk for domain and install with defaults.
+#######################################
+boot() {
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'boot'
+        exit 0
+        ;;
+      *)
+        domain="${1}"
+        shift 1
+        ;;
+    esac
+  done
+
+  mkdir -p "${HOME}/.virshx"
+  case "${domain:-}" in
+    alpine)
+      url='https://dl-cdn.alpinelinux.org/alpine/v3.18/releases/x86_64/alpine-standard-3.18.5-x86_64.iso'
+      image="${HOME}/.virshx/alpine_amd64.iso"
+      fetch "${url}" "${image}"
+      install_ --domain alpine --osinfo alpinelinux3.18 "${image}"
+      ;;
+    debian)
+      url='https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2'
+      image="${HOME}/.virshx/debian_amd64.qcow2"
+      fetch "${url}" "${image}"
+      install_ --domain debian --osinfo debian12 "${image}"
+      ;;
+    freebsd)
+      url='https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/14.0/FreeBSD-14.0-RELEASE-amd64-dvd1.iso'
+      image="${HOME}/.virshx/freebsd_amd64.iso"
+      fetch "${url}" "${image}"
+      install_ --domain freebsd --osinfo freebsd13.1 "${image}"
+      ;;
+    *)
+      error_usage "Unsupported domain '${domain:-}'" 'download'
+      ;;
+  esac
 }
 
 #######################################
@@ -173,6 +217,17 @@ error_usage() {
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
   printf "Run \'virshx %s--help\' for usage.\n" "${2:+${2} }" >&2
   exit 2
+}
+
+#######################################
+# Download file if necessary.
+#######################################
+fetch() {
+  # Flags:
+  #   -f: Check if file exists and is a regular file.
+  if [ ! -f "${2}" ]; then
+    curl --location --show-error --fail --output "${2}" "${1}"
+  fi
 }
 
 #######################################
@@ -308,7 +363,7 @@ install_cdrom() {
   folder="${HOME}/.local/share/libvirt/cdroms"
   cdrom="${folder}/${1}.iso"
 
-  mkdir -p "${folder}"
+  mkdir -p "${folder}" "${HOME}/.local/share/libvirt/images"
   cp "${3}" "${cdrom}"
   virt-install \
     --arch "$(get_arch)" \
@@ -380,39 +435,6 @@ install_disk() {
     --osinfo "${2}" \
     --vcpus 4 \
     ${linux:+--virt-type kvm}
-}
-
-#######################################
-# Mount guest filesystem to host machine.
-#######################################
-mount_() {
-  # Parse command line arguments.
-  while [ "${#}" -gt 0 ]; do
-    case "${1}" in
-      -h | --help)
-        usage 'mount'
-        exit 0
-        ;;
-      *)
-        domain="${1}"
-        shift 1
-        ;;
-    esac
-  done
-
-  # Flags:
-  #   -z: Check if string has zero length.
-  if [ -z "${domain:-}" ]; then
-    error_usage 'Domain name is required' 'mount'
-  fi
-
-  path="${HOME}/.local/share/libvirt/mounts/${domain}"
-  mkdir -p "${path}"
-
-  guestmount --inspector --add \
-    "${HOME}/.local/share/libvirt/images/${domain}.qcow2" "${path}"
-
-  echo "Filesystem for ${domain} is mounted at ${path}"
 }
 
 #######################################
@@ -563,7 +585,8 @@ setup() {
   # unable to find the "" command.
   if [ -x "$(command -v apk)" ]; then
     ${use_sudo:+sudo} apk update
-    ${use_sudo:+sudo} apk add openssh-server qemu-guest-agent spice-vdagent
+    ${use_sudo:+sudo} apk add openssh-server python3 qemu-guest-agent \
+      spice-vdagent
     ${use_sudo:+sudo} rc-update add qemu-guest-agent
     ${use_sudo:+sudo} service qemu-guest-agent start
     # Starting spice-vdagentd service causes an error.
@@ -626,14 +649,14 @@ EOF
 }
 
 #######################################
-# Unmount guest filesystem from host machine.
+# Upload Virshx to guest machine.
 #######################################
-unmount_() {
+upload() {
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
     case "${1}" in
       -h | --help)
-        usage 'unmount'
+        usage 'upload'
         exit 0
         ;;
       *)
@@ -643,13 +666,8 @@ unmount_() {
     esac
   done
 
-  # Flags:
-  #   -z: Check if string has zero length.
-  if [ -z "${domain:-}" ]; then
-    error_usage 'Domain name is required' 'unmount'
-  fi
-
-  guestunmount "${HOME}/.local/share/libvirt/mounts/${domain}"
+  virt-copy-in --domain "${domain}" "$(fullpath "$0")" /usr/local/bin/
+  echo "Uploaded Virshx to ${domain} machine at path /usr/local/bin/virshx"
 }
 
 #######################################
@@ -680,6 +698,11 @@ main() {
         version
         exit 0
         ;;
+      boot)
+        shift 1
+        boot "$@"
+        exit 0
+        ;;
       forward)
         shift 1
         forward "$@"
@@ -688,11 +711,6 @@ main() {
       install)
         shift 1
         install_ "$@"
-        exit 0
-        ;;
-      mount)
-        shift 1
-        mount_ "$@"
         exit 0
         ;;
       run)
@@ -705,9 +723,9 @@ main() {
         setup "$@"
         exit 0
         ;;
-      unmount)
+      upload)
         shift 1
-        unmount_ "$@"
+        upload "$@"
         exit 0
         ;;
       *)
