@@ -231,6 +231,22 @@ fetch() {
 }
 
 #######################################
+# Find command to elevate as super user.
+#######################################
+find_super() {
+  # Flags:
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
+  if [ -x "$(command -v sudo)" ]; then
+    echo 'sudo'
+  elif [ -x "$(command -v doas)" ]; then
+    echo 'doas'
+  else
+    echo ''
+  fi
+}
+
+#######################################
 # Setup SSH port forward to guest domain.
 #######################################
 forward() {
@@ -550,83 +566,73 @@ run() {
 # Configure guest filesystem.
 #######################################
 setup() {
+  super=''
+
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
     case "${1}" in
       -h | --help)
-        usage 'unmount'
+        usage 'setup'
         exit 0
         ;;
       *)
-        domain="${1}"
-        shift 1
+        error_usage "No such option '${1}'" 'setup'
         ;;
     esac
   done
 
-  # Flags:
-  #   -n: Check if string has nonzero length.
-  if [ -n "${domain:-}" ]; then
-    virt-copy-in --domain "${domain}" "$(fullpath "$0")" /usr/local/bin/
-    echo "Uploaded Virshx to ${domain} machine at path /usr/local/bin/virshx"
-    exit 0
-  fi
-
   # Use sudo for system installation if user is not root. Do not use long form
   # --user flag for id. It is not supported on MacOS.
   if [ "$(id -u)" -ne 0 ]; then
-    assert_cmd sudo
-    use_sudo='true'
-  else
-    use_sudo=''
+    super="$(find_super)"
   fi
 
-  # Do not quote the sudo parameter expansion. Script will error due to be being
-  # unable to find the "" command.
+  # Do not quote the outer super parameter expansion. Shell will error due to be
+  # being unable to find the "" command.
   if [ -x "$(command -v apk)" ]; then
-    ${use_sudo:+sudo} apk update
-    ${use_sudo:+sudo} apk add openssh-server python3 qemu-guest-agent \
-      spice-vdagent
-    ${use_sudo:+sudo} rc-update add qemu-guest-agent
-    ${use_sudo:+sudo} service qemu-guest-agent start
+    ${super:+"${super}"} apk update
+    ${super:+"${super}"} apk add curl jq openssh-server python3 \
+      qemu-guest-agent spice-vdagent
+    ${super:+"${super}"} rc-update add qemu-guest-agent
+    ${super:+"${super}"} service qemu-guest-agent start
     # Starting spice-vdagentd service causes an error.
-    ${use_sudo:+sudo} rc-update add spice-vdagentd
-    ${use_sudo:+sudo} rc-update add sshd
-    ${use_sudo:+sudo} service sshd start
+    ${super:+"${super}"} rc-update add spice-vdagentd
+    ${super:+"${super}"} rc-update add sshd
+    ${super:+"${super}"} service sshd start
   fi
 
   if [ -x "$(command -v apt-get)" ]; then
     # DEBIAN_FRONTEND variable setting is ineffective if on a separate line,
     # since the command is executed as sudo.
-    ${use_sudo:+sudo} apt-get update
-    ${use_sudo:+sudo} DEBIAN_FRONTEND=noninteractive apt-get install --yes \
-      openssh-server qemu-guest-agent spice-vdagent
+    ${super:+"${super}"} apt-get update
+    ${super:+"${super}"} DEBIAN_FRONTEND=noninteractive apt-get install --yes \
+      curl jq openssh-server qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v dnf)" ]; then
-    ${use_sudo:+sudo} dnf check-update || {
+    ${super:+"${super}"} dnf check-update || {
       code="$?"
       [ "${code}" -ne 100 ] && exit "${code}"
     }
-    ${use_sudo:+sudo} dnf install --assumeyes openssh-server qemu-guest-agent \
-      spice-vdagent
+    ${super:+"${super}"} dnf install --assumeyes curl jq openssh-server \
+      qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v pacman)" ]; then
-    ${use_sudo:+sudo} pacman --noconfirm --refresh --sync --sysupgrade
-    ${use_sudo:+sudo} pacman --noconfirm --sync openssh qemu-guest-agent \
-      spice-vdagent
+    ${super:+"${super}"} pacman --noconfirm --refresh --sync --sysupgrade
+    ${super:+"${super}"} pacman --noconfirm --sync curl jq openssh \
+      qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v pkg)" ]; then
-    ${use_sudo:+sudo} pkg update
+    ${super:+"${super}"} pkg update
     # Seems as though openssh-server is builtin to FreeBSD.
-    ${use_sudo:+sudo} pkg install --yes qemu-guest-agent
-    ${use_sudo:+sudo} service qemu-guest-agent start
-    ${use_sudo:+sudo} sysrc qemu_guest_agent_enable="YES"
+    ${super:+"${super}"} pkg install --yes curl jq qemu-guest-agent
+    ${super:+"${super}"} service qemu-guest-agent start
+    ${super:+"${super}"} sysrc qemu_guest_agent_enable="YES"
 
     # Enable serial console on next boot.
-    ${use_sudo:+sudo} tee --append /boot/loader.conf > /dev/null << EOF
+    ${super:+"${super}"} tee --append /boot/loader.conf > /dev/null << EOF
 boot_multicons="YES"
 boot_serial="YES"
 comconsole_speed="115200"
@@ -635,17 +641,21 @@ EOF
   fi
 
   if [ -x "$(command -v zypper)" ]; then
-    ${use_sudo:+sudo} zypper update --no-confirm
-    ${use_sudo:+sudo} zypper install --no-confirm openssh-server \
+    ${super:+"${super}"} zypper update --no-confirm
+    ${super:+"${super}"} zypper install --no-confirm curl jq openssh-server \
       qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v systemctl)" ]; then
-    ${use_sudo:+sudo} systemctl enable --now qemu-guest-agent.service
-    ${use_sudo:+sudo} systemctl enable --now serial-getty@ttyS0.service
-    ${use_sudo:+sudo} systemctl enable --now spice-vdagentd.service
-    ${use_sudo:+sudo} systemctl enable --now ssh.service
+    ${super:+"${super}"} systemctl enable --now qemu-guest-agent.service
+    ${super:+"${super}"} systemctl enable --now serial-getty@ttyS0.service
+    ${super:+"${super}"} systemctl enable --now spice-vdagentd.service
+    ${super:+"${super}"} systemctl enable --now ssh.service
   fi
+
+  curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- clear-cache
+  curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- packup
+  packup
 }
 
 #######################################
