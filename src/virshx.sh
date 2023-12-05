@@ -109,22 +109,6 @@ EOF
   esac
 }
 
-# Assert that command can be found in system path.
-# Will exit script with an error code if command is not in system path.
-# Arguments:
-#   Command to check availabilty.
-# Outputs:
-#   Writes error message to stderr if command is not in system path.
-#######################################
-assert_cmd() {
-  # Flags:
-  #   -v: Only show file path of command.
-  #   -x: Check if file exists and execute permission is granted.
-  if [ ! -x "$(command -v "${1}")" ]; then
-    error "Cannot find required ${1} command on computer"
-  fi
-}
-
 #######################################
 # Download disk for domain and install with defaults.
 #######################################
@@ -185,6 +169,7 @@ cloud_init() {
 #cloud-config
 
 hostname: "${1}"
+preserve_hostname: true
 users:
   - lock_passwd: false
     name: "${2}"
@@ -242,7 +227,7 @@ find_super() {
   elif [ -x "$(command -v doas)" ]; then
     echo 'doas'
   else
-    echo ''
+    error 'Unable to find a command for super user elevation'
   fi
 }
 
