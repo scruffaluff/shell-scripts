@@ -16,9 +16,7 @@ set -eu
 #   Writes help information to stdout.
 #######################################
 usage() {
-  case "${1}" in
-    main)
-      cat 1>&2 << EOF
+  cat 1>&2 << EOF
 Frees up disk space by clearing caches of package managers.
 
 Usage: clear-cache [OPTIONS]
@@ -28,11 +26,6 @@ Options:
   -h, --help      Print help information
   -v, --version   Print version information
 EOF
-      ;;
-    *)
-      error "No such usage option '${1}'"
-      ;;
-  esac
 }
 
 #######################################
@@ -49,6 +42,69 @@ assert_cmd() {
   #   -x: Check if file exists and execute permission is granted.
   if [ ! -x "$(command -v "${1}")" ]; then
     error "Cannot find required ${1} command on computer"
+  fi
+}
+
+#######################################
+# Clear cache of all package managers.
+#######################################
+clear_cache() {
+  # Do not use long form -user flag for id. It is not supported on MacOS.
+  if [ "$(id -u)" -ne 0 ]; then
+    super="$(find_super)"
+  else
+    super=''
+  fi
+
+  # Do not quote the outer super parameter expansion. Shell will error due to be
+  # being unable to find the "" command.
+  if [ -x "$(command -v apk)" ]; then
+    ${super:+"${super}"} apk cache clean
+  fi
+
+  if [ -x "$(command -v apt-get)" ]; then
+    ${super:+"${super}"} apt-get clean --yes
+  fi
+
+  if [ -x "$(command -v brew)" ]; then
+    brew cleanup --prune all
+  fi
+
+  if [ -x "$(command -v dnf)" ]; then
+    ${super:+"${super}"} dnf clean --assumeyes all
+  fi
+
+  if [ -x "$(command -v flatpak)" ]; then
+    ${super:+"${super}"} flatpak uninstall --assumeyes --unused
+  fi
+
+  if [ -x "$(command -v pacman)" ]; then
+    ${super:+"${super}"} pacman --clean --sync
+  fi
+
+  if [ -x "$(command -v pkg)" ]; then
+    ${super:+"${super}"} pkg clean --all --yes
+  fi
+
+  if [ -x "$(command -v zypper)" ]; then
+    ${super:+"${super}"} zypper clean --all
+  fi
+
+  # Check if Docker client is install and Docker daemon is up and running.
+  if [ -x "$(command -v docker)" ] && docker ps > /dev/null 2>&1; then
+    ${super:+"${super}"} docker system prune --force --volumes
+  fi
+
+  if [ -x "$(command -v npm)" ]; then
+    npm cache clean --force --loglevel error
+  fi
+
+  if [ -x "$(command -v nvm)" ]; then
+    nvm cache clear
+  fi
+
+  if [ -x "$(command -v pip)" ]; then
+    pip cache purge
   fi
 }
 
@@ -76,67 +132,18 @@ error_usage() {
 }
 
 #######################################
-# Clear cache of all package managers.
+# Find command to elevate as super user.
 #######################################
-clear_cache() {
-  # Use sudo for system installation if user is not root. Do not use long form
-  # --user flag for id. It is not supported on MacOS.
-  if [ "$(id -u)" -ne 0 ]; then
-    assert_cmd sudo
-    use_sudo='true'
+find_super() {
+  # Flags:
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
+  if [ -x "$(command -v sudo)" ]; then
+    echo 'sudo'
+  elif [ -x "$(command -v doas)" ]; then
+    echo 'doas'
   else
-    use_sudo=''
-  fi
-
-  # Do not quote the sudo parameter expansion. Script will error due to be being
-  # unable to find the "" command.
-  if [ -x "$(command -v apk)" ]; then
-    ${use_sudo:+sudo} apk cache clean
-  fi
-
-  if [ -x "$(command -v apt-get)" ]; then
-    ${use_sudo:+sudo} apt-get clean --yes
-  fi
-
-  if [ -x "$(command -v brew)" ]; then
-    brew cleanup --prune all
-  fi
-
-  if [ -x "$(command -v dnf)" ]; then
-    ${use_sudo:+sudo} dnf clean --assumeyes all
-  fi
-
-  if [ -x "$(command -v flatpak)" ]; then
-    ${use_sudo:+sudo} flatpak uninstall --assumeyes --unused
-  fi
-
-  if [ -x "$(command -v pacman)" ]; then
-    ${use_sudo:+sudo} pacman --clean --sync
-  fi
-
-  if [ -x "$(command -v pkg)" ]; then
-    ${use_sudo:+sudo} pkg clean --all --yes
-  fi
-
-  if [ -x "$(command -v zypper)" ]; then
-    ${use_sudo:+sudo} zypper clean --all
-  fi
-
-  # Check if Docker client is install and Docker daemon is up and running.
-  if [ -x "$(command -v docker)" ] && docker ps > /dev/null 2>&1; then
-    ${use_sudo:+sudo} docker system prune --force --volumes
-  fi
-
-  if [ -x "$(command -v npm)" ]; then
-    npm cache clean --force --loglevel error
-  fi
-
-  if [ -x "$(command -v nvm)" ]; then
-    nvm cache clear
-  fi
-
-  if [ -x "$(command -v pip)" ]; then
-    pip cache purge
+    error 'Unable to find a command for super user elevation'
   fi
 }
 
@@ -146,7 +153,7 @@ clear_cache() {
 #   ClearCache version string.
 #######################################
 version() {
-  echo 'ClearCache 0.1.2'
+  echo 'ClearCache 0.2.0'
 }
 
 #######################################
@@ -161,14 +168,16 @@ main() {
         shift 1
         ;;
       -h | --help)
-        usage 'main'
+        usage
         exit 0
         ;;
       -v | --version)
         version
         exit 0
         ;;
-      *) ;;
+      *)
+        error_usage "No such option '${1}'."
+        ;;
     esac
   done
 

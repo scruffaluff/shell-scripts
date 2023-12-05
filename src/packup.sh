@@ -16,9 +16,7 @@ set -eu
 #   Writes help information to stdout.
 #######################################
 usage() {
-  case "${1}" in
-    main)
-      cat 1>&2 << EOF
+  cat 1>&2 << EOF
 Invokes upgrade commands to all installed package managers.
 
 Usage: packup [OPTIONS]
@@ -28,28 +26,6 @@ Options:
   -h, --help      Print help information
   -v, --version   Print version information
 EOF
-      ;;
-    *)
-      error "No such usage option '${1}'"
-      ;;
-  esac
-}
-
-#######################################
-# Assert that command can be found in system path.
-# Will exit script with an error code if command is not in system path.
-# Arguments:
-#   Command to check availabilty.
-# Outputs:
-#   Writes error message to stderr if command is not in system path.
-#######################################
-assert_cmd() {
-  # Flags:
-  #   -v: Only show file path of command.
-  #   -x: Check if file exists and execute permission is granted.
-  if [ ! -x "$(command -v "${1}")" ]; then
-    error "Cannot find required ${1} command on computer"
-  fi
 }
 
 #######################################
@@ -60,10 +36,10 @@ assert_cmd() {
 # codes.
 #
 # Arguments:
-#   Whether to use sudo command.
+#   Super user command for installation.
 #######################################
 dnf_check_update() {
-  ${1:+sudo} dnf check-update || {
+  ${1:+"${1}"} dnf check-update || {
     code="$?"
     [ "${code}" -eq 100 ] && return 0
     return "${code}"
@@ -94,32 +70,46 @@ error_usage() {
 }
 
 #######################################
+# Find command to elevate as super user.
+#######################################
+find_super() {
+  # Flags:
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
+  if [ -x "$(command -v sudo)" ]; then
+    echo 'sudo'
+  elif [ -x "$(command -v doas)" ]; then
+    echo 'doas'
+  else
+    error 'Unable to find a command for super user elevation'
+  fi
+}
+
+#######################################
 # Invoke upgrade commands to all installed package managers.
 #######################################
 upgrade() {
-  # Use sudo for system installation if user is not root. Do not use long form
-  # --user flag for id. It is not supported on MacOS.
+  # Do not use long form -user flag for id. It is not supported on MacOS.
   if [ "$(id -u)" -ne 0 ]; then
-    assert_cmd sudo
-    use_sudo='true'
+    super="$(find_super)"
   else
-    use_sudo=''
+    super=''
   fi
 
-  # Do not quote the sudo parameter expansion. Script will error due to be being
-  # unable to find the "" command.
+  # Do not quote the outer super parameter expansion. Shell will error due to be
+  # being unable to find the "" command.
   if [ -x "$(command -v apk)" ]; then
-    ${use_sudo:+sudo} apk update
-    ${use_sudo:+sudo} apk upgrade
+    ${super:+"${super}"} apk update
+    ${super:+"${super}"} apk upgrade
   fi
 
   if [ -x "$(command -v apt-get)" ]; then
     # DEBIAN_FRONTEND variable setting is ineffective if on a separate line,
-    # since the command is executed as sudo.
-    ${use_sudo:+sudo} apt-get update
-    ${use_sudo:+sudo} DEBIAN_FRONTEND=noninteractive apt-get full-upgrade \
+    # since the command is executed as super user.
+    ${super:+"${super}"} apt-get update
+    ${super:+"${super}"} DEBIAN_FRONTEND=noninteractive apt-get full-upgrade \
       --yes --allow-downgrades
-    ${use_sudo:+sudo} apt-get autoremove --yes
+    ${super:+"${super}"} apt-get autoremove --yes
   fi
 
   if [ -x "$(command -v brew)" ]; then
@@ -128,26 +118,26 @@ upgrade() {
   fi
 
   if [ -x "$(command -v dnf)" ]; then
-    dnf_check_update "${use_sudo}"
-    ${use_sudo:+sudo} dnf upgrade --assumeyes
-    ${use_sudo:+sudo} dnf autoremove --assumeyes
+    dnf_check_update "${super}"
+    ${super:+"${super}"} dnf upgrade --assumeyes
+    ${super:+"${super}"} dnf autoremove --assumeyes
   fi
 
   if [ -x "$(command -v flatpak)" ]; then
-    ${use_sudo:+sudo} flatpak update --assumeyes
+    ${super:+"${super}"} flatpak update --assumeyes
   fi
 
   if [ -x "$(command -v pacman)" ]; then
-    ${use_sudo:+sudo} pacman --noconfirm --refresh --sync --sysupgrade
+    ${super:+"${super}"} pacman --noconfirm --refresh --sync --sysupgrade
   fi
 
   if [ -x "$(command -v pkg)" ]; then
-    ${use_sudo:+sudo} pkg update
+    ${super:+"${super}"} pkg update
   fi
 
   if [ -x "$(command -v zypper)" ]; then
-    ${use_sudo:+sudo} zypper update --no-confirm
-    ${use_sudo:+sudo} zypper autoremove --no-confirm
+    ${super:+"${super}"} zypper update --no-confirm
+    ${super:+"${super}"} zypper autoremove --no-confirm
   fi
 
   # Flags:
@@ -170,7 +160,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo 'Packup 0.3.1'
+  echo 'Packup 0.4.0'
 }
 
 #######################################
@@ -185,14 +175,16 @@ main() {
         shift 1
         ;;
       -h | --help)
-        usage 'main'
+        usage
         exit 0
         ;;
       -v | --version)
         version
         exit 0
         ;;
-      *) ;;
+      *)
+        error_usage "No such option '${1}'."
+        ;;
     esac
   done
 

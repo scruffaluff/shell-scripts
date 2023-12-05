@@ -21,7 +21,7 @@ Options:
 
 # Print Tscp version string.
 Function Version() {
-    Write-Output 'Tscp 0.1.2'
+    Write-Output 'Tscp 0.2.0'
 }
 
 # Script entrypoint.

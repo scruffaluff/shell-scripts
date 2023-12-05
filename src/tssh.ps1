@@ -21,7 +21,7 @@ Options:
 
 # Print Tssh version string.
 Function Version() {
-    Write-Output 'Tssh 0.1.2'
+    Write-Output 'Tssh 0.2.0'
 }
 
 # Script entrypoint.
