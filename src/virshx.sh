@@ -639,8 +639,10 @@ EOF
     ${super:+"${super}"} systemctl enable --now ssh.service
   fi
 
-  curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- clear-cache
-  curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- packup
+  curl -LSfs https://raw.githubusercontent.com/alacritty/alacritty/master/extra/alacritty.info |
+    tic -x -
+  curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh |
+    sh -s -- clear-cache packup
   packup
 }
 
