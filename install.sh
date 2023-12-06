@@ -87,6 +87,27 @@ configure_shell() {
 }
 
 #######################################
+# Download file to local path.
+# Arguments:
+#   Super user command for installation.
+#   Remote source URL.
+#   Local destination path.
+#######################################
+download() {
+  # Flags:
+  #   -O path: Save download to path.
+  #   -q: Hide log output.
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
+  if [ -x "$(command -v curl)" ]; then
+    ${1:+"${1}"} curl --fail --location --show-error --silent --output "${3}" \
+      "${2}"
+  else
+    ${1:+"${1}"} wget -q -O "${3}" "${2}"
+  fi
+}
+
+#######################################
 # Print error message and exit script with error code.
 # Outputs:
 #   Writes error message to stderr.
@@ -117,13 +138,21 @@ error_usage() {
 #   Array of script name stems.
 #######################################
 find_scripts() {
-  assert_cmd jq
+  url="https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/${1}?recursive=true"
 
-  response="$(
-    curl -LSfs "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/${1}?recursive=true"
-  )"
-  echo "${response}" |
-    jq --raw-output '.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
+  # Flags:
+  #   -O path: Save download to path.
+  #   -q: Hide log output.
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
+  if [ -x "$(command -v curl)" ]; then
+    response="$(curl --fail --location --show-error --silent "${url}")"
+  else
+    response="$(wget -q -O - "${url}")"
+  fi
+
+  filter='.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
+  echo "${response}" | jq --exit-status --raw-output "${filter}"
 }
 
 #######################################
@@ -177,7 +206,7 @@ install_script() {
   # Do not quote the outer super parameter expansion. Shell will error due to be
   # being unable to find the "" command.
   ${super:+"${super}"} mkdir -p "${3}"
-  ${super:+"${super}"} curl -LSfs "${src_url}" -o "${dst_file}"
+  download "${super}" "${src_url}" "${dst_file}"
   ${super:+"${super}"} chmod 755 "${dst_file}"
 
   # Add Scripts to shell profile if not in system path.
@@ -214,7 +243,7 @@ log() {
 # Script entrypoint.
 #######################################
 main() {
-  dst_dir='/usr/local/bin' version='main'
+  dst_dir='/usr/local/bin' names='' version='main'
 
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
@@ -245,15 +274,17 @@ main() {
         shift 2
         ;;
       *)
-        name="${1}"
+        if [ -n "${names}" ]; then
+          names="${names} ${1}"
+        else
+          names="${1}"
+        fi
         shift 1
         ;;
     esac
   done
 
-  assert_cmd curl
   assert_cmd jq
-
   src_prefix="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${version}/src"
   scripts="$(find_scripts "${version}")"
 
@@ -262,20 +293,20 @@ main() {
   if [ -n "${list_scripts:-}" ]; then
     echo "${scripts}"
   else
-    for script in ${scripts}; do
-      # Flags:
-      #   -n: Check if the string has nonzero length.
-      if [ -n "${name:-}" ] && [ "${script}" = "${name}" ]; then
-        match_found='true'
-        install_script "${user_install:-}" "${src_prefix}" "${dst_dir}" \
-          "${script}"
-      fi
+    for name in ${names}; do
+      for script in ${scripts}; do
+        if [ "${script}" = "${name}" ]; then
+          match_found='true'
+          install_script "${user_install:-}" "${src_prefix}" "${dst_dir}" \
+            "${script}"
+        fi
+      done
     done
 
     # Flags:
     #   -z: Check if string has zero length.
     if [ -z "${match_found:-}" ]; then
-      error_usage "No script name found for '${name:-}'"
+      error_usage "No script found for '${names}'."
     fi
   fi
 }

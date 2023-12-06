@@ -32,16 +32,18 @@ setup() {
 
 @test 'Installer passes local path to Curl' {
   local actual expected
+  expected="curl --fail --location --show-error --silent --output \
+${HOME}/.local/bin/otherscript \
+https://raw.githubusercontent.com/scruffaluff/shell-scripts/develop/src/otherscript.sh"
 
-  expected="curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/develop/src/otherscript.sh -o ${HOME}/.local/bin/otherscript"
   actual="$(bash install.sh --user --version develop otherscript)"
   assert_equal "${actual}" "${expected}"
 }
 
 @test 'JSON parser finds all POSIX shell shell scripts' {
   local actual expected
-
   expected=$'mockscript\notherscript'
+
   actual="$(bash install.sh --list)"
   assert_equal "${actual}" "${expected}"
 }
