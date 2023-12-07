@@ -184,4 +184,7 @@ main() {
   clear_cache
 }
 
-main "$@"
+# Add ability to selectively skip main function during test suite.
+if [ -z "${BATS_SOURCE_ONLY:-}" ]; then
+  main "$@"
+fi
