@@ -10,6 +10,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Doas support for all Unix scripts.
+- Multiple script installations with one command.
 
 ### Removed
 

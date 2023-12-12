@@ -58,7 +58,7 @@ jobs:
           npm --version
           npm ci
       - name: Check format of configuration files
-        run: npm run prettier:test
+        run: npm run prettier
       - name: Setup Tmate session if debug enabled
         if: >-
           ${{ always() && github.event_name == 'workflow_dispatch' &&
@@ -97,13 +97,13 @@ jobs:
           sudo curl -LSfs "https://github.com/mvdan/sh/releases/download/v${shfmt_version}/shfmt_v${shfmt_version}_linux_amd64" --output /usr/local/bin/shfmt
           sudo chmod 755 /usr/local/bin/shfmt
       - name: Check format of POSIX shell scripts
-        run: npm run shfmt:test
+        run: npm run shfmt
       - name: Install ShellCheck
         run: sudo apt-get install --yes shellcheck
       - name: Run ShellCheck on POSIX shell scripts
-        run: npm run shellcheck:test
+        run: npm run shellcheck
       - name: Run POSIX shell tests with Bats
-        run: npm run bats:test
+        run: npm run bats
       - name: Setup Tmate session if debug enabled
         if: >-
           ${{ always() && github.event_name == 'workflow_dispatch' &&
