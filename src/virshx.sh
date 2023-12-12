@@ -590,7 +590,7 @@ setup() {
     # DEBIAN_FRONTEND variable setting is ineffective if on a separate line,
     # since the command is executed as sudo.
     ${super:+"${super}"} apt-get update
-    ${super:+"${super}"} DEBIAN_FRONTEND=noninteractive apt-get install --yes \
+    DEBIAN_FRONTEND=noninteractive ${super:+"${super}"} apt-get install --yes \
       curl jq openssh-server qemu-guest-agent spice-vdagent
   fi
 
