@@ -140,6 +140,14 @@ upgrade() {
     ${super:+"${super}"} zypper autoremove --no-confirm
   fi
 
+  if [ -x "$(command -v cargo)" ] && [ -O "$(which cargo)" ]; then
+    cargo install --list | while read -r line; do
+      if expr "${line}" : '^.*:$' > /dev/null; then
+        cargo install "$(echo "${line}" | cut -f1 -d ' ')"
+      fi
+    done
+  fi
+
   # Flags:
   #   -O: Check if current user owns the file.
   if [ -x "$(command -v npm)" ] && [ -O "$(which npm)" ]; then

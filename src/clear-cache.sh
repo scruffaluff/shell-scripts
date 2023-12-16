@@ -90,6 +90,10 @@ clear_cache() {
     ${super:+"${super}"} zypper clean --all
   fi
 
+  if [ -x "$(command -v cargo-cache)" ]; then
+    cargo-cache --autoclean
+  fi
+
   # Check if Docker client is install and Docker daemon is up and running.
   if [ -x "$(command -v docker)" ] && docker ps > /dev/null 2>&1; then
     ${super:+"${super}"} docker system prune --force --volumes
@@ -105,6 +109,16 @@ clear_cache() {
 
   if [ -x "$(command -v pip)" ]; then
     pip cache purge
+  fi
+
+  if [ -x "$(command -v playwright)" ]; then
+    playwright uninstall --all
+  fi
+
+  if [ -x "$(command -v poetry)" ]; then
+    for cache in $(poetry cache list); do
+      poetry cache clear --all --no-interaction "${cache}"
+    done
   fi
 }
 
