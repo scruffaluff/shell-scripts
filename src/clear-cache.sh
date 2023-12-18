@@ -112,7 +112,7 @@ clear_cache() {
   fi
 
   if [ -x "$(command -v playwright)" ]; then
-    playwright uninstall --all
+    playwright uninstall --all || true
   fi
 
   if [ -x "$(command -v poetry)" ]; then
