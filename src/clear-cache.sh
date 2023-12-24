@@ -112,13 +112,32 @@ clear_cache() {
   fi
 
   if [ -x "$(command -v playwright)" ]; then
-    playwright uninstall --all || true
+    clear_playwright
   fi
 
   if [ -x "$(command -v poetry)" ]; then
     for cache in $(poetry cache list); do
       poetry cache clear --all --no-interaction "${cache}"
     done
+  fi
+}
+
+#######################################
+# Clear cache for Playwright.
+#######################################
+clear_playwright() {
+  # Do not use long form --kernel-name flag for uname. It is not supported on
+  # MacOS.
+  #
+  # Flags:
+  #   -d: Check if path exists and is a directory.
+  #   -s: Show operating system kernel name.
+  if [ "$(uname -s)" = 'Darwin' ]; then
+    if [ -d "${HOME}/Library/Caches/ms-playwright/.links" ]; then
+      playwright uninstall --all
+    fi
+  elif [ -d "${HOME}/.cache/ms-playwright/.links" ]; then
+    playwright uninstall --all
   fi
 }
 
