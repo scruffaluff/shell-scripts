@@ -72,6 +72,18 @@ error_usage() {
 #######################################
 # Find command to elevate as super user.
 #######################################
+find_snaps() {
+  # Find all installed Snap packages.
+  #
+  # Flags:
+  #   --lines +2: Select the 2nd line to the end of the output.
+  #   --field 1: Take only the first part of the output.
+  snap list 2> /dev/null | tail --lines +2 | cut --delimiter ' ' --field 1
+}
+
+#######################################
+# Find command to elevate as super user.
+#######################################
 find_super() {
   # Flags:
   #   -v: Only show file path of command.
@@ -96,22 +108,23 @@ purge_snaps() {
     super=''
   fi
 
-  # Find all installed Snap packages.
+  # Loop repeatedly over Snap packages until all are removed.
   #
-  # Flags:
-  #   --lines +2: Select the 2nd line to the end of the output.
-  #   --field 1: Take only the first part of the output.
-  snaps="$(snap list | tail --lines +2 | cut --delimiter ' ' --field 1)"
-
-  while IFS= read -r snap; do
-    # Do not quote the outer super parameter expansion. Shell will error due to
-    # be being unable to find the "" command.
-    ${super:+"${super}"} snap remove --purge "${snap}"
-  done << EOF
-${snaps}
-EOF
+  # Several Snap packages cannot be removed until other packages are removed
+  # first. Looping repeatedly allows will remove dependencies and then attempt
+  # removing the package again.
+  packages="$(find_snaps)"
+  while [ -n "${packages}" ]; do
+    for package in ${packages}; do
+      ${super:+"${super}"} snap remove --purge "${package}" 2> /dev/null || true
+    done
+    packages="$(find_snaps)"
+  done
 
   # Delete Snap system daemons and services.
+  #
+  # Do not quote the outer super parameter expansion. Shell will error due to be
+  # being unable to find the "" command.
   ${super:+"${super}"} systemctl stop --show-transaction snapd.socket
   ${super:+"${super}"} systemctl stop --show-transaction snapd.service
   ${super:+"${super}"} systemctl disable snapd.service
@@ -127,7 +140,7 @@ EOF
 #   Packup version string.
 #######################################
 version() {
-  echo 'PurgeSnap 0.2.0'
+  echo 'PurgeSnap 0.3.0'
 }
 
 #######################################

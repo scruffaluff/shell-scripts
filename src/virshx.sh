@@ -65,6 +65,7 @@ Options:
 
 Subcommands:
   boot      Download disk for domain and install with defaults
+  forward   Setup SSH port forward to guest domain
   install   Create a virtual machine from a cdrom or disk file
   run       Create a virtual machine directly with QEMU
   setup     Configure guest machine
@@ -127,7 +128,7 @@ boot() {
     esac
   done
 
-  mkdir -p "${HOME}/.virshx"
+  setup_host
   case "${domain:-}" in
     alpine)
       url='https://dl-cdn.alpinelinux.org/alpine/v3.18/releases/x86_64/alpine-standard-3.18.5-x86_64.iso'
@@ -157,11 +158,6 @@ boot() {
 # Generate cloud init data.
 #######################################
 cloud_init() {
-  mkdir -p "${HOME}/.virshx"
-  if [ ! -f "${HOME}/.virshx/key" ]; then
-    ssh-keygen -N '' -q -f "${HOME}/.virshx/key" -t ed25519 -C virshx
-    chmod 600 "${HOME}/.virshx/key" "${HOME}/.virshx/key.pub"
-  fi
   pub_key="$(cat "${HOME}/.virshx/key.pub")"
 
   path="$(mktemp).yaml"
@@ -179,6 +175,25 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
 EOF
   printf "%s" "${path}"
+}
+
+#######################################
+# Create application bundle or desktop entry.
+#######################################
+create_app() {
+  name="${1}"
+
+  if [ "$(uname -s)" = 'Linux' ]; then
+    cat << EOF > "${HOME}/.local/share/applications/${name}.desktop"
+[Desktop Entry]
+Exec=virshx launch ${name}
+Icon=${HOME}/.virshx/waveform.svg
+Name=$(echo "${name}" | sed 's/./\U&/')
+Terminal=false
+Type=Application
+Version=1.0
+EOF
+  fi
 }
 
 #######################################
@@ -255,6 +270,7 @@ forward() {
     esac
   done
 
+  setup_host
   # Flags:
   #   -z: Check if string has zero length.
   if [ -z "${domain:-}" ]; then
@@ -262,6 +278,8 @@ forward() {
   fi
   virsh qemu-monitor-command --domain "${domain}" \
     --hmp "hostfwd_add tcp::${port}-:22"
+
+  echo "You can now SSH login to ${domain} with command 'ssh -i ~/virshx/key -p 2022 localhost'."
 }
 
 #######################################
@@ -322,6 +340,7 @@ install_() {
     esac
   done
 
+  setup_host
   # Flags:
   #   -z: Check if string has zero length.
   if [ -z "${filepath:-}" ]; then
@@ -354,6 +373,7 @@ install_() {
       error_usage "File type ${extension} is not supported" 'install'
       ;;
   esac
+  create_app "${domain}"
 }
 
 #######################################
@@ -375,6 +395,7 @@ install_cdrom() {
     --memory 8192 \
     --name "${1}" \
     --osinfo "${2}" \
+    --tpm model=tpm-tis,backend.type=emulator,backend.version=2.0 \
     --vcpus 4 \
     ${linux:+--virt-type kvm}
 }
@@ -439,6 +460,15 @@ install_disk() {
 }
 
 #######################################
+# Launch virtual machine as desktop application.
+#######################################
+launch() {
+  virsh start "${1}" || true
+  forward "${1}" || true
+  virt-viewer "${1}"
+}
+
+#######################################
 # Create virtual machine directly with QEMU.
 #######################################
 run() {
@@ -478,6 +508,7 @@ run() {
     esac
   done
 
+  setup_host
   # Flags:
   #   -z: Check if string has zero length.
   if [ -z "${filepath:-}" ]; then
@@ -550,7 +581,7 @@ run() {
 #######################################
 # Configure guest filesystem.
 #######################################
-setup() {
+setup_guest() {
   super=''
 
   # Parse command line arguments.
@@ -576,7 +607,7 @@ setup() {
   # being unable to find the "" command.
   if [ -x "$(command -v apk)" ]; then
     ${super:+"${super}"} apk update
-    ${super:+"${super}"} apk add curl jq openssh-server python3 \
+    ${super:+"${super}"} apk add curl jq ncurses openssh-server python3 \
       qemu-guest-agent spice-vdagent
     ${super:+"${super}"} rc-update add qemu-guest-agent
     ${super:+"${super}"} service qemu-guest-agent start
@@ -591,7 +622,7 @@ setup() {
     # since the command is executed as sudo.
     ${super:+"${super}"} apt-get update
     DEBIAN_FRONTEND=noninteractive ${super:+"${super}"} apt-get install --yes \
-      curl jq openssh-server qemu-guest-agent spice-vdagent
+      curl jq libncurses5-dbg openssh-server qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v dnf)" ]; then
@@ -599,20 +630,20 @@ setup() {
       code="$?"
       [ "${code}" -ne 100 ] && exit "${code}"
     }
-    ${super:+"${super}"} dnf install --assumeyes curl jq openssh-server \
-      qemu-guest-agent spice-vdagent
+    ${super:+"${super}"} dnf install --assumeyes curl jq ncurses \
+      openssh-server qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v pacman)" ]; then
     ${super:+"${super}"} pacman --noconfirm --refresh --sync --sysupgrade
-    ${super:+"${super}"} pacman --noconfirm --sync curl jq openssh \
+    ${super:+"${super}"} pacman --noconfirm --sync curl jq ncurses openssh \
       qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v pkg)" ]; then
     ${super:+"${super}"} pkg update
     # Seems as though openssh-server is builtin to FreeBSD.
-    ${super:+"${super}"} pkg install --yes curl jq qemu-guest-agent
+    ${super:+"${super}"} pkg install --yes curl jq ncurses qemu-guest-agent
     ${super:+"${super}"} service qemu-guest-agent start
     ${super:+"${super}"} sysrc qemu_guest_agent_enable="YES"
 
@@ -628,8 +659,8 @@ EOF
 
   if [ -x "$(command -v zypper)" ]; then
     ${super:+"${super}"} zypper update --no-confirm
-    ${super:+"${super}"} zypper install --no-confirm curl jq openssh-server \
-      qemu-guest-agent spice-vdagent
+    ${super:+"${super}"} zypper install --no-confirm curl jq ncurses \
+      openssh-server qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v systemctl)" ]; then
@@ -644,6 +675,22 @@ EOF
   curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh |
     sh -s -- clear-cache packup
   packup
+}
+
+#######################################
+# Configure host filesystem.
+#######################################
+setup_host() {
+  mkdir -p "${HOME}/.virshx"
+
+  fetch \
+    https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/waveform.svg \
+    "${HOME}/.virshx/waveform.svg"
+
+  if [ ! -f "${HOME}/.virshx/key" ]; then
+    ssh-keygen -N '' -q -f "${HOME}/.virshx/key" -t ed25519 -C virshx
+    chmod 600 "${HOME}/.virshx/key" "${HOME}/.virshx/key.pub"
+  fi
 }
 
 #######################################
@@ -664,10 +711,12 @@ upload() {
     esac
   done
 
+  setup_host
   if [ "$(virsh domstate "${domain}")" = 'running' ]; then
     scp -i ~/.virshx/key -P 2022 "$(fullpath "$0")" localhost:/tmp/virshx
     echo "Uploaded Virshx to ${domain} machine at path /tmp/virshx"
   else
+    virt-copy-in --domain "${domain}" "$(fullpath "$0")" /usr/local/bin/
     virt-copy-in --domain "${domain}" "$(fullpath "$0")" /usr/local/bin/
     echo "Uploaded Virshx to ${domain} machine at path /usr/local/bin/virshx"
   fi
@@ -716,6 +765,11 @@ main() {
         install_ "$@"
         exit 0
         ;;
+      launch)
+        shift 1
+        launch "$@"
+        exit 0
+        ;;
       run)
         shift 1
         run "$@"
@@ -723,7 +777,7 @@ main() {
         ;;
       setup)
         shift 1
-        setup "$@"
+        setup_guest "$@"
         exit 0
         ;;
       upload)
