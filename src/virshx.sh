@@ -86,12 +86,17 @@ EOF
       ;;
     setup)
       cat 1>&2 << EOF
-Configure guest machine
+Configure machine
 
-Usage: virshx setup [OPTIONS] DOMAIN
+Usage: virshx setup [OPTIONS] [SUBCOMMAND]
 
 Options:
   -h, --help    Print help information
+
+Subcommands:
+  desktop     Create GNOME desktop environment
+  guest       Configure guest machine
+  host        Configure host machine
 EOF
       ;;
     upload)
@@ -131,10 +136,22 @@ boot() {
   setup_host
   case "${domain:-}" in
     alpine)
-      url='https://dl-cdn.alpinelinux.org/alpine/v3.18/releases/x86_64/alpine-standard-3.18.5-x86_64.iso'
+      url='https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-standard-3.19.0-x86_64.iso'
       image="${HOME}/.virshx/alpine_amd64.iso"
       fetch "${url}" "${image}"
-      install_ --domain alpine --osinfo alpinelinux3.18 "${image}"
+      install_ --domain alpine --osinfo alpinelinux3.19 "${image}"
+      ;;
+    android)
+      url='https://gigenet.dl.sourceforge.net/project/android-x86/Release%209.0/android-x86_64-9.0-r2.iso'
+      image="${HOME}/.virshx/android_amd64.iso"
+      fetch "${url}" "${image}"
+      install_ --domain android --osinfo android-x86-9.0 "${image}"
+      ;;
+    arch)
+      url='https://geo.mirror.pkgbuild.com/iso/latest/archlinux-x86_64.iso'
+      image="${HOME}/.virshx/arch_amd64.iso"
+      fetch "${url}" "${image}"
+      install_ --domain arch --osinfo archlinux "${image}"
       ;;
     debian)
       url='https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2'
@@ -146,7 +163,13 @@ boot() {
       url='https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/14.0/FreeBSD-14.0-RELEASE-amd64-dvd1.iso'
       image="${HOME}/.virshx/freebsd_amd64.iso"
       fetch "${url}" "${image}"
-      install_ --domain freebsd --osinfo freebsd13.1 "${image}"
+      install_ --domain freebsd --osinfo freebsd14.0 "${image}"
+      ;;
+    windows)
+      url='https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso'
+      image="${HOME}/.virshx/winvirt_drivers.iso"
+      fetch "${url}" "${image}"
+      install_windows "${HOME}/.virshx/windows_amd64.iso"
       ;;
     *)
       error_usage "Unsupported domain '${domain:-}'" 'download'
@@ -381,11 +404,9 @@ install_() {
 #######################################
 install_cdrom() {
   linux="$([ "$(uname -s)" = 'Linux' ] && echo 'true' || echo '')"
-  folder="${HOME}/.local/share/libvirt/cdroms"
-  cdrom="${folder}/${1}.iso"
-
-  mkdir -p "${folder}" "${HOME}/.local/share/libvirt/images"
+  cdrom="${HOME}/.local/share/libvirt/cdroms/${1}.iso"
   cp "${3}" "${cdrom}"
+
   virt-install \
     --arch "$(get_arch)" \
     --cdrom "${cdrom}" \
@@ -457,6 +478,31 @@ install_disk() {
     --osinfo "${2}" \
     --vcpus 4 \
     ${linux:+--virt-type kvm}
+}
+
+#######################################
+# Create a Windows virtual machine from an ISO disk.
+#######################################
+install_windows() {
+  linux="$([ "$(uname -s)" = 'Linux' ] && echo 'true' || echo '')"
+  cdrom="${HOME}/.local/share/libvirt/cdroms/windows.iso"
+  cp "${1}" "${cdrom}"
+
+  virt-install \
+    --arch "$(get_arch)" \
+    --cdrom "${cdrom}" \
+    --cpu host \
+    --disk bus=virtio,format=qcow2,size=64 \
+    --disk "bus=sata,device=cdrom,path=${HOME}/.virshx/winvirt_drivers.iso" \
+    --graphics spice \
+    --memory 8192 \
+    --name windows \
+    --osinfo win11 \
+    --tpm model=tpm-tis,backend.type=emulator,backend.version=2.0 \
+    --vcpus 4 \
+    ${linux:+--virt-type kvm}
+
+  create_app windows
 }
 
 #######################################
@@ -579,6 +625,77 @@ run() {
 }
 
 #######################################
+# Configure computer filesystem.
+#######################################
+setup() {
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'setup'
+        exit 0
+        ;;
+      desktop)
+        shift 1
+        setup_desktop "$@"
+        exit 0
+        ;;
+      guest)
+        shift 1
+        setup_guest "$@"
+        exit 0
+        ;;
+      host)
+        shift 1
+        setup_host "$@"
+        exit 0
+        ;;
+      *)
+        error_usage "No such option '${1}'" 'setup'
+        ;;
+    esac
+  done
+
+  usage 'setup'
+}
+
+#######################################
+# Configure desktop environment on guest filesystem.
+#######################################
+setup_desktop() {
+  super=''
+
+  # Use sudo for system installation if user is not root. Do not use long form
+  # --user flag for id. It is not supported on MacOS.
+  if [ "$(id -u)" -ne 0 ]; then
+    super="$(find_super)"
+  fi
+
+  # Do not quote the outer super parameter expansion. Shell will error due to be
+  # being unable to find the "" command.
+  if [ -x "$(command -v apk)" ]; then
+    ${super:+"${super}"} apk update
+    ${super:+"${super}"} setup-desktop gnome
+  fi
+
+  # Configure GNOME desktop for FreeBSD.
+  #
+  # Based on instructions at
+  # https://docs.freebsd.org/en/books/handbook/desktop/#gnome-environment.
+  if [ -x "$(command -v pkg)" ]; then
+    ${super:+"${super}"} pkg update
+    ${super:+"${super}"} pkg install --yes gnome
+
+    echo 'proc /proc procfs rw 0 0' |
+      ${super:+"${super}"} tee -a /etc/fstab > /dev/null
+
+    sudo sysrc dbus_enable="YES"
+    sudo sysrc gdm_enable="YES"
+    sudo sysrc gnome_enable="YES"
+  fi
+}
+
+#######################################
 # Configure guest filesystem.
 #######################################
 setup_guest() {
@@ -643,7 +760,8 @@ setup_guest() {
   if [ -x "$(command -v pkg)" ]; then
     ${super:+"${super}"} pkg update
     # Seems as though openssh-server is builtin to FreeBSD.
-    ${super:+"${super}"} pkg install --yes curl jq ncurses qemu-guest-agent
+    ${super:+"${super}"} pkg install --yes curl jq ncurses qemu-guest-agent \
+      rsync terminfo-db
     ${super:+"${super}"} service qemu-guest-agent start
     ${super:+"${super}"} sysrc qemu_guest_agent_enable="YES"
 
@@ -670,9 +788,14 @@ EOF
     ${super:+"${super}"} systemctl enable --now ssh.service
   fi
 
-  curl -LSfs https://raw.githubusercontent.com/alacritty/alacritty/master/extra/alacritty.info |
-    tic -x -
-  curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh |
+  # Tic fails on FreeBSD and Alacritty seems to be already be supported.
+  if [ ! -x "$(command -v pkg)" ]; then
+    curl --location --show-error --fail \
+      https://raw.githubusercontent.com/alacritty/alacritty/master/extra/alacritty.info |
+      tic -x -
+  fi
+  curl --location --show-error --fail \
+    https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh |
     sh -s -- clear-cache packup
   packup
 }
@@ -681,7 +804,8 @@ EOF
 # Configure host filesystem.
 #######################################
 setup_host() {
-  mkdir -p "${HOME}/.virshx"
+  mkdir -p "${HOME}/.virshx" "${HOME}/.local/share/libvirt/cdroms" \
+    "${HOME}/.local/share/libvirt/images"
 
   fetch \
     https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/waveform.svg \
@@ -713,7 +837,7 @@ upload() {
 
   setup_host
   if [ "$(virsh domstate "${domain}")" = 'running' ]; then
-    scp -i ~/.virshx/key -P 2022 "$(fullpath "$0")" localhost:/tmp/virshx
+    tscp -i ~/.virshx/key -P 2022 "$(fullpath "$0")" localhost:/tmp/virshx
     echo "Uploaded Virshx to ${domain} machine at path /tmp/virshx"
   else
     virt-copy-in --domain "${domain}" "$(fullpath "$0")" /usr/local/bin/
@@ -777,7 +901,7 @@ main() {
         ;;
       setup)
         shift 1
-        setup_guest "$@"
+        setup "$@"
         exit 0
         ;;
       upload)
