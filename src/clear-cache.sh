@@ -90,6 +90,10 @@ clear_cache() {
     ${super:+"${super}"} zypper clean --all
   fi
 
+  if [ -x "$(command -v cargo-cache)" ]; then
+    cargo-cache --autoclean
+  fi
+
   # Check if Docker client is install and Docker daemon is up and running.
   if [ -x "$(command -v docker)" ] && docker ps > /dev/null 2>&1; then
     ${super:+"${super}"} docker system prune --force --volumes
@@ -105,6 +109,35 @@ clear_cache() {
 
   if [ -x "$(command -v pip)" ]; then
     pip cache purge
+  fi
+
+  if [ -x "$(command -v playwright)" ]; then
+    clear_playwright
+  fi
+
+  if [ -x "$(command -v poetry)" ]; then
+    for cache in $(poetry cache list); do
+      poetry cache clear --all --no-interaction "${cache}"
+    done
+  fi
+}
+
+#######################################
+# Clear cache for Playwright.
+#######################################
+clear_playwright() {
+  # Do not use long form --kernel-name flag for uname. It is not supported on
+  # MacOS.
+  #
+  # Flags:
+  #   -d: Check if path exists and is a directory.
+  #   -s: Show operating system kernel name.
+  if [ "$(uname -s)" = 'Darwin' ]; then
+    if [ -d "${HOME}/Library/Caches/ms-playwright/.links" ]; then
+      playwright uninstall --all
+    fi
+  elif [ -d "${HOME}/.cache/ms-playwright/.links" ]; then
+    playwright uninstall --all
   fi
 }
 
