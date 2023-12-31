@@ -69,7 +69,7 @@ Function Main() {
     }
 
     If (
-        (Get-Command playwright -ErrorAction SilentlyContinue) -And 
+        (Get-Command playwright -ErrorAction SilentlyContinue) -And
         (Test-Path -Path "$Env:LocalAppData\ms-playwright\.links" -PathType Container)
     ) {
         playwright uninstall --all
