@@ -25,7 +25,7 @@ curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/inst
 ```
 
 ```powershell [Windows]
-powershell { & ([ScriptBlock]::Create((iwr -useb https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.ps1))) "--list" }
+powershell { & ([ScriptBlock]::Create((iwr -useb https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.ps1))) --list }
 ```
 
 :::
@@ -48,7 +48,7 @@ curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/inst
 ```
 
 ```powershell [Windows]
-powershell { & ([ScriptBlock]::Create((iwr -useb https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.ps1))) "packup" }
+powershell { & ([ScriptBlock]::Create((iwr -useb https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.ps1))) packup }
 ```
 
 :::

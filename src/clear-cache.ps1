@@ -68,7 +68,10 @@ Function Main() {
         pip cache purge
     }
 
-    If (Get-Command playwright -ErrorAction SilentlyContinue) {
+    If (
+        (Get-Command playwright -ErrorAction SilentlyContinue) -And 
+        (Test-Path -Path "$Env:LocalAppData\ms-playwright\.links" -PathType Container)
+    ) {
         playwright uninstall --all
     }
 
