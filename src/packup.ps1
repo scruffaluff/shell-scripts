@@ -54,6 +54,15 @@ Function Main() {
         scoop cleanup --all
     }
 
+    If (Get-Command cargo -ErrorAction SilentlyContinue) {
+        ForEach ($Line in $(cargo install --list)) {
+            Write-Output "$Line"
+            If ("$Line" -Like '*:') {
+                cargo install $Line.Split()[0]
+            }
+        }
+    }
+
     If (Get-Command npm -ErrorAction SilentlyContinue) {
         # The "npm install" command is run before "npm update" command to avoid
         # messages about newer versions of NPM being available.

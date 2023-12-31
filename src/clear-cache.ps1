@@ -48,6 +48,10 @@ Function Main() {
         scoop cache rm --all
     }
 
+    If (Get-Command cargo-cache -ErrorAction SilentlyContinue) {
+        cargo-cache --autoclean
+    }
+
     # Check if Docker client is install and Docker daemon is up and running.
     If (Get-Command docker -ErrorAction SilentlyContinue) {
         docker ps 2>&1 | Out-Null
@@ -62,6 +66,19 @@ Function Main() {
 
     If (Get-Command pip -ErrorAction SilentlyContinue) {
         pip cache purge
+    }
+
+    If (
+        (Get-Command playwright -ErrorAction SilentlyContinue) -And
+        (Test-Path -Path "$Env:LocalAppData\ms-playwright\.links" -PathType Container)
+    ) {
+        playwright uninstall --all
+    }
+
+    If (Get-Command poetry -ErrorAction SilentlyContinue) {
+        ForEach ($Cache in $(poetry cache list)) {
+            poetry cache clear --all --no-interaction "$Cache"
+        }
     }
 }
 
