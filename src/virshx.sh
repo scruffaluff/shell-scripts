@@ -17,27 +17,6 @@ set -eu
 #######################################
 usage() {
   case "${1}" in
-    boot)
-      cat 1>&2 << EOF
-Download disk for domain and install with defaults
-
-Usage: virshx boot [OPTIONS] DOMAIN
-
-Options:
-  -h, --help          Print help information
-EOF
-      ;;
-    forward)
-      cat 1>&2 << EOF
-Forward host port to guest domain 22 port for SSH
-
-Usage: virshx forward [OPTIONS] DOMAIN
-
-Options:
-  -h, --help          Print help information
-  -p, --port <PORT>   Specify host port to foward (default 2022)
-EOF
-      ;;
     install)
       cat 1>&2 << EOF
 Create a virtual machine from a cdrom or disk file
@@ -45,6 +24,7 @@ Create a virtual machine from a cdrom or disk file
 Usage: virshx install [OPTIONS] FILEPATH
 
 Options:
+      --default <DOMAIN>      Download disk for domain and install with defaults
   -d, --domain <DOMAIN>       Virtual machine name
   -h, --help                  Print help information
   -o, --osinfo <OSINFO>       Virt-install osinfo
@@ -64,19 +44,59 @@ Options:
   -v, --version     Print version information
 
 Subcommands:
-  boot      Download disk for domain and install with defaults
-  forward   Setup SSH port forward to guest domain
-  install   Create a virtual machine from a cdrom or disk file
-  run       Create a virtual machine directly with QEMU
-  setup     Configure guest machine
-  upload    Upload Virshx to guest machine
+  install   Create a virtual machine
+  remove    Delete virtual machine and its disk images
+  start     Run a virtual machine
+  setup     Configure system
 EOF
       ;;
-    run)
+    remove)
+      cat 1>&2 << EOF
+Delete virtual machine and its disk images
+
+Usage: virshx remove [OPTIONS] DOMAIN
+
+Options:
+  -h, --help          Print help information
+EOF
+      ;;
+    start)
       cat 1>&2 << EOF
 Create a virtual machine directly with QEMU
 
-Usage: virshx run [OPTIONS] FILEPATH
+Usage: virshx start [OPTIONS] [SUBCOMMAND]
+
+Subcommands:
+  console     Run virtual machine and connect to its console
+  desktop     Run virtual machine as a desktop application
+  qemu        Run a virtual machine with QEMU commands
+EOF
+      ;;
+    start_console)
+      cat 1>&2 << EOF
+Run virtual machine and connect to its console
+
+Usage: virshx start console [OPTIONS] DOMAIN
+
+Options:
+  -h, --help              Print help information
+EOF
+      ;;
+    start_desktop)
+      cat 1>&2 << EOF
+Run virtual machine as a desktop application
+
+Usage: virshx start desktop [OPTIONS] DOMAIN
+
+Options:
+  -h, --help              Print help information
+EOF
+      ;;
+    start_qemu)
+      cat 1>&2 << EOF
+Run a virtual machine with QEMU commands
+
+Usage: virshx start qemu [OPTIONS] FILEPATH
 
 Options:
   -c, --console           Use serial console instead of display window
@@ -97,13 +117,56 @@ Subcommands:
   desktop     Create GNOME desktop environment
   guest       Configure guest machine
   host        Configure host machine
+  port        Forward host port to guest domain
+  upload      Upload Virshx to guest machine
 EOF
       ;;
-    upload)
+    setup_desktop)
+      cat 1>&2 << EOF
+Create GNOME desktop environment
+
+Usage: virshx setup desktop [OPTIONS]
+
+Options:
+  -h, --help    Print help information
+EOF
+      ;;
+    setup_guest)
+      cat 1>&2 << EOF
+Configure guest machine
+
+Usage: virshx setup guest [OPTIONS]
+
+Options:
+  -h, --help    Print help information
+EOF
+      ;;
+    setup_host)
+      cat 1>&2 << EOF
+Configure host machine
+
+Usage: virshx setup host [OPTIONS]
+
+Options:
+  -h, --help    Print help information
+EOF
+      ;;
+    setup_port)
+      cat 1>&2 << EOF
+Forward host port to guest domain 22 port for SSH
+
+Usage: virshx setup port [OPTIONS] DOMAIN
+
+Options:
+  -h, --help          Print help information
+  -p, --port <PORT>   Specify host port to foward (default 2022)
+EOF
+      ;;
+    setup_upload)
       cat 1>&2 << EOF
 Upload Virshx to guest machine
 
-Usage: virshx upload [OPTIONS] DOMAIN
+Usage: virshx setup upload [OPTIONS] DOMAIN
 
 Options:
   -h, --help    Print help information
@@ -111,68 +174,6 @@ EOF
       ;;
     *)
       error "No such usage option '${1}'"
-      ;;
-  esac
-}
-
-#######################################
-# Download disk for domain and install with defaults.
-#######################################
-boot() {
-  # Parse command line arguments.
-  while [ "${#}" -gt 0 ]; do
-    case "${1}" in
-      -h | --help)
-        usage 'boot'
-        exit 0
-        ;;
-      *)
-        domain="${1}"
-        shift 1
-        ;;
-    esac
-  done
-
-  setup_host
-  case "${domain:-}" in
-    alpine)
-      url='https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-standard-3.19.0-x86_64.iso'
-      image="${HOME}/.virshx/alpine_amd64.iso"
-      fetch "${url}" "${image}"
-      install_ --domain alpine --osinfo alpinelinux3.19 "${image}"
-      ;;
-    android)
-      url='https://gigenet.dl.sourceforge.net/project/android-x86/Release%209.0/android-x86_64-9.0-r2.iso'
-      image="${HOME}/.virshx/android_amd64.iso"
-      fetch "${url}" "${image}"
-      install_ --domain android --osinfo android-x86-9.0 "${image}"
-      ;;
-    arch)
-      url='https://geo.mirror.pkgbuild.com/iso/latest/archlinux-x86_64.iso'
-      image="${HOME}/.virshx/arch_amd64.iso"
-      fetch "${url}" "${image}"
-      install_ --domain arch --osinfo archlinux "${image}"
-      ;;
-    debian)
-      url='https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2'
-      image="${HOME}/.virshx/debian_amd64.qcow2"
-      fetch "${url}" "${image}"
-      install_ --domain debian --osinfo debian12 "${image}"
-      ;;
-    freebsd)
-      url='https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/14.0/FreeBSD-14.0-RELEASE-amd64-dvd1.iso'
-      image="${HOME}/.virshx/freebsd_amd64.iso"
-      fetch "${url}" "${image}"
-      install_ --domain freebsd --osinfo freebsd14.0 "${image}"
-      ;;
-    windows)
-      url='https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso'
-      image="${HOME}/.virshx/winvirt_drivers.iso"
-      fetch "${url}" "${image}"
-      install_windows "${HOME}/.virshx/windows_amd64.iso"
-      ;;
-    *)
-      error_usage "Unsupported domain '${domain:-}'" 'download'
       ;;
   esac
 }
@@ -207,9 +208,9 @@ create_app() {
   name="${1}"
 
   if [ "$(uname -s)" = 'Linux' ]; then
-    cat << EOF > "${HOME}/.local/share/applications/${name}.desktop"
+    cat << EOF > "${HOME}/.local/share/applications/virshx_${name}.desktop"
 [Desktop Entry]
-Exec=virshx launch ${name}
+Exec=virshx start desktop ${name}
 Icon=${HOME}/.virshx/waveform.svg
 Name=$(echo "${name}" | sed 's/./\U&/')
 Terminal=false
@@ -237,8 +238,9 @@ error() {
 #######################################
 error_usage() {
   bold_red='\033[1;31m' default='\033[0m'
+  command="$(echo "${2:-}" | tr '_' ' ') "
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
-  printf "Run \'virshx %s--help\' for usage.\n" "${2:+${2} }" >&2
+  printf "Run \'virshx %s--help\' for usage.\n" "${2:+${command}}" >&2
   exit 2
 }
 
@@ -267,42 +269,6 @@ find_super() {
   else
     error 'Unable to find a command for super user elevation'
   fi
-}
-
-#######################################
-# Setup SSH port forward to guest domain.
-#######################################
-forward() {
-  port='2022'
-
-  # Parse command line arguments.
-  while [ "${#}" -gt 0 ]; do
-    case "${1}" in
-      -h | --help)
-        usage 'forward'
-        exit 0
-        ;;
-      -p | --port)
-        port="${2}"
-        shift 2
-        ;;
-      *)
-        domain="${1}"
-        shift 1
-        ;;
-    esac
-  done
-
-  setup_host
-  # Flags:
-  #   -z: Check if string has zero length.
-  if [ -z "${domain:-}" ]; then
-    error_usage 'Domain argument is required' 'forward'
-  fi
-  virsh qemu-monitor-command --domain "${domain}" \
-    --hmp "hostfwd_add tcp::${port}-:22"
-
-  echo "You can now SSH login to ${domain} with command 'ssh -i ~/virshx/key -p 2022 localhost'."
 }
 
 #######################################
@@ -336,6 +302,10 @@ install_() {
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
     case "${1}" in
+      --default)
+        default="${2}"
+        shift 2
+        ;;
       -d | --domain)
         domain="${2}"
         shift 2
@@ -366,6 +336,9 @@ install_() {
   setup_host
   # Flags:
   #   -z: Check if string has zero length.
+  if [ -n "${default:-}" ]; then
+    install_default "${default}"
+  fi
   if [ -z "${filepath:-}" ]; then
     error_usage 'Disk filepath argument is required' 'install'
   fi
@@ -419,6 +392,53 @@ install_cdrom() {
     --tpm model=tpm-tis,backend.type=emulator,backend.version=2.0 \
     --vcpus 4 \
     ${linux:+--virt-type kvm}
+}
+
+#######################################
+# Download disk for domain and install with defaults.
+#######################################
+install_default() {
+  case "${1:-}" in
+    alpine)
+      url='https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-standard-3.19.0-x86_64.iso'
+      image="${HOME}/.virshx/alpine_amd64.iso"
+      fetch "${url}" "${image}"
+      install_ --domain alpine --osinfo alpinelinux3.19 "${image}"
+      ;;
+    android)
+      url='https://gigenet.dl.sourceforge.net/project/android-x86/Release%209.0/android-x86_64-9.0-r2.iso'
+      image="${HOME}/.virshx/android_amd64.iso"
+      fetch "${url}" "${image}"
+      install_ --domain android --osinfo android-x86-9.0 "${image}"
+      ;;
+    arch)
+      url='https://geo.mirror.pkgbuild.com/iso/latest/archlinux-x86_64.iso'
+      image="${HOME}/.virshx/arch_amd64.iso"
+      fetch "${url}" "${image}"
+      install_ --domain arch --osinfo archlinux "${image}"
+      ;;
+    debian)
+      url='https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2'
+      image="${HOME}/.virshx/debian_amd64.qcow2"
+      fetch "${url}" "${image}"
+      install_ --domain debian --osinfo debian12 "${image}"
+      ;;
+    freebsd)
+      url='https://download.freebsd.org/releases/amd64/amd64/ISO-IMAGES/14.0/FreeBSD-14.0-RELEASE-amd64-dvd1.iso'
+      image="${HOME}/.virshx/freebsd_amd64.iso"
+      fetch "${url}" "${image}"
+      install_ --domain freebsd --osinfo freebsd14.0 "${image}"
+      ;;
+    windows)
+      url='https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso'
+      image="${HOME}/.virshx/winvirt_drivers.iso"
+      fetch "${url}" "${image}"
+      install_windows "${HOME}/.virshx/windows_amd64.iso"
+      ;;
+    *)
+      error_usage "Unsupported domain '${domain:-}'" 'download'
+      ;;
+  esac
 }
 
 #######################################
@@ -506,18 +526,116 @@ install_windows() {
 }
 
 #######################################
-# Launch virtual machine as desktop application.
+# Delete virtual machine and its disk images.
 #######################################
-launch() {
-  virsh start "${1}" || true
-  forward "${1}" || true
-  virt-viewer "${1}"
+remove() {
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'remove'
+        exit 0
+        ;;
+      *)
+        domain="${1}"
+        shift 1
+        ;;
+    esac
+  done
+
+  for snapshot in $(virsh snapshot-list --name --domain "${domain}"); do
+    virsh snapshot-delete --domain "${domain}" "${snapshot}"
+  done
+  virsh undefine --nvram --remove-all-storage "${domain}"
+  rm --force "${HOME}/.local/share/applications/virshx_${name}.desktop" \
+    "${HOME}/.local/share/libvirt/cdroms/${domain}.iso"
 }
 
 #######################################
-# Create virtual machine directly with QEMU.
+# Run virtual machine.
 #######################################
-run() {
+start() {
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'start'
+        exit 0
+        ;;
+      console)
+        shift 1
+        start_console "$@"
+        exit 0
+        ;;
+      desktop)
+        shift 1
+        start_desktop "$@"
+        exit 0
+        ;;
+      qemu)
+        shift 1
+        start_qemu "$@"
+        exit 0
+        ;;
+      *)
+        error_usage "No such option '${1}'" 'start'
+        ;;
+    esac
+  done
+
+  usage 'start'
+}
+
+#######################################
+# Run virtual machine and connect to its console.
+#######################################
+start_console() {
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'start_console'
+        exit 0
+        ;;
+      *)
+        domain="${1}"
+        shift 1
+        ;;
+    esac
+  done
+
+  virsh start "${domain}" || true
+  setup_port "${domain}" || true
+  virsh console "${domain}"
+}
+
+#######################################
+# Run virtual machine as desktop application.
+#######################################
+start_desktop() {
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'start_desktop'
+        exit 0
+        ;;
+      *)
+        domain="${1}"
+        shift 1
+        ;;
+    esac
+  done
+
+  virsh start "${domain}" || true
+  setup_port "${domain}" || true
+  virt-viewer "${domain}"
+}
+
+#######################################
+# Run virtual machine with QEMU commands.
+#######################################
+start_qemu() {
   arch="$(get_arch)"
   cdrom=''
   display='spice-app,gl=on'
@@ -540,7 +658,7 @@ run() {
         shift 2
         ;;
       -h | --help)
-        usage 'run'
+        usage 'start_qemu'
         exit 0
         ;;
       -m | --machine)
@@ -558,7 +676,7 @@ run() {
   # Flags:
   #   -z: Check if string has zero length.
   if [ -z "${filepath:-}" ]; then
-    error_usage 'Disk or ISO file is required' 'mount'
+    error_usage 'Disk or ISO file is required' 'start_qemu'
   fi
   extension="${filepath##*.}"
 
@@ -625,7 +743,7 @@ run() {
 }
 
 #######################################
-# Configure computer filesystem.
+# Configure system.
 #######################################
 setup() {
   # Parse command line arguments.
@@ -650,6 +768,16 @@ setup() {
         setup_host "$@"
         exit 0
         ;;
+      port)
+        shift 1
+        setup_port "$@"
+        exit 0
+        ;;
+      upload)
+        shift 1
+        setup_upload "$@"
+        exit 0
+        ;;
       *)
         error_usage "No such option '${1}'" 'setup'
         ;;
@@ -664,6 +792,19 @@ setup() {
 #######################################
 setup_desktop() {
   super=''
+
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'setup_desktop'
+        exit 0
+        ;;
+      *)
+        error_usage "No such option '${1}'" 'setup_desktop'
+        ;;
+    esac
+  done
 
   # Use sudo for system installation if user is not root. Do not use long form
   # --user flag for id. It is not supported on MacOS.
@@ -705,11 +846,11 @@ setup_guest() {
   while [ "${#}" -gt 0 ]; do
     case "${1}" in
       -h | --help)
-        usage 'setup'
+        usage 'setup_guest'
         exit 0
         ;;
       *)
-        error_usage "No such option '${1}'" 'setup'
+        error_usage "No such option '${1}'" 'setup_guest'
         ;;
     esac
   done
@@ -804,6 +945,19 @@ EOF
 # Configure host filesystem.
 #######################################
 setup_host() {
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'setup_host'
+        exit 0
+        ;;
+      *)
+        error_usage "No such option '${1}'" 'setup_host'
+        ;;
+    esac
+  done
+
   mkdir -p "${HOME}/.virshx" "${HOME}/.local/share/libvirt/cdroms" \
     "${HOME}/.local/share/libvirt/images"
 
@@ -818,14 +972,50 @@ setup_host() {
 }
 
 #######################################
-# Upload Virshx to guest machine.
+# Setup SSH port forward to guest domain.
 #######################################
-upload() {
+setup_port() {
+  port='2022'
+
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
     case "${1}" in
       -h | --help)
-        usage 'upload'
+        usage 'setup_port'
+        exit 0
+        ;;
+      -p | --port)
+        port="${2}"
+        shift 2
+        ;;
+      *)
+        domain="${1}"
+        shift 1
+        ;;
+    esac
+  done
+
+  setup_host
+  # Flags:
+  #   -z: Check if string has zero length.
+  if [ -z "${domain:-}" ]; then
+    error_usage 'Domain argument is required' 'setup_port'
+  fi
+  virsh qemu-monitor-command --domain "${domain}" \
+    --hmp "hostfwd_add tcp::${port}-:22"
+
+  echo "You can now SSH login to ${domain} with command 'ssh -i ~/virshx/key -p 2022 localhost'."
+}
+
+#######################################
+# Upload Virshx to guest machine.
+#######################################
+setup_upload() {
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'setup_upload'
         exit 0
         ;;
       *)
@@ -874,39 +1064,24 @@ main() {
         version
         exit 0
         ;;
-      boot)
-        shift 1
-        boot "$@"
-        exit 0
-        ;;
-      forward)
-        shift 1
-        forward "$@"
-        exit 0
-        ;;
       install)
         shift 1
         install_ "$@"
         exit 0
         ;;
-      launch)
+      remove)
         shift 1
-        launch "$@"
+        remove "$@"
         exit 0
         ;;
-      run)
+      start)
         shift 1
-        run "$@"
+        start "$@"
         exit 0
         ;;
       setup)
         shift 1
         setup "$@"
-        exit 0
-        ;;
-      upload)
-        shift 1
-        upload "$@"
         exit 0
         ;;
       *)
