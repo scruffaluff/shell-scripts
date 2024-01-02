@@ -11,7 +11,7 @@ Function Usage() {
     Write-Output @'
 Extra convenience commands for Virsh and Libvirt.
 
-Usage: virshx [OPTIONS]
+Usage: virshx [OPTIONS] 
 
 Options:
   -h, --help      Print help information
@@ -146,7 +146,7 @@ Function Main() {
                 Version
                 Exit 0
             }
-            'run' {
+            'start' {
                 $ArgIdx += 1
                 Run @(GetParameters $Args[0] $ArgIdx)
                 Exit $LastExitCode

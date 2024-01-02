@@ -195,7 +195,7 @@ users:
     name: "${2}"
     plain_text_passwd: "${3}"
     ssh_authorized_keys:
-      - ${pub_key}"
+      - ${pub_key}
     sudo: ALL=(ALL) NOPASSWD:ALL
 EOF
   printf "%s" "${path}"
@@ -303,8 +303,9 @@ install_() {
   while [ "${#}" -gt 0 ]; do
     case "${1}" in
       --default)
-        default="${2}"
-        shift 2
+        shift 1
+        install_default "${1}"
+        exit 0
         ;;
       -d | --domain)
         domain="${2}"
@@ -336,9 +337,6 @@ install_() {
   setup_host
   # Flags:
   #   -z: Check if string has zero length.
-  if [ -n "${default:-}" ]; then
-    install_default "${default}"
-  fi
   if [ -z "${filepath:-}" ]; then
     error_usage 'Disk filepath argument is required' 'install'
   fi
@@ -543,11 +541,18 @@ remove() {
     esac
   done
 
-  for snapshot in $(virsh snapshot-list --name --domain "${domain}"); do
-    virsh snapshot-delete --domain "${domain}" "${snapshot}"
-  done
-  virsh undefine --nvram --remove-all-storage "${domain}"
-  rm --force "${HOME}/.local/share/applications/virshx_${name}.desktop" \
+  if expr " $(virsh list --name) " : ".*\s${domain}\s.*" > /dev/null; then
+    virsh destroy "${domain}"
+  fi
+
+  if expr " $(virsh list --all --name) " : ".*\s${domain}\s.*" > /dev/null; then
+    for snapshot in $(virsh snapshot-list --name --domain "${domain}"); do
+      virsh snapshot-delete --domain "${domain}" "${snapshot}"
+    done
+    virsh undefine --nvram --remove-all-storage "${domain}"
+  fi
+
+  rm --force "${HOME}/.local/share/applications/virshx_${domain}.desktop" \
     "${HOME}/.local/share/libvirt/cdroms/${domain}.iso"
 }
 
