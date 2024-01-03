@@ -195,7 +195,7 @@ users:
     name: "${2}"
     plain_text_passwd: "${3}"
     ssh_authorized_keys:
-      - ${pub_key}
+      - "${pub_key}"
     sudo: ALL=(ALL) NOPASSWD:ALL
 EOF
   printf "%s" "${path}"
@@ -396,6 +396,7 @@ install_cdrom() {
 # Download disk for domain and install with defaults.
 #######################################
 install_default() {
+  setup_host
   case "${1:-}" in
     alpine)
       url='https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-standard-3.19.0-x86_64.iso'
@@ -426,6 +427,12 @@ install_default() {
       image="${HOME}/.virshx/freebsd_amd64.iso"
       fetch "${url}" "${image}"
       install_ --domain freebsd --osinfo freebsd14.0 "${image}"
+      ;;
+    ubuntu)
+      url='https://releases.ubuntu.com/23.10.1/ubuntu-23.10.1-desktop-amd64.iso'
+      image="${HOME}/.virshx/ubuntu_amd64.iso"
+      fetch "${url}" "${image}"
+      install_ --domain ubuntu --osinfo ubuntu23.10 "${image}"
       ;;
     windows)
       url='https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso'
@@ -552,7 +559,8 @@ remove() {
     virsh undefine --nvram --remove-all-storage "${domain}"
   fi
 
-  rm --force "${HOME}/.local/share/applications/virshx_${domain}.desktop" \
+  # Do not use long form --force flag for rm. It is not supported on MacOS.
+  rm -f "${HOME}/.local/share/applications/virshx_${domain}.desktop" \
     "${HOME}/.local/share/libvirt/cdroms/${domain}.iso"
 }
 

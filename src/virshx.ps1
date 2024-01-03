@@ -11,7 +11,7 @@ Function Usage() {
     Write-Output @'
 Extra convenience commands for Virsh and Libvirt.
 
-Usage: virshx [OPTIONS] 
+Usage: virshx [OPTIONS]
 
 Options:
   -h, --help      Print help information
