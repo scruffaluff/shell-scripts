@@ -57,10 +57,14 @@ error_usage() {
 # Find command to elevate as super user.
 #######################################
 find_super() {
+  # Do not use long form -user flag for id. It is not supported on MacOS.
+  #
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [ -x "$(command -v sudo)" ]; then
+  if [ "$(id -u)" -eq 0 ]; then
+    echo ''
+  elif [ -x "$(command -v sudo)" ]; then
     echo 'sudo'
   elif [ -x "$(command -v doas)" ]; then
     echo 'doas'
@@ -152,12 +156,7 @@ install_tmate_linux() {
 # Installs Tmate and creates a remote session.
 #######################################
 setup_tmate() {
-  # Do not use long form -user flag for id. It is not supported on MacOS.
-  if [ "$(id -u)" -ne 0 ]; then
-    super="$(find_super)"
-  else
-    super=''
-  fi
+  super="$(find_super)"
 
   # Install Tmate if not available.
   #

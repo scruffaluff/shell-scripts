@@ -159,15 +159,53 @@ find_scripts() {
 # Find command to elevate as super user.
 #######################################
 find_super() {
+  # Do not use long form --user flag for id. It is not supported on MacOS.
+  #
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [ -x "$(command -v sudo)" ]; then
+  if [ "$(id -u)" -eq 0 ]; then
+    echo ''
+  elif [ -x "$(command -v sudo)" ]; then
     echo 'sudo'
   elif [ -x "$(command -v doas)" ]; then
     echo 'doas'
   else
     error 'Unable to find a command for super user elevation'
+  fi
+}
+
+#######################################
+# Install Jq JSON parser.
+#######################################
+install_jq() {
+  super="$(find_super)"
+
+  # Do not quote the outer super parameter expansion. Shell will error due to be
+  # being unable to find the "" command.
+  if [ -x "$(command -v apk)" ]; then
+    ${super:+"${super}"} apk update
+    ${super:+"${super}"} apk add jq
+  elif [ -x "$(command -v apt-get)" ]; then
+    ${super:+"${super}"} apt-get update
+    ${super:+"${super}"} apt-get install --yes jq
+  elif [ -x "$(command -v brew)" ]; then
+    brew install jq
+  elif [ -x "$(command -v dnf)" ]; then
+    ${super:+"${super}"} dnf check-update || {
+      code="$?"
+      [ "${code}" -ne 100 ] && exit "${code}"
+    }
+    ${super:+"${super}"} dnf install --assumeyes jq
+  elif [ -x "$(command -v pacman)" ]; then
+    ${super:+"${super}"} pacman --noconfirm --refresh --sync --sysupgrade
+    ${super:+"${super}"} pacman --noconfirm --sync jq
+  elif [ -x "$(command -v pkg)" ]; then
+    ${super:+"${super}"} pkg update
+    ${super:+"${super}"} pkg install --yes jq
+  elif [ -x "$(command -v zypper)" ]; then
+    ${super:+"${super}"} zypper update --no-confirm
+    ${super:+"${super}"} zypper install --no-confirm jq
   fi
 }
 
@@ -195,7 +233,7 @@ install_script() {
   # Flags:
   #   -w: Check if file exists and is writable.
   #   -z: Check if the string has zero length or is null.
-  if [ -z "${1}" ] && [ ! -w "${dst_file}" ] && [ "$(id -u)" -ne 0 ]; then
+  if [ -z "${1}" ] && [ ! -w "${dst_file}" ]; then
     super="$(find_super)"
   else
     super=''
@@ -284,7 +322,9 @@ main() {
     esac
   done
 
-  assert_cmd jq
+  if [ ! -x "$(command -v jq)" ]; then
+    install_jq
+  fi
   src_prefix="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${version}/src"
   scripts="$(find_scripts "${version}")"
 
