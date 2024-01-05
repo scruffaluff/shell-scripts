@@ -21,7 +21,9 @@ format:
 [windows]
 format:
   npx prettier --check .
-  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path . -Settings CodeFormatting
+  Invoke-ScriptAnalyzer -EnableExit -Path install.ps1 -Settings CodeFormatting
+  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path src -Settings CodeFormatting
+  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path tests -Settings CodeFormatting
 
 # Run code analyses.
 [unix]
@@ -30,7 +32,9 @@ lint:
 
 [windows]
 lint:
-  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path .
+  Invoke-ScriptAnalyzer -EnableExit -Path install.ps1
+  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path src
+  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path tests
 
 # Install development dependencies.
 setup: _setup-shell
