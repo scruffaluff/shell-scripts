@@ -2,9 +2,7 @@
 #
 # For more information, visit https://just.systems.
 
-set windows-shell := ['powershell.exe', '-NoLogo', '-Command']
-
-servers := 'cicd,dev,dns,media,sneakieboop'
+set windows-shell := ['pwsh.exe', '-NoLogo', '-Command']
 
 # List all commands available in justfile.
 list:
@@ -105,7 +103,7 @@ _setup-shell:
 # Run test suites.
 [unix]
 test:
-  bats --recursive tests
+  npx bats --recursive tests
 
 [windows]
 test:
