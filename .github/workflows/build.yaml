@@ -20,27 +20,24 @@ on:
         default: false
         description: Use Tmate session for debugging
         type: boolean
-      job:
-        default: test
-        description: CI job to run
-        options:
-          - lint
-          - posix
-          - powershell
-        type: choice
 
 env:
   NPM_CONFIG_CACHE: "${{ github.workspace }}/.cache/npm"
 
 jobs:
-  lint:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.job == 'lint' }}
-    name: Run formatter on configuration files
-    runs-on: ubuntu-latest
+  build:
+    name: Run code analyses and test suites
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu
+          - windows
     steps:
-      - name: Checkout code repository
-        uses: actions/checkout@v3
-      - name: Cache Node packages
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Cache packages
         uses: actions/cache@v3
         with:
           path: |
@@ -48,95 +45,30 @@ jobs:
             node_modules
           key: >-
             node-20_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
-      - name: Install Node interpreter
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20"
-      - name: Install Node packages
-        run: |
-          node --version
-          npm --version
-          npm ci
-      - name: Check format of configuration files
-        run: npm run prettier
-      - name: Setup Tmate session if debug enabled
-        if: >-
-          ${{ always() && github.event_name == 'workflow_dispatch' &&
-          inputs.debug }}
-        timeout-minutes: 60
-        uses: mxschmitt/action-tmate@v3
-
-  posix:
-    if: >-
-      ${{ github.event_name != 'workflow_dispatch' || inputs.job == 'posix' }}
-    name: Run linter and tests for POSIX shell scripts
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code repository
-        uses: actions/checkout@v3
-      - name: Cache Node packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            .cache
-            node_modules
-          key: >-
-            node-20_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
-      - name: Install Node interpreter
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20"
-      - name: Install Node packages
-        run: |
-          node --version
-          npm --version
-          npm ci
-      - name: Install Shfmt
-        run: |
-          shfmt_version="$(curl -LSfs https://formulae.brew.sh/api/formula/shfmt.json | jq --raw-output .versions.stable)"
-          sudo curl -LSfs "https://github.com/mvdan/sh/releases/download/v${shfmt_version}/shfmt_v${shfmt_version}_linux_amd64" --output /usr/local/bin/shfmt
-          sudo chmod 755 /usr/local/bin/shfmt
-      - name: Check format of POSIX shell scripts
-        run: npm run shfmt
-      - name: Install ShellCheck
-        run: sudo apt-get install --yes shellcheck
-      - name: Run ShellCheck on POSIX shell scripts
-        run: npm run shellcheck
-      - name: Run POSIX shell tests with Bats
-        run: npm run bats
-      - name: Setup Tmate session if debug enabled
-        if: >-
-          ${{ always() && github.event_name == 'workflow_dispatch' &&
-          inputs.debug }}
-        timeout-minutes: 60
-        uses: mxschmitt/action-tmate@v3
-
-  powershell:
-    if: >-
-      ${{ github.event_name != 'workflow_dispatch' || inputs.job == 'powershell'
-      }}
-    name: Run linter and tests for PowerShell scripts
-    runs-on: windows-latest
-    steps:
-      - name: Checkout code repository
-        uses: actions/checkout@v3
-      - name: Install PSScriptAnalyzer
-        run: Install-Module -Name PSScriptAnalyzer -Force
-        shell: pwsh
-      - name: Run PSScriptAnalyzer format lints on all PowerShell scripts
+      - if: ${{ runner.os != 'Windows' }}
+        name: Install Just for Unix
         run: >-
-          Invoke-ScriptAnalyzer -EnableExit -Recurse -Path . -Settings
-          CodeFormatting
-        shell: pwsh
-      - name: Run PSScriptAnalyzer code lints on all PowerShell scripts
-        run: Invoke-ScriptAnalyzer -EnableExit -Recurse -Path .
-        shell: pwsh
-      - name: Install Pester
-        run: Install-Module -Name Pester -Force
-        shell: pwsh
-      - name: Run PowerShell tests with Pester
-        run: Invoke-Pester -Output Detailed tests
-        shell: pwsh
+          curl -LSfs https://just.systems/install.sh | bash -s -- --to
+          /usr/local/bin
+      - if: ${{ runner.os == 'Windows' }}
+        name: Install Just for Windows
+        run: choco install --yes just
+      - name: Install Node interpreter
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+      # GitHub default shell for Windows is PowerShell Core and installing
+      # modules in a PowerShell session that is a subprocess of a PowerShell
+      # Core session causes failures related to not being able to find NuGet.
+      - if: ${{ runner.os != 'Windows' }}
+        name: Install development dependencies
+        run: just setup
+      - name: Check code formatting
+        run: just format
+      - name: Run code analyses
+        run: just lint
+      - name: Run test suites
+        run: just test
       - name: Setup Tmate session if debug enabled
         if: >-
           ${{ always() && github.event_name == 'workflow_dispatch' &&

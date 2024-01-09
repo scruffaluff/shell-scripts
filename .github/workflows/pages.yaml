@@ -26,9 +26,9 @@ jobs:
     name: Build and publish documentation
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code repository
-        uses: actions/checkout@v3
-      - name: Cache Node packages
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Cache packages
         uses: actions/cache@v3
         with:
           path: |
@@ -36,17 +36,18 @@ jobs:
             node_modules
           key: >-
             node-20_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
+      - name: Install Just
+        run: >-
+          curl -LSfs https://just.systems/install.sh | bash -s -- --to
+          /usr/local/bin
       - name: Install Node interpreter
         uses: actions/setup-node@v3
         with:
           node-version: "20"
-      - name: Install Node packages
-        run: |
-          node --version
-          npm --version
-          npm ci
+      - name: Install development dependencies
+        run: just setup
       - name: Build documentation
-        run: npm run docs
+        run: just docs
       - name: Publish documentation
         uses: peaceiris/actions-gh-pages@v3
         with:

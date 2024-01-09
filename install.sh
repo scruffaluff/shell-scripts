@@ -32,28 +32,6 @@ EOF
 }
 
 #######################################
-# Assert that command can be found in system path.
-# Will exit script with an error code if command is not in system path.
-# Arguments:
-#   Command to check availabilty.
-# Outputs:
-#   Writes error message to stderr if command is not in system path.
-#######################################
-assert_cmd() {
-  # Flags:
-  #   -v: Only show file path of command.
-  #   -x: Check if file exists and execute permission is granted.
-  if [ ! -x "$(command -v "${1}")" ]; then
-    error "$(
-      cat << EOF
-Cannot find required '${1}' command on computer.
-Please install '${1}' and retry installation.
-EOF
-    )"
-  fi
-}
-
-#######################################
 # Add Scripts to system path in user's shell profile.
 # Globals:
 #   HOME
@@ -108,6 +86,28 @@ download() {
 }
 
 #######################################
+# Download Jq binary to temporary path.
+# Arguments:
+#   Operating system name.
+# Outputs:
+#   Path to temporary Jq binary.
+#######################################
+download_jq() {
+  # Do not use long form --machine flag for uname. It is not supported on MacOS.
+  #
+  # Flags:
+  #   -m: Show system architecture name.
+  arch="$(uname -m | sed s/x86_64/amd64/ | sed s/x64/amd64/ |
+    sed s/aarch64/arm64/)"
+  tmp_path="$(mktemp)"
+  download '' \
+    "https://github.com/jqlang/jq/releases/latest/download/jq-${1}-${arch}" \
+    "${tmp_path}"
+  chmod 755 "${tmp_path}"
+  echo "${tmp_path}"
+}
+
+#######################################
 # Print error message and exit script with error code.
 # Outputs:
 #   Writes error message to stderr.
@@ -131,6 +131,48 @@ error_usage() {
 }
 
 #######################################
+# Find or download Jq JSON parser.
+# Outputs:
+#   Path to Jq binary.
+#######################################
+find_jq() {
+  # Do not use long form --kernel-name flag for uname. It is not supported on
+  # MacOS.
+  #
+  # Flags:
+  #   -s: Show operating system kernel name.
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
+  jq_bin="$(command -v jq)"
+  if [ -x "${jq_bin}" ]; then
+    echo "${jq_bin}"
+  else
+    case "$(uname -s)" in
+      Darwin)
+        download_jq macos
+        ;;
+      FreeBSD)
+        super="$(find_super)"
+        ${super:+"${super}"} pkg update > /dev/null 2>&1
+        ${super:+"${super}"} pkg install --yes jq > /dev/null 2>&1
+        command -v jq
+        ;;
+      Linux)
+        download_jq linux
+        ;;
+      *)
+        error "$(
+          cat << EOF
+Cannot find required 'jq' command on computer.
+Please install 'jq' and retry installation.
+EOF
+        )"
+        ;;
+    esac
+  fi
+}
+
+#######################################
 # Find all scripts inside GitHub repository.
 # Arguments:
 #   Version
@@ -151,18 +193,23 @@ find_scripts() {
     response="$(wget -q -O - "${url}")"
   fi
 
+  jq_bin="$(find_jq)"
   filter='.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
-  echo "${response}" | jq --exit-status --raw-output "${filter}"
+  echo "${response}" | "${jq_bin}" --exit-status --raw-output "${filter}"
 }
 
 #######################################
 # Find command to elevate as super user.
 #######################################
 find_super() {
+  # Do not use long form --user flag for id. It is not supported on MacOS.
+  #
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [ -x "$(command -v sudo)" ]; then
+  if [ "$(id -u)" -eq 0 ]; then
+    echo ''
+  elif [ -x "$(command -v sudo)" ]; then
     echo 'sudo'
   elif [ -x "$(command -v doas)" ]; then
     echo 'doas'
@@ -195,7 +242,7 @@ install_script() {
   # Flags:
   #   -w: Check if file exists and is writable.
   #   -z: Check if the string has zero length or is null.
-  if [ -z "${1}" ] && [ ! -w "${dst_file}" ] && [ "$(id -u)" -ne 0 ]; then
+  if [ -z "${1}" ] && [ ! -w "${dst_file}" ]; then
     super="$(find_super)"
   else
     super=''
@@ -284,7 +331,6 @@ main() {
     esac
   done
 
-  assert_cmd jq
   src_prefix="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${version}/src"
   scripts="$(find_scripts "${version}")"
 

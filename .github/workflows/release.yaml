@@ -23,8 +23,8 @@ jobs:
     name: Make GitHub release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code repository
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
