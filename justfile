@@ -32,9 +32,9 @@ lint:
 
 [windows]
 lint:
-  Invoke-ScriptAnalyzer -EnableExit -Path install.ps1
-  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path src
-  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path tests
+  Invoke-ScriptAnalyzer -EnableExit -Path install.ps1 -Settings PSScriptAnalyzerSettings.psd1
+  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path src -Settings PSScriptAnalyzerSettings.psd1
+  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path tests -Settings PSScriptAnalyzerSettings.psd1
 
 # Install development dependencies.
 setup: _setup-shell
@@ -101,6 +101,7 @@ _setup-shell:
 
 [windows]
 _setup-shell:
+  Import-Module PackageManagement -RequiredVersion 1.0.0.1
   Install-PackageProvider -Force -MinimumVersion 2.8.5.201 -Name NuGet
   Install-Module -Force -Name PSScriptAnalyzer
   Install-Module -Force -SkipPublisherCheck -Name Pester
