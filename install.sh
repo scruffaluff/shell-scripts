@@ -32,28 +32,6 @@ EOF
 }
 
 #######################################
-# Assert that command can be found in system path.
-# Will exit script with an error code if command is not in system path.
-# Arguments:
-#   Command to check availabilty.
-# Outputs:
-#   Writes error message to stderr if command is not in system path.
-#######################################
-assert_cmd() {
-  # Flags:
-  #   -v: Only show file path of command.
-  #   -x: Check if file exists and execute permission is granted.
-  if [ ! -x "$(command -v "${1}")" ]; then
-    error "$(
-      cat << EOF
-Cannot find required '${1}' command on computer.
-Please install '${1}' and retry installation.
-EOF
-    )"
-  fi
-}
-
-#######################################
 # Add Scripts to system path in user's shell profile.
 # Globals:
 #   HOME
@@ -108,6 +86,24 @@ download() {
 }
 
 #######################################
+# Download Jq binary to temporary path.
+# Arguments:
+#   Operating system name.
+# Outputs:
+#   Path to temporary Jq binary.
+#######################################
+download_jq() {
+  arch="$(uname -m | sed s/x86_64/amd64/ | sed s/x64/amd64/ |
+    sed s/aarch64/arm64/)"
+  tmp_path="$(mktemp)"
+  download '' \
+    "https://github.com/jqlang/jq/releases/latest/download/jq-${1}-${arch}" \
+    "${tmp_path}"
+  chmod 755 "${tmp_path}"
+  echo "${tmp_path}"
+}
+
+#######################################
 # Print error message and exit script with error code.
 # Outputs:
 #   Writes error message to stderr.
@@ -131,6 +127,41 @@ error_usage() {
 }
 
 #######################################
+# Find or download Jq JSON parser.
+# Outputs:
+#   Path to Jq binary.
+#######################################
+find_jq() {
+  jq_bin="$(command -v jq)"
+  if [ -x "{jq_bin}" ]; then
+    echo "${jq_bin}"
+  else
+    case "$(uname -s)" in
+      Darwin)
+        download_jq macos
+        ;;
+      FreeBSD)
+        super="$(find_super)"
+        ${super:+"${super}"} pkg update > /dev/null 2>&1
+        ${super:+"${super}"} pkg install --yes jq > /dev/null 2>&1
+        command -v jq
+        ;;
+      Linux)
+        download_jq linux
+        ;;
+      *)
+        error "$(
+          cat << EOF
+Cannot find required 'jq' command on computer.
+Please install 'jq' and retry installation.
+EOF
+        )"
+        ;;
+    esac
+  fi
+}
+
+#######################################
 # Find all scripts inside GitHub repository.
 # Arguments:
 #   Version
@@ -151,8 +182,9 @@ find_scripts() {
     response="$(wget -q -O - "${url}")"
   fi
 
+  jq_bin="$(find_jq)"
   filter='.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
-  echo "${response}" | jq --exit-status --raw-output "${filter}"
+  echo "${response}" | "${jq_bin}" --exit-status --raw-output "${filter}"
 }
 
 #######################################
@@ -172,40 +204,6 @@ find_super() {
     echo 'doas'
   else
     error 'Unable to find a command for super user elevation'
-  fi
-}
-
-#######################################
-# Install Jq JSON parser.
-#######################################
-install_jq() {
-  super="$(find_super)"
-
-  # Do not quote the outer super parameter expansion. Shell will error due to be
-  # being unable to find the "" command.
-  if [ -x "$(command -v apk)" ]; then
-    ${super:+"${super}"} apk update
-    ${super:+"${super}"} apk add jq
-  elif [ -x "$(command -v apt-get)" ]; then
-    ${super:+"${super}"} apt-get update
-    ${super:+"${super}"} apt-get install --yes jq
-  elif [ -x "$(command -v brew)" ]; then
-    brew install jq
-  elif [ -x "$(command -v dnf)" ]; then
-    ${super:+"${super}"} dnf check-update || {
-      code="$?"
-      [ "${code}" -ne 100 ] && exit "${code}"
-    }
-    ${super:+"${super}"} dnf install --assumeyes jq
-  elif [ -x "$(command -v pacman)" ]; then
-    ${super:+"${super}"} pacman --noconfirm --refresh --sync --sysupgrade
-    ${super:+"${super}"} pacman --noconfirm --sync jq
-  elif [ -x "$(command -v pkg)" ]; then
-    ${super:+"${super}"} pkg update
-    ${super:+"${super}"} pkg install --yes jq
-  elif [ -x "$(command -v zypper)" ]; then
-    ${super:+"${super}"} zypper update --no-confirm
-    ${super:+"${super}"} zypper install --no-confirm jq
   fi
 }
 
@@ -322,9 +320,6 @@ main() {
     esac
   done
 
-  if [ ! -x "$(command -v jq)" ]; then
-    install_jq
-  fi
   src_prefix="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${version}/src"
   scripts="$(find_scripts "${version}")"
 

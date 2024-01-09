@@ -54,7 +54,7 @@ _setup-shell:
     super='doas'
   fi
   arch="$(uname -m | sed s/x86_64/amd64/ | sed s/x64/amd64/ | sed s/aarch64/arm64/)"
-  os="$(uname -s | tr '[A-Z]' '[a-z]')"
+  os="$(uname -s | tr '[:upper:]' '[:lower:]')"
   if [ ! -x "$(command -v jq)" ]; then
     if [ -x "$(command -v apk)" ]; then
       ${super:+"${super}"} apk update

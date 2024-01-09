@@ -40,13 +40,29 @@ Function ErrorUsage($Message) {
     Exit 2
 }
 
+# Find or download Jq JSON parser.
+Function FindJq() {
+    $JqBin = $(Get-Command jq -ErrorAction SilentlyContinue).Source
+    If ($JqBin) {
+        Write-Output $JqBin
+    }
+    Else {
+        $TempFile = [System.IO.Path]::GetTempFileName() -Replace '.tmp', '.exe'
+        DownloadFile `
+            https://github.com/jqlang/jq/releases/latest/download/jq-windows-amd64.exe `
+            $TempFile
+        Write-Output $TempFile
+    }
+}
+
 # Find all scripts inside GitHub repository.
 Function FindScripts($Version) {
     $Filter = '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".ps1\")'
     $Uri = "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true"
-
     $Response = $(Invoke-WebRequest -UseBasicParsing -Uri "$Uri")
-    Write-Output "$Response" | jq --raw-output "$Filter"
+
+    $JqBin = $(FindJq)
+    Write-Output "$Response" | & $JqBin --raw-output "$Filter"
 }
 
 # Print log message to stdout if logging is enabled.
