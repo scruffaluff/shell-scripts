@@ -101,7 +101,6 @@ _setup-shell:
 
 [windows]
 _setup-shell:
-  Import-Module PackageManagement -RequiredVersion 1.0.0.1
   Install-PackageProvider -Force -MinimumVersion 2.8.5.201 -Name NuGet
   Install-Module -Force -Name PSScriptAnalyzer
   Install-Module -Force -SkipPublisherCheck -Name Pester

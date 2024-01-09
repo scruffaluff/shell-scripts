@@ -52,7 +52,9 @@ jobs:
           /usr/local/bin
       - if: ${{ runner.os == 'Windows' }}
         name: Install Just for Windows
-        run: choco install --yes just
+        run: |
+          choco install --yes just
+          Install-PackageProvider -Force -MinimumVersion 2.8.5.201 -Name NuGet
       - name: Install Node interpreter
         uses: actions/setup-node@v3
         with:
