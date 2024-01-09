@@ -143,7 +143,7 @@ find_jq() {
   #   -s: Show operating system kernel name.
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  jq_bin="$(command -v jq)"
+  jq_bin="$(command -v jq || echo '')"
   if [ -x "${jq_bin}" ]; then
     echo "${jq_bin}"
   else
