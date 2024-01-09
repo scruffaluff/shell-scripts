@@ -93,6 +93,10 @@ download() {
 #   Path to temporary Jq binary.
 #######################################
 download_jq() {
+  # Do not use long form --machine flag for uname. It is not supported on MacOS.
+  #
+  # Flags:
+  #   -m: Show system architecture name.
   arch="$(uname -m | sed s/x86_64/amd64/ | sed s/x64/amd64/ |
     sed s/aarch64/arm64/)"
   tmp_path="$(mktemp)"
@@ -132,8 +136,15 @@ error_usage() {
 #   Path to Jq binary.
 #######################################
 find_jq() {
+  # Do not use long form --kernel-name flag for uname. It is not supported on
+  # MacOS.
+  #
+  # Flags:
+  #   -s: Show operating system kernel name.
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
   jq_bin="$(command -v jq)"
-  if [ -x "{jq_bin}" ]; then
+  if [ -x "${jq_bin}" ]; then
     echo "${jq_bin}"
   else
     case "$(uname -s)" in

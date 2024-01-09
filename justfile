@@ -2,7 +2,7 @@
 #
 # For more information, visit https://just.systems.
 
-set windows-shell := ['pwsh.exe', '-NoLogo', '-Command']
+set windows-shell := ['powershell.exe', '-NoLogo', '-Command']
 
 # List all commands available in justfile.
 list:
@@ -101,8 +101,9 @@ _setup-shell:
 
 [windows]
 _setup-shell:
+  Install-PackageProvider -Force -MinimumVersion 2.8.5.201 -Name NuGet
   Install-Module -Force -Name PSScriptAnalyzer
-  Install-Module -Force -Name Pester
+  Install-Module -Force -SkipPublisherCheck -Name Pester
 
 # Run test suites.
 [unix]
@@ -111,4 +112,4 @@ test:
 
 [windows]
 test:
-  Invoke-Pester -Output Detailed tests
+  Invoke-Pester tests
