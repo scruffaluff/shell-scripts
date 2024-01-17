@@ -387,7 +387,6 @@ install_cdrom() {
     --memory 8192 \
     --name "${1}" \
     --osinfo "${2}" \
-    --tpm model=tpm-tis,backend.type=emulator,backend.version=2.0 \
     --vcpus 4 \
     ${linux:+--virt-type kvm}
 }
@@ -408,6 +407,7 @@ install_default() {
       url='https://gigenet.dl.sourceforge.net/project/android-x86/Release%209.0/android-x86_64-9.0-r2.iso'
       image="${HOME}/.virshx/android_amd64.iso"
       fetch "${url}" "${image}"
+      echo 'Follow instructions at https://youtu.be/MG7-S_88nDg?t=120 during first boot.'
       install_ --domain android --osinfo android-x86-9.0 "${image}"
       ;;
     arch)
@@ -878,7 +878,7 @@ setup_guest() {
   # being unable to find the "" command.
   if [ -x "$(command -v apk)" ]; then
     ${super:+"${super}"} apk update
-    ${super:+"${super}"} apk add curl jq ncurses openssh-server python3 \
+    ${super:+"${super}"} apk add curl ncurses openssh-server python3 \
       qemu-guest-agent spice-vdagent
     ${super:+"${super}"} rc-update add qemu-guest-agent
     ${super:+"${super}"} service qemu-guest-agent start
@@ -893,7 +893,7 @@ setup_guest() {
     # since the command is executed as sudo.
     ${super:+"${super}"} apt-get update
     DEBIAN_FRONTEND=noninteractive ${super:+"${super}"} apt-get install --yes \
-      curl jq libncurses5-dbg openssh-server qemu-guest-agent spice-vdagent
+      curl libncurses5-dbg openssh-server qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v dnf)" ]; then
@@ -901,20 +901,20 @@ setup_guest() {
       code="$?"
       [ "${code}" -ne 100 ] && exit "${code}"
     }
-    ${super:+"${super}"} dnf install --assumeyes curl jq ncurses \
+    ${super:+"${super}"} dnf install --assumeyes curl ncurses \
       openssh-server qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v pacman)" ]; then
     ${super:+"${super}"} pacman --noconfirm --refresh --sync --sysupgrade
-    ${super:+"${super}"} pacman --noconfirm --sync curl jq ncurses openssh \
+    ${super:+"${super}"} pacman --noconfirm --sync curl ncurses openssh \
       qemu-guest-agent spice-vdagent
   fi
 
   if [ -x "$(command -v pkg)" ]; then
     ${super:+"${super}"} pkg update
     # Seems as though openssh-server is builtin to FreeBSD.
-    ${super:+"${super}"} pkg install --yes curl jq ncurses qemu-guest-agent \
+    ${super:+"${super}"} pkg install --yes curl ncurses qemu-guest-agent \
       rsync terminfo-db
     ${super:+"${super}"} service qemu-guest-agent start
     ${super:+"${super}"} sysrc qemu_guest_agent_enable="YES"
@@ -931,7 +931,7 @@ EOF
 
   if [ -x "$(command -v zypper)" ]; then
     ${super:+"${super}"} zypper update --no-confirm
-    ${super:+"${super}"} zypper install --no-confirm curl jq ncurses \
+    ${super:+"${super}"} zypper install --no-confirm curl ncurses \
       openssh-server qemu-guest-agent spice-vdagent
   fi
 
@@ -988,18 +988,12 @@ setup_host() {
 # Setup SSH port forward to guest domain.
 #######################################
 setup_port() {
-  port='2022'
-
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
     case "${1}" in
       -h | --help)
         usage 'setup_port'
         exit 0
-        ;;
-      -p | --port)
-        port="${2}"
-        shift 2
         ;;
       *)
         domain="${1}"
@@ -1014,8 +1008,13 @@ setup_port() {
   if [ -z "${domain:-}" ]; then
     error_usage 'Domain argument is required' 'setup_port'
   fi
+
+  # Setup SSH port.
   virsh qemu-monitor-command --domain "${domain}" \
-    --hmp "hostfwd_add tcp::${port}-:22"
+    --hmp "hostfwd_add tcp::2022-:22"
+  # Setup Android debug port.
+  virsh qemu-monitor-command --domain "${domain}" \
+    --hmp "hostfwd_add tcp::4444-:5555"
 
   echo "You can now SSH login to ${domain} with command 'ssh -i ~/virshx/key -p 2022 localhost'."
 }
