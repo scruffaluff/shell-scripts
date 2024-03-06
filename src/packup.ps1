@@ -73,6 +73,10 @@ Function Main() {
     If (Get-Command pipx -ErrorAction SilentlyContinue) {
         pipx upgrade-all
     }
+
+    If (Get-Command tldr -ErrorAction SilentlyContinue) {
+        tldr --update
+    }
 }
 
 # Only run Main if invoked as script. Otherwise import functions as library.

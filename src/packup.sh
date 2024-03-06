@@ -159,6 +159,10 @@ upgrade() {
   if [ -x "$(command -v pipx)" ] && [ -O "$(which pipx)" ]; then
     pipx upgrade-all
   fi
+
+  if [ -x "$(command -v tldr)" ]; then
+    tldr --update
+  fi
 }
 
 #######################################
