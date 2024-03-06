@@ -56,7 +56,6 @@ Function Main() {
 
     If (Get-Command cargo -ErrorAction SilentlyContinue) {
         ForEach ($Line in $(cargo install --list)) {
-            Write-Output "$Line"
             If ("$Line" -Like '*:') {
                 cargo install $Line.Split()[0]
             }
