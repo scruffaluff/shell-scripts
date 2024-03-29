@@ -46,9 +46,11 @@ Function Main() {
             Default {
                 If (-Not $Program) {
                     $Program = $(Resolve-Path $Args[0][$ArgIdx])
-                } ElseIf (-Not $ProgArgs) {
+                }
+                ElseIf (-Not $ProgArgs) {
                     $ProgArgs += "`"$($Args[0][$ArgIdx])`""
-                } Else {
+                }
+                Else {
                     $ProgArgs += ", `"$($Args[0][$ArgIdx])`""
                 }
                 $ArgIdx += 1
