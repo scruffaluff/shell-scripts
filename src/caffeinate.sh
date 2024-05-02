@@ -39,9 +39,16 @@ error() {
   exit 1
 }
 
+#######################################
+# Cleanup resources on exit.
+#######################################
 panic() {
-  if [ -x "$(command -v gsettings)" ]; then
-    schema="${HOME}/.local/share/gnome-shell/extensions/caffeine@patapon.info/schemas"
+  schema="${HOME}/.local/share/gnome-shell/extensions/caffeine@patapon.info/schemas"
+
+  # Flags:
+  #   -d: Check if path exists and is a directory.
+  #   -x: Check if file exists and execute permission is granted.
+  if [ -x "$(command -v gsettings)" ] && [ -d "${schema}" ]; then
     gsettings --schemadir "${schema}" set org.gnome.shell.extensions.caffeine toggle-state false
   fi
 }
@@ -59,6 +66,12 @@ version() {
 # Script entrypoint.
 #######################################
 main() {
+  # Use system caffeinate if it exists.
+  if [ -x /usr/bin/caffeinate ]; then
+    /usr/bin/caffeinate "$@"
+    exit 0
+  fi
+
   case "${1:-}" in
     --debug)
       set -o xtrace
@@ -75,16 +88,28 @@ main() {
     *) ;;
   esac
 
-  if [ -x /usr/bin/caffeinate ]; then
-    /usr/bin/caffeinate "$@"
-  elif [ -x "$(command -v gsettings)" ]; then
-    schema="${HOME}/.local/share/gnome-shell/extensions/caffeine@patapon.info/schemas"
+  # Schema is required since MacOS can have a gsettings program that does
+  # nothing if the glib formula, https://formulae.brew.sh/formula/glib, is
+  # installed.
+  #
+  # Flags:
+  #   -d: Check if path exists and is a directory.
+  #   -x: Check if file exists and execute permission is granted.
+  schema="${HOME}/.local/share/gnome-shell/extensions/caffeine@patapon.info/schemas"
+  if [ -x "$(command -v gsettings)" ] && [ -d "${schema}" ]; then
     gsettings --schemadir "${schema}" set org.gnome.shell.extensions.caffeine toggle-state true
+
     if [ "${#}" -eq 0 ]; then
-      sleep infinity
+      # Sleep inifinity is not supported on all platforms.
+      #
+      #  For more information, visit https://stackoverflow.com/a/41655546.
+      while true; do
+        sleep 86400
+      done
     else
       "$@"
     fi
+
     gsettings --schemadir "${schema}" set org.gnome.shell.extensions.caffeine toggle-state false
   else
     error 'Unable to find a supported caffeine backend'
