@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Starts a VSCode debug session with CodeLLDB from the command line.
+    Scruffaluff's debug helper.
 #>
 
 # If unable to execute due to policy rules, run
@@ -12,19 +12,23 @@ $ErrorActionPreference = 'Stop'
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
-Starts a VSCode debug session with CodeLLDB from the command line.
+Scruffaluff's debug helper.
 
-Usage: vslldb [OPTIONS] [PROGRAM] [ARGUMENTS]
+Usage: sdb [OPTIONS] [COMMAND]
 
 Options:
   -h, --help      Print help information
   -v, --version   Print version information
+
+Subcommands:
+  tty       Start debug session with output redirected to another tty
+  vscode    Start debug session in VSCode
 '@
 }
 
 # Print Packup version string.
 Function Version() {
-    Write-Output 'VSLLDB 0.0.1'
+    Write-Output 'SDB 0.0.1'
 }
 
 # Script entrypoint.
