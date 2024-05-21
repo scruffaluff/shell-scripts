@@ -70,8 +70,20 @@ configure_shell() {
 #   Super user command for installation.
 #   Remote source URL.
 #   Local destination path.
+#   Optional permissions for file.
 #######################################
 download() {
+  # Create parent directory if it does not exist.
+  #
+  # Flags:
+  #   -d: Check if path exists and is a directory.
+  folder="$(dirname "${3}")"
+  if [ ! -d "${folder}" ]; then
+    ${1:+"${1}"} mkdir -p "${folder}"
+  fi
+
+  # Download with Curl or Wget.
+  #
   # Flags:
   #   -O path: Save download to path.
   #   -q: Hide log output.
@@ -82,6 +94,14 @@ download() {
       "${2}"
   else
     ${1:+"${1}"} wget -q -O "${3}" "${2}"
+  fi
+
+  # Change file permissions if chmod parameter was passed.
+  #
+  # Flags:
+  #   -n: Check if the string has nonzero length.
+  if [ -n "${4:-}" ]; then
+    ${1:+"${1}"} chmod "${4}" "${3}"
   fi
 }
 
@@ -102,8 +122,7 @@ download_jq() {
   tmp_path="$(mktemp)"
   download '' \
     "https://github.com/jqlang/jq/releases/latest/download/jq-${1}-${arch}" \
-    "${tmp_path}"
-  chmod 755 "${tmp_path}"
+    "${tmp_path}" 755
   echo "${tmp_path}"
 }
 
@@ -219,7 +238,7 @@ find_super() {
 }
 
 #######################################
-# Print log message to stdout if logging is enabled.
+# Install script and update path.
 # Arguments:
 #   Super user command for installation
 #   Script URL prefix
@@ -249,12 +268,7 @@ install_script() {
   fi
 
   log "Installing script ${4}..."
-
-  # Do not quote the outer super parameter expansion. Shell will error due to be
-  # being unable to find the "" command.
-  ${super:+"${super}"} mkdir -p "${3}"
-  download "${super}" "${src_url}" "${dst_file}"
-  ${super:+"${super}"} chmod 755 "${dst_file}"
+  download "${super}" "${src_url}" "${dst_file}" 755
 
   # Add Scripts to shell profile if not in system path.
   #
