@@ -61,7 +61,7 @@ https://raw.githubusercontent.com/scruffaluff/shell-scripts/develop/src/otherscr
   }
   export -f sudo
 
-  expected='sudo mkdir -p /bin'
-  actual="$(bash install.sh --dest /bin mockscript)"
+  expected='sudo mkdir -p /bin/fake'
+  actual="$(bash install.sh --dest /bin/fake mockscript)"
   assert_equal "${actual}" "${expected}"
 }
