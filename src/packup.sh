@@ -113,7 +113,7 @@ upgrade() {
 
   if [ -x "$(command -v brew)" ]; then
     brew update
-    brew upgrade
+    brew upgrade --greedy
   fi
 
   if [ -x "$(command -v dnf)" ]; then
