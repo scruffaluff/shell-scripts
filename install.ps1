@@ -30,7 +30,7 @@ Function DownloadFile($SrcURL, $DstFile) {
     # The progress bar updates every byte, which makes downloads slow. See
     # https://stackoverflow.com/a/43477248 for an explanation.
     $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest -UseBasicParsing -Uri "$SrcURL" -OutFile "$DstFile"
+    Invoke-WebRequest -UseBasicParsing -OutFile "$DstFile" -Uri "$SrcURL"
 }
 
 # Print error message and exit script with usage error code.
@@ -42,7 +42,7 @@ Function ErrorUsage($Message) {
 
 # Find or download Jq JSON parser.
 Function FindJq() {
-    $JqBin = $(Get-Command jq -ErrorAction SilentlyContinue).Source
+    $JqBin = $(Get-Command -ErrorAction SilentlyContinue jq).Source
     If ($JqBin) {
         Write-Output $JqBin
     }
@@ -59,9 +59,9 @@ Function FindJq() {
 Function FindScripts($Version) {
     $Filter = '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".ps1\")'
     $Uri = "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true"
-    $Response = $(Invoke-WebRequest -UseBasicParsing -Uri "$Uri")
+    $Response = Invoke-WebRequest -UseBasicParsing -Uri "$Uri"
 
-    $JqBin = $(FindJq)
+    $JqBin = FindJq
     Write-Output "$Response" | & $JqBin --raw-output "$Filter"
 }
 
@@ -114,7 +114,7 @@ Function Main() {
     }
 
     If ($List) {
-        $Scripts = $(FindScripts "$Version")
+        $Scripts = FindScripts "$Version"
         Write-Output $Scripts
     }
     ElseIf ($Name) {
@@ -138,7 +138,7 @@ Function Main() {
             $Env:Path = $PrependedPath
         }
 
-        $Scripts = $(FindScripts "$Version")
+        $Scripts = FindScripts "$Version"
         $MatchFound = $False
         $SrcPrefix = "https://raw.githubusercontent.com/scruffaluff/shell-scripts/$Version/src"
 

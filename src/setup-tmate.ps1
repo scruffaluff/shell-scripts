@@ -22,11 +22,11 @@ Options:
 }
 
 Function InstallTmate($URL) {
-    If (-Not (Get-Command choco -ErrorAction SilentlyContinue)) {
+    If (-Not (Get-Command -ErrorAction SilentlyContinue choco)) {
         RemoteScript 'https://chocolatey.org/install.ps1'
     }
 
-    If (-Not (Get-Command pacman -ErrorAction SilentlyContinue)) {
+    If (-Not (Get-Command -ErrorAction SilentlyContinue pacman)) {
         choco install --yes msys2
     }
 
@@ -45,7 +45,7 @@ Function RemoteScript($URL) {
 
 # Print SetupTmate version string.
 Function Version() {
-    Write-Output 'SetupTmate 0.3.0'
+    Write-Output 'SetupTmate 0.3.1'
 }
 
 # Script entrypoint.
@@ -69,7 +69,7 @@ Function Main() {
     }
 
     $Env:Path = 'C:\tools\msys64\usr\bin;' + "$Env:Path"
-    If (-Not (Get-Command tmate -ErrorAction SilentlyContinue)) {
+    If (-Not (Get-Command -ErrorAction SilentlyContinue tmate)) {
         InstallTmate
     }
 
@@ -84,8 +84,8 @@ Function Main() {
     #   -S: Set Tmate socket path.
     tmate -S /tmp/tmate.sock new-session -d
     tmate -S /tmp/tmate.sock wait tmate-ready
-    $SSHConnect = "$(sh -l -c "tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'")"
-    $WebConnect = "$(sh -l -c "tmate -S /tmp/tmate.sock display -p '#{tmate_web}'")"
+    $SSHConnect = sh -l -c "tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'"
+    $WebConnect = sh -l -c "tmate -S /tmp/tmate.sock display -p '#{tmate_web}'"
 
     While ($True) {
         Write-Output "SSH: $SSHConnect"
@@ -94,8 +94,8 @@ Function Main() {
         # Check if script should exit.
         If (
             (-Not (sh -l -c 'ls /tmp/tmate.sock 2> /dev/null')) -Or
-            (Test-Path -Path 'C:/tools/msys64/close-tmate') -Or
-            (Test-Path -Path './close-tmate')
+            (Test-Path 'C:/tools/msys64/close-tmate') -Or
+            (Test-Path './close-tmate')
         ) {
             Break
         }
