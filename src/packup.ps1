@@ -21,7 +21,7 @@ Options:
 
 # Print Packup version string.
 Function Version() {
-    Write-Output 'Packup 0.4.0'
+    Write-Output 'Packup 0.4.1'
 }
 
 # Script entrypoint.
@@ -44,17 +44,17 @@ Function Main() {
         }
     }
 
-    If (Get-Command choco -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue choco) {
         choco upgrade --yes all
     }
 
-    If (Get-Command scoop -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue scoop) {
         scoop update
         scoop update --all
         scoop cleanup --all
     }
 
-    If (Get-Command cargo -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue cargo) {
         ForEach ($Line in $(cargo install --list)) {
             If ("$Line" -Like '*:') {
                 cargo install $Line.Split()[0]
@@ -62,18 +62,18 @@ Function Main() {
         }
     }
 
-    If (Get-Command npm -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue npm) {
         # The "npm install" command is run before "npm update" command to avoid
         # messages about newer versions of NPM being available.
         npm install --global npm@latest
         npm update --global --loglevel error
     }
 
-    If (Get-Command pipx -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue pipx) {
         pipx upgrade-all
     }
 
-    If (Get-Command tldr -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue tldr) {
         tldr --update
     }
 }
