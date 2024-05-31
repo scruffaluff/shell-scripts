@@ -18,6 +18,7 @@ format:
   npx prettier --check .
   shfmt --diff install.sh src
 
+# Check code formatting.
 [windows]
 format:
   npx prettier --check .
@@ -30,6 +31,7 @@ format:
 lint:
   ./scripts/shellcheck.sh
 
+# Run code analyses.
 [windows]
 lint:
   Invoke-ScriptAnalyzer -EnableExit -Path install.ps1 -Settings PSScriptAnalyzerSettings.psd1
@@ -110,6 +112,7 @@ _setup-shell:
 test:
   npx bats --recursive tests
 
+# Run test suites.
 [windows]
 test:
   Invoke-Pester tests

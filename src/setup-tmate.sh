@@ -199,7 +199,7 @@ setup_tmate() {
 #   Setup Tmate version string.
 #######################################
 version() {
-  echo 'SetupTmate 0.3.0'
+  echo 'SetupTmate 0.3.1'
 }
 
 #######################################

@@ -185,7 +185,7 @@ find_super() {
 #   ClearCache version string.
 #######################################
 version() {
-  echo 'ClearCache 0.2.0'
+  echo 'ClearCache 0.2.1'
 }
 
 #######################################
