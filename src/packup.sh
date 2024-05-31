@@ -171,7 +171,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo 'Packup 0.4.0'
+  echo 'Packup 0.4.1'
 }
 
 #######################################

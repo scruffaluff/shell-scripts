@@ -38,28 +38,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Cache packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             .cache
             node_modules
           key: >-
-            node-20_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
+            node-22_${{ runner.os }}_npm-${{ hashFiles('package-lock.json') }}
+      - if: ${{ runner.os == 'Windows' }}
+        name: Install Just for Windows
+        run: choco install --yes just
       - if: ${{ runner.os != 'Windows' }}
         name: Install Just for Unix
         run: >-
           curl -LSfs https://just.systems/install.sh | bash -s -- --to
           /usr/local/bin
-      - if: ${{ runner.os == 'Windows' }}
-        name: Install Just for Windows
-        run: choco install --yes just
       - name: Install Node interpreter
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       # GitHub default shell for Windows is PowerShell Core and installing
       # modules in a PowerShell session that is a subprocess of a PowerShell
       # Core session causes failures related to not being able to find NuGet.
+      - if: ${{ runner.os == 'Windows' }}
+        name: Install development dependencies
+        run: just setup
+        shell: powershell
       - if: ${{ runner.os != 'Windows' }}
         name: Install development dependencies
         run: just setup
