@@ -60,9 +60,13 @@ jobs:
       # GitHub default shell for Windows is PowerShell Core and installing
       # modules in a PowerShell session that is a subprocess of a PowerShell
       # Core session causes failures related to not being able to find NuGet.
-      - name: Install development dependencies
+      - if: ${{ runner.os == 'Windows' }}
+        name: Install development dependencies
         run: just setup
-        shell: ${{ runner.os == 'Windows' && 'powershell' || 'bash' }}
+        shell: powershell
+      - if: ${{ runner.os != 'Windows' }}
+        name: Install development dependencies
+        run: just setup
       - name: Check code formatting
         run: just format
       - name: Run code analyses
