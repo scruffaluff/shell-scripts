@@ -8,6 +8,9 @@ set windows-shell := ['powershell.exe', '-NoLogo', '-Command']
 list:
   just --list
 
+# Execute all commands.
+all: setup format lint docs test
+
 # Build documentation.
 docs:
   npx vitepress build .
@@ -29,7 +32,7 @@ format:
 # Run code analyses.
 [unix]
 lint:
-  ./scripts/shellcheck.sh
+  scripts/shellcheck.sh
 
 # Run code analyses.
 [windows]
