@@ -51,7 +51,7 @@ jobs:
       - if: ${{ runner.os != 'Windows' }}
         name: Install Just for Unix
         run: >-
-          curl -LSfs https://just.systems/install.sh | bash -s -- --to
+          curl -LSfs https://just.systems/install.sh | sh -s -- --to
           /usr/local/bin
       - name: Install Node interpreter
         uses: actions/setup-node@v4

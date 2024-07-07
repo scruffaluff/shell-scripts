@@ -90,7 +90,7 @@ _setup-shell:
   if [ ! -x "$(command -v shfmt)" ]; then
     if [ -x "$(command -v brew)" ]; then
       brew install shfmt
-    elif [ -x "$(command -v brew)" ]; then
+    elif [ -x "$(command -v pkg)" ]; then
       ${super:+"${super}"} pkg update
       ${super:+"${super}"} pkg install --yes shfmt
     else

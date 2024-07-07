@@ -25,7 +25,9 @@ Options:
   -a, --addpath <PATH>        Add folder to Matlab path
   -c, --license <LOCATION>    Set location of Matlab license file
   -d, --debug                 Start script with Matlab debugger
+  -e, --echo                  Print Matlab command and exit
   -h, --help                  Print help information
+  -j, --jupyter               Launch Jupyter Lab with Matlab kernel
   -l, --log <PATH>            Copy command window output to logfile
   -s, --sd <PATH>             Set the Matlab startup folder
   -v, --version               Print version information
@@ -61,16 +63,18 @@ find_matlab() {
   else
     case "$(uname -s)" in
       Darwin)
-        for file in /Applications/MATLAB_*.app; do
-          program="${file}/bin/matlab"
+        for folder in /Applications/MATLAB_*.app; do
+          program="${folder}/bin/matlab"
           break
         done
         ;;
       *)
-        for file in /usr/local/MATLAB/R*; do
-          program="${file}/bin/matlab"
-          break
-        done
+        if [ -d '/usr/local/MATLAB' ]; then
+          for folder in /usr/local/MATLAB/R*; do
+            program="${folder}/bin/matlab"
+            break
+          done
+        fi
         ;;
     esac
   fi
@@ -103,6 +107,24 @@ get_module() {
 }
 
 #######################################
+# Launch Jupyter Lab with Matlab kernel.
+#######################################
+launch_jupyter() {
+  share_dir="${HOME}/.local/share/mlab"
+  matlab_dir="$(dirname "$(find_matlab)")"
+
+  if [ ! -d "${share_dir}/venv" ]; then
+    mkdir -p "${share_dir}"
+    python3 -m venv "${share_dir}/venv"
+    "${share_dir}/venv/bin/pip" install jupyterlab jupyter-matlab-proxy
+  fi
+
+  . "${share_dir}/venv/bin/activate"
+  export PATH="${matlab_dir}:${PATH}"
+  jupyter lab "$@"
+}
+
+#######################################
 # Print Mlab version string.
 # Outputs:
 #   Mlab version string.
@@ -116,7 +138,8 @@ version() {
 # Script entrypoint.
 #######################################
 main() {
-  debug='' flag='-r' license='' logfile='' pathcmd='' startdir='' script=''
+  debug='' display='-nodisplay' flag='-r' license='' logfile='' pathcmd=''
+  print='' script='' startdir=''
 
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
@@ -133,8 +156,21 @@ main() {
         debug='true'
         shift 1
         ;;
+      -e | --echo)
+        print='true'
+        shift 1
+        ;;
+      -g | --genpath)
+        pathcmd="addpath(genpath('${2}')); "
+        shift 2
+        ;;
       -h | --help)
         usage
+        exit 0
+        ;;
+      -j | --jupyter)
+        shift 1
+        launch_jupyter "$@"
         exit 0
         ;;
       -l | -logfile | --logfile)
@@ -166,9 +202,10 @@ main() {
   if [ -z "${script}" ]; then
     command='dbstop if error;'
   elif [ -n "${debug}" ]; then
-    command="dbstop if error; dbstop in ${module}; ${module} $*; exit"
+    command="dbstop if error; dbstop in ${module}; ${module}; exit"
   else
-    command="${module} $*"
+    command="${module}"
+    display='-nodesktop'
     flag='-batch'
   fi
 
@@ -178,13 +215,19 @@ main() {
   #   -n: Check if the string has nonzero length.
   if [ -n "${script}" ] && [ "${module}" != "${script}" ]; then
     folder="$(dirname "${script}")"
-    command="addpath('${folder}'); ${command}"
+    case "$(basename "${folder}")" in
+      +*) ;;
+      *)
+        command="addpath('${folder}'); ${command}"
+        ;;
+    esac
   fi
 
   command="${pathcmd}${command}"
   program="$(find_matlab)"
-  "${program}" ${license:+-c "${license}"} ${logfile:+-logfile "${logfile}"} \
-    ${startdir:+-sd "${startdir}"} -nodisplay -nosplash "${flag}" "${command}"
+  ${print:+echo} "${program}" ${license:+-c "${license}"} \
+    ${logfile:+-logfile "${logfile}"} ${startdir:+-sd "${startdir}"} \
+    "${display}" -nosplash "${flag}" "${command}"
 }
 
 # Add ability to selectively skip main function during test suite.
