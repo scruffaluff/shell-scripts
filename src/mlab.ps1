@@ -56,8 +56,8 @@ Function FindMatlab() {
 Function GetModule($Path) {
     Switch ($Path) {
         { $_ -Like "*.m" } {
-            Return $(Get-Item $Path).BaseName 
-        }   
+            Return $(Get-Item $Path).BaseName
+        }
         Default {
             Return $Path
         }

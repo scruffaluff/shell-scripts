@@ -131,7 +131,6 @@ launch_jupyter() {
 #######################################
 version() {
   echo 'Mlab 0.0.1'
-  printf 'Matlab %s\n' "$("$(find_matlab)" -batch 'disp(version);')"
 }
 
 #######################################
