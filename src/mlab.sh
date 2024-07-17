@@ -16,8 +16,26 @@ set -eu
 #   Writes help information to stdout.
 #######################################
 usage() {
-  cat 1>&2 << EOF
-Wrapper script for running Matlab programs from the command line.
+  case "${1}" in
+    main)
+      cat 1>&2 << EOF
+Wrapper script for running Matlab programs from the command line
+
+Usage: mlab [OPTIONS] [SUBCOMMAND]
+
+Options:
+      --debug       Enable shell debug traces
+  -h, --help        Print help information
+  -v, --version     Print version information
+
+Subcommands:
+  jupyter   Launch Jupyter Lab with Matlab kernel
+  run       Execute Matlab code
+EOF
+      ;;
+    run)
+      cat 1>&2 << EOF
+Execute Matlab code
 
 Usage: mlab [OPTIONS] [SCRIPT] [ARGS]
 
@@ -27,11 +45,14 @@ Options:
   -d, --debug                 Start script with Matlab debugger
   -e, --echo                  Print Matlab command and exit
   -h, --help                  Print help information
-  -j, --jupyter               Launch Jupyter Lab with Matlab kernel
   -l, --log <PATH>            Copy command window output to logfile
   -s, --sd <PATH>             Set the Matlab startup folder
-  -v, --version               Print version information
 EOF
+      ;;
+    *)
+      error "No such usage option '${1}'"
+      ;;
+  esac
 }
 
 #######################################
@@ -43,6 +64,18 @@ error() {
   bold_red='\033[1;31m' default='\033[0m'
   printf "${bold_red}error${default}: %s\n" "${1}" >&2
   exit 1
+}
+
+#######################################
+# Print error message and exit script with usage error code.
+# Outputs:
+#   Writes error message to stderr.
+#######################################
+error_usage() {
+  bold_red='\033[1;31m' default='\033[0m'
+  printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  printf "Run 'mlab %s--help' for usage.\n" "${2:+${2} }" >&2
+  exit 2
 }
 
 #######################################
@@ -116,7 +149,7 @@ launch_jupyter() {
   if [ ! -d "${share_dir}/venv" ]; then
     mkdir -p "${share_dir}"
     python3 -m venv "${share_dir}/venv"
-    "${share_dir}/venv/bin/pip" install jupyterlab jupyter-matlab-proxy
+    "${share_dir}/venv/bin/pip" install jupyter-matlab-proxy jupyterlab
   fi
 
   . "${share_dir}/venv/bin/activate"
@@ -125,18 +158,9 @@ launch_jupyter() {
 }
 
 #######################################
-# Print Mlab version string.
-# Outputs:
-#   Mlab version string.
+# Subcommand to execute Matlab code.
 #######################################
-version() {
-  echo 'Mlab 0.0.1'
-}
-
-#######################################
-# Script entrypoint.
-#######################################
-main() {
+run() {
   debug='' display='-nodisplay' flag='-r' license='' logfile='' pathcmd=''
   print='' script='' startdir=''
 
@@ -164,12 +188,7 @@ main() {
         shift 2
         ;;
       -h | --help)
-        usage
-        exit 0
-        ;;
-      -j | --jupyter)
-        shift 1
-        launch_jupyter "$@"
+        usage 'run'
         exit 0
         ;;
       -l | -logfile | --logfile)
@@ -179,10 +198,6 @@ main() {
       -s | -sd | --sd)
         startdir="${2}"
         shift 2
-        ;;
-      -v | --version)
-        version
-        exit 0
         ;;
       *)
         script="${1}"
@@ -227,6 +242,53 @@ main() {
   ${print:+echo} "${program}" ${license:+-c "${license}"} \
     ${logfile:+-logfile "${logfile}"} ${startdir:+-sd "${startdir}"} \
     "${display}" -nosplash "${flag}" "${command}"
+}
+
+#######################################
+# Print Mlab version string.
+# Outputs:
+#   Mlab version string.
+#######################################
+version() {
+  echo 'Mlab 0.0.2'
+}
+
+#######################################
+# Script entrypoint.
+#######################################
+main() {
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      --debug)
+        set -o xtrace
+        shift 1
+        ;;
+      -h | --help)
+        usage 'main'
+        exit 0
+        ;;
+      -v | --version)
+        version
+        exit 0
+        ;;
+      jupyter)
+        shift 1
+        launch_jupyter "$@"
+        exit 0
+        ;;
+      run)
+        shift 1
+        run "$@"
+        exit 0
+        ;;
+      *)
+        error_usage "No such subcommand or option '${1}'"
+        ;;
+    esac
+  done
+
+  usage 'main'
 }
 
 # Add ability to selectively skip main function during test suite.

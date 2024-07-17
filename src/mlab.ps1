@@ -8,8 +8,25 @@ $ErrorActionPreference = 'Stop'
 
 # Show CLI help information.
 Function Usage() {
-    Write-Output @'
-Wrapper script for running Matlab programs from the command line.
+    Switch ($Args[0]) {
+        'main' {
+            Write-Output @'
+Wrapper script for running Matlab programs from the command line
+
+Usage: mlab [OPTIONS] [SUBCOMMAND]
+
+Options:
+  -h, --help        Print help information
+  -v, --version     Print version information
+
+Subcommands:
+  jupyter   Launch Jupyter Lab with Matlab kernel
+  run       Execute Matlab code
+'@
+        }
+        'run' {
+            Write-Output @'
+Execute Matlab code
 
 Usage: mlab [OPTIONS] [SCRIPT] [ARGS]
 
@@ -19,13 +36,21 @@ Options:
   -d, --debug                 Start script with Matlab debugger
   -e, --echo                  Print Matlab command and exit
   -h, --help                  Print help information
-  -j, --jupyter               Launch Jupyter Lab with Matlab kernel
   -l, --log <PATH>            Copy command window output to logfile
   -s, --sd <PATH>             Set the Matlab startup folder
-  -v, --version               Print version information
 '@
+        }
+        Default {
+            ErrorUsage "No such usage option '$($Args[0])'"
+        }
+    }
 }
 
+# Print error message and exit script with usage error code.
+Function ErrorUsage($Message) {
+    Throw "Error: $Message"
+    Exit 2
+}
 
 # Find Matlab executable on system.
 Function FindMatlab() {
@@ -82,7 +107,7 @@ Function LaunchJupyter() {
     If (-Not (Test-Path -Path "$LocalDir/venv" -PathType Container)) {
         New-Item -Force -ItemType Directory -Path $LocalDir | Out-Null
         python3 -m venv "$LocalDir/venv"
-        & "$LocalDir/venv/Scripts/pip.exe" install jupyterlab jupyter-matlab-proxy
+        & "$LocalDir/venv/Scripts/pip.exe" install jupyter-matlab-proxy jupyterlab
     }
 
     & "$LocalDir/venv/Scripts/activate.ps1"
@@ -90,13 +115,8 @@ Function LaunchJupyter() {
     jupyter lab $Args
 }
 
-# Print Mlab version string.
-Function Version() {
-    Write-Output 'Mlab 0.0.1'
-}
-
-# Script entrypoint.
-Function Main() {
+# Subcommand to execute Matlab code.
+Function Run() {
     $ArgIdx = 0
     $BinaryArgs = @()
     $Debug = $False
@@ -130,12 +150,7 @@ Function Main() {
                 $ArgIdx += 2
             }
             { $_ -In '-h', '--help' } {
-                Usage
-                Exit 0
-            }
-            { $_ -In '-j', '--jupyter' } {
-                $ArgIdx += 1
-                LaunchJupyter @(GetParameters $Args[0] $ArgIdx)
+                Usage 'run'
                 Exit 0
             }
             { $_ -In '-l', '-logfile', '--logfile' } {
@@ -147,10 +162,6 @@ Function Main() {
                 $BinaryArgs += '-sd'
                 $BinaryArgs += $Args[0][$ArgIdx + 1]
                 $ArgIdx += 2
-            }
-            { $_ -In '-v', '--version' } {
-                Version
-                Exit 0
             }
             Default {
                 $Script = $Args[0][$ArgIdx]
@@ -198,6 +209,46 @@ Function Main() {
     Else {
         & $Program $Display -nosplash $Flag $Command
     }
+}
+
+# Print Mlab version string.
+Function Version() {
+    Write-Output 'Mlab 0.0.2'
+}
+
+# Script entrypoint.
+Function Main() {
+    $ArgIdx = 0
+
+    While ($ArgIdx -LT $Args[0].Count) {
+        Switch ($Args[0][$ArgIdx]) {
+            { $_ -In '-h', '--help' } {
+                Usage 'main'
+                Exit 0
+            }
+            { $_ -In '-v', '--version' } {
+                Version
+                Exit 0
+            }
+            'jupyter' {
+                $ArgIdx += 1
+                LaunchJupyter @(GetParameters $Args[0] $ArgIdx)
+                Exit 0
+            }
+            'run' {
+                $ArgIdx += 1
+                Run @(GetParameters $Args[0] $ArgIdx)
+                Exit 0
+            }
+            Default {
+                $Script = $Args[0][$ArgIdx]
+                $ArgIdx += 1
+                Break
+            }
+        }
+    }
+
+    Usage 'main'
 }
 
 # Only run Main if invoked as script. Otherwise import functions as library.
