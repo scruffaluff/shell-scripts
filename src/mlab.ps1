@@ -241,9 +241,7 @@ Function Main() {
                 Exit 0
             }
             Default {
-                $Script = $Args[0][$ArgIdx]
-                $ArgIdx += 1
-                Break
+                ErrorUsage "No such subcommand or option '$($Args[0][0])'"
             }
         }
     }
