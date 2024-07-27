@@ -161,8 +161,8 @@ launch_jupyter() {
 # Subcommand to execute Matlab code.
 #######################################
 run() {
-  debug='' display='-nodisplay' flag='-r' license='' logfile='' pathcmd=''
-  print='' script='' startdir=''
+  command='' debug='' display='-nodesktop' flag='-r' license='' logfile=''
+  pathcmd='' print='' script='' startdir=''
 
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
@@ -184,6 +184,7 @@ run() {
         shift 1
         ;;
       -g | --genpath)
+        # shellcheck disable=SC2089
         pathcmd="addpath(genpath('${2}')); "
         shift 2
         ;;
@@ -211,15 +212,16 @@ run() {
   #
   # Flags:
   #   -n: Check if the string has nonzero length.
-  #   -z: Check if string has zero length.
   module="$(get_module "${script}")"
-  if [ -z "${script}" ]; then
-    command='dbstop if error;'
-  elif [ -n "${debug}" ]; then
-    command="dbstop if error; dbstop in ${module}; ${module}; exit"
-  else
+  if [ -n "${debug}" ]; then
+    display='-nodisplay'
+    if [ -n "${script}" ]; then
+      command="dbstop if error; dbstop in ${module}; ${module}; exit"
+    else
+      command='dbstop if error;'
+    fi
+  elif [ -n "${script}" ]; then
     command="${module}"
-    display='-nodesktop'
     flag='-batch'
   fi
 
@@ -239,9 +241,10 @@ run() {
 
   command="${pathcmd}${command}"
   program="$(find_matlab)"
+  # shellcheck disable=SC2090
   ${print:+echo} "${program}" ${license:+-c "${license}"} \
     ${logfile:+-logfile "${logfile}"} ${startdir:+-sd "${startdir}"} \
-    "${display}" -nosplash "${flag}" "${command}"
+    "${display}" -nosplash ${command:+"${flag}"} ${command:+"${command}"}
 }
 
 #######################################
@@ -250,7 +253,7 @@ run() {
 #   Mlab version string.
 #######################################
 version() {
-  echo 'Mlab 0.0.2'
+  echo 'Mlab 0.0.3'
 }
 
 #######################################
