@@ -81,7 +81,7 @@ Function FindMatlab() {
 Function GetModule($Path) {
     Switch ($Path) {
         { $_ -Like "*.m" } {
-            Return $(Get-Item $Path).BaseName
+            Return [System.IO.Path]::GetFileNameWithoutExtension($Path)
         }
         Default {
             Return $Path
@@ -120,7 +120,7 @@ Function Run() {
     $ArgIdx = 0
     $BinaryArgs = @()
     $Debug = $False
-    $Display = '-nodisplay'
+    $Display = '-nodesktop'
     $Flag = '-r'
     $PathCmd = ''
     $Print = $False
@@ -129,7 +129,7 @@ Function Run() {
     While ($ArgIdx -LT $Args[0].Count) {
         Switch ($Args[0][$ArgIdx]) {
             { $_ -In '-a', '--addpath' } {
-                $PathCmd = "addpath('$Args[0][$ArgIdx + 1]'); "
+                $PathCmd = "addpath('"+ $Args[0][$ArgIdx + 1]+ "'); "
                 $ArgIdx += 2
             }
             { $_ -In '-c', '--license' } {
@@ -146,7 +146,7 @@ Function Run() {
                 $ArgIdx += 1
             }
             { $_ -In '-g', '--genpath' } {
-                $PathCmd = "addpath(genpath('$Args[0][$ArgIdx + 1]')); "
+                $PathCmd = "addpath(genpath('" + $Args[0][$ArgIdx + 1] + "')); "
                 $ArgIdx += 2
             }
             { $_ -In '-h', '--help' } {
@@ -173,47 +173,54 @@ Function Run() {
 
     # Build Matlab command for script execution.
     $Module = "$(GetModule $Script)"
-    If (-Not $Script) {
-        $Command = 'dbstop if error;'
+    If ($Debug) {
+        $Display = '-nodisplay'
+        If ($Script) {
+            $Command = "dbstop if error; dbstop in $Module; $Module; exit"
+        }
+        Else {
+            $Command = 'dbstop if error;'
+        }
     }
-    ElseIf ($Debug) {
-        $Command = "dbstop if error; dbstop in $Module; $Module; exit"
-    }
-    Else {
+    ElseIf ($Script) {
         $Command = "$Module"
-        $Display = '-nodesktop'
         $Flag = '-batch'
     }
 
     # Add parent path to Matlab if command is a script.
     If ($Script -And ($Module -NE $Script)) {
-        $Folder = $(Get-Item $Script).Directory.FullName
-        # Cannot seem to use $Folder variable to get basename.
-        $FolderName = $(Get-Item $Script).Directory.BaseName
-        If ($FolderName -NotLike "+*") {
+        $Folder = [System.IO.Path]::GetDirectoryName($Script)
+        If ($Folder -NotLike "+*") {
             $Command = "addpath('$Folder'); $Command"
         }
     }
 
     $Command = "$PathCmd$Command"
-    $Program = "$(FindMatlab)"
-    If ($Print -And ($BinaryArgs.Count -GT 0)) {
-        Write-Output "& $Program $BinaryArgs $Display -nosplash $Flag $Command"
-    }
-    ElseIf ($Print) {
-        Write-Output "& $Program $Display -nosplash $Flag $Command"
-    }
-    ElseIf ($BinaryArgs.Count -GT 0) {
-        & $Program $BinaryArgs $Display -nosplash $Flag $Command
+    If ($Command) {
+        $FlagArgs = '-nosplash',$Flag,$Command
     }
     Else {
-        & $Program $Display -nosplash $Flag $Command
+        $FlagArgs = @('-nosplash')
+    }
+
+    $Program = "$(FindMatlab)"
+    If ($Print -And ($BinaryArgs.Count -GT 0)) {
+        Write-Output "& $Program $BinaryArgs $Display $FlagArgs"
+    }
+    ElseIf ($Print) {
+        Write-Output "& $Program $Display $FlagArgs"
+    }
+    ElseIf ($BinaryArgs.Count -GT 0) {
+        & $Program $BinaryArgs $Display $FlagArgs
+    }
+    Else {
+        & $Program $Display $FlagArgs
     }
 }
 
 # Print Mlab version string.
 Function Version() {
-    Write-Output 'Mlab 0.0.2'
+    Write-Output 'Mlab 0.0.3'
 }
 
 # Script entrypoint.
