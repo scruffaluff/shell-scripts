@@ -104,6 +104,7 @@ _setup-shell:
   fi
   shfmt --version
 
+# May fail if launched from PowerShell version 7.
 [windows]
 _setup-shell:
   Install-PackageProvider -Force -MinimumVersion 2.8.5.201 -Name NuGet
