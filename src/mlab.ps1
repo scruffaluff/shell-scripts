@@ -129,7 +129,7 @@ Function Run() {
     While ($ArgIdx -LT $Args[0].Count) {
         Switch ($Args[0][$ArgIdx]) {
             { $_ -In '-a', '--addpath' } {
-                $PathCmd = "addpath('"+ $Args[0][$ArgIdx + 1]+ "'); "
+                $PathCmd = "addpath('" + $Args[0][$ArgIdx + 1] + "'); "
                 $ArgIdx += 2
             }
             { $_ -In '-c', '--license' } {
@@ -197,7 +197,7 @@ Function Run() {
 
     $Command = "$PathCmd$Command"
     If ($Command) {
-        $FlagArgs = '-nosplash',$Flag,$Command
+        $FlagArgs = '-nosplash', $Flag, $Command
     }
     Else {
         $FlagArgs = @('-nosplash')
