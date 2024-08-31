@@ -23,6 +23,7 @@ Unix and Windows systems.
 | Name        | Description                                                         |
 | ----------- | ------------------------------------------------------------------- |
 | clear-cache | Frees up disk space by clearing caches of several package managers. |
+| mlab        | Wrapper script for running Matlab programs from the command line.   |
 | packup      | Invokes upgrade commands to several installed package managers.     |
 | purge-snap  | Removes all traces of the Snap package manager.                     |
 | setup-tmate | Installs Tmate and creates a session suitable for CI pipelines.     |
