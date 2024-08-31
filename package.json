@@ -4,8 +4,8 @@
     "bats-assert": "https://github.com/bats-core/bats-assert#v2.1.0",
     "bats-file": "https://github.com/bats-core/bats-file#v0.4.0",
     "bats-support": "https://github.com/bats-core/bats-support#v0.3.0",
-    "prettier": "^3.2.0",
-    "vitepress": "^1.2.0",
+    "prettier": "^3.3.0",
+    "vitepress": "^1.3.0",
     "vue": "^3.4.0"
   },
   "private": true,
