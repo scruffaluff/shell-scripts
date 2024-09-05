@@ -21,7 +21,7 @@ Options:
 
 # Print Packup version string.
 Function Version() {
-    Write-Output 'Packup 0.4.1'
+    Write-Output 'Packup 0.4.2'
 }
 
 # Script entrypoint.

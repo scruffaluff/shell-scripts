@@ -139,6 +139,7 @@ upgrade() {
 
   if [ -x "$(command -v pkg)" ]; then
     ${super:+"${super}"} pkg update
+    ${super:+"${super}"} pkg upgrade --yes
   fi
 
   if [ -x "$(command -v zypper)" ]; then
@@ -178,7 +179,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo 'Packup 0.4.1'
+  echo 'Packup 0.4.2'
 }
 
 #######################################
