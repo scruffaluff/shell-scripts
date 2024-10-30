@@ -41,10 +41,12 @@ Usage: mlab [OPTIONS] [SCRIPT] [ARGS]
 
 Options:
   -a, --addpath <PATH>        Add folder to Matlab path
+  -b, --batch                 Use batch mode for session
   -c, --license <LOCATION>    Set location of Matlab license file
-  -d, --debug                 Start script with Matlab debugger
+  -d, --debug                 Use Matlab debugger for session
   -e, --echo                  Print Matlab command and exit
   -h, --help                  Print help information
+  -i, --interactive           Use interactive mode for session
   -l, --log <PATH>            Copy command window output to logfile
   -s, --sd <PATH>             Set the Matlab startup folder
 EOF
@@ -161,8 +163,8 @@ launch_jupyter() {
 # Subcommand to execute Matlab code.
 #######################################
 run() {
-  command='' debug='' display='-nodesktop' flag='-r' license='' logfile=''
-  pathcmd='' print='' script='' startdir=''
+  batch='' command='' debug='' display='-nodisplay' flag='-r' interactive=''
+  license='' logfile='' pathcmd='' print='' script='' startdir=''
 
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
@@ -170,6 +172,10 @@ run() {
       -a | --addpath)
         pathcmd="addpath('${2}'); "
         shift 2
+        ;;
+      -b | --batch)
+        batch='true'
+        shift 1
         ;;
       -c | --license)
         license="${2}"
@@ -192,6 +198,10 @@ run() {
         usage 'run'
         exit 0
         ;;
+      -i | --interactive)
+        interactive='true'
+        shift 1
+        ;;
       -l | -logfile | --logfile)
         logfile="${2}"
         shift 2
@@ -208,21 +218,28 @@ run() {
     esac
   done
 
-  # Build Matlab command for script execution.
+  # Build Matlab command for execution.
+  #
+  # Defaults to batch mode for script execution and interactive mode otherwise.
   #
   # Flags:
   #   -n: Check if the string has nonzero length.
   module="$(get_module "${script}")"
-  if [ -n "${debug}" ]; then
-    display='-nodisplay'
-    if [ -n "${script}" ]; then
+  if [ -n "${script}" ]; then
+    if [ -n "${debug}" ]; then
       command="dbstop if error; dbstop in ${module}; ${module}; exit"
+    elif [ -n "${interactive}" ]; then
+      command="${module}"
     else
-      command='dbstop if error;'
+      command="${module}"
+      display='-nodesktop'
+      flag='-batch'
     fi
-  elif [ -n "${script}" ]; then
-    command="${module}"
+  elif [ -n "${batch}" ]; then
+    display='-nodesktop'
     flag='-batch'
+  elif [ -n "${debug}" ]; then
+    command='dbstop if error;'
   fi
 
   # Add parent path to Matlab if command is a script.
@@ -253,7 +270,7 @@ run() {
 #   Mlab version string.
 #######################################
 version() {
-  echo 'Mlab 0.0.3'
+  echo 'Mlab 0.0.4'
 }
 
 #######################################

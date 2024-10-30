@@ -32,10 +32,12 @@ Usage: mlab [OPTIONS] [SCRIPT] [ARGS]
 
 Options:
   -a, --addpath <PATH>        Add folder to Matlab path
+  -b, --batch                 Use batch mode for session
   -c, --license <LOCATION>    Set location of Matlab license file
-  -d, --debug                 Start script with Matlab debugger
+  -d, --debug                 Use Matlab debugger for session
   -e, --echo                  Print Matlab command and exit
   -h, --help                  Print help information
+  -i, --interactive           Use interactive mode for session
   -l, --log <PATH>            Copy command window output to logfile
   -s, --sd <PATH>             Set the Matlab startup folder
 '@
@@ -118,10 +120,12 @@ Function LaunchJupyter() {
 # Subcommand to execute Matlab code.
 Function Run() {
     $ArgIdx = 0
+    $Batch = $False
     $BinaryArgs = @()
     $Debug = $False
-    $Display = '-nodesktop'
+    $Display = '-nodisplay'
     $Flag = '-r'
+    $Interactive = $False
     $PathCmd = ''
     $Print = $False
     $Script = ''
@@ -131,6 +135,10 @@ Function Run() {
             { $_ -In '-a', '--addpath' } {
                 $PathCmd = "addpath('" + $Args[0][$ArgIdx + 1] + "'); "
                 $ArgIdx += 2
+            }
+            { $_ -In '-b', '--batch' } {
+                $Batch = $True
+                $ArgIdx += 1
             }
             { $_ -In '-c', '--license' } {
                 $BinaryArgs += '-c'
@@ -153,6 +161,10 @@ Function Run() {
                 Usage 'run'
                 Exit 0
             }
+            { $_ -In '-i', '--interactive' } {
+                $Interactive = $True
+                $ArgIdx += 1
+            }
             { $_ -In '-l', '-logfile', '--logfile' } {
                 $BinaryArgs += '-logfile'
                 $BinaryArgs += $Args[0][$ArgIdx + 1]
@@ -172,19 +184,31 @@ Function Run() {
     }
 
     # Build Matlab command for script execution.
+    #
+    # Defaults to batch mode for script execution and interactive mode
+    # otherwise.
     $Module = "$(GetModule $Script)"
-    If ($Debug) {
-        $Display = '-nodisplay'
-        If ($Script) {
-            $Command = "dbstop if error; dbstop in $Module; $Module; exit"
-        }
-        Else {
-            $Command = 'dbstop if error;'
+    If ($Script) {
+        If ($Debug) {
+            If ($Debug) {
+                $Command = "dbstop if error; dbstop in $Module; $Module; exit"
+            }
+            ElseIf ($Interactive) {
+                $Command = "$Module"
+            }
+            Else {
+                $Command = "$Module"
+                $Display = '-nodesktop'
+                $Flag = '-batch'
+            }
         }
     }
-    ElseIf ($Script) {
-        $Command = "$Module"
+    ElseIf ($Batch) {
+        $Display = '-nodesktop'
         $Flag = '-batch'
+    }
+    ElseIf ($Debug) {
+        $Command = 'dbstop if error;'
     }
 
     # Add parent path to Matlab if command is a script.
@@ -220,7 +244,7 @@ Function Run() {
 
 # Print Mlab version string.
 Function Version() {
-    Write-Output 'Mlab 0.0.3'
+    Write-Output 'Mlab 0.0.4'
 }
 
 # Script entrypoint.
