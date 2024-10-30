@@ -190,17 +190,15 @@ Function Run() {
     $Module = "$(GetModule $Script)"
     If ($Script) {
         If ($Debug) {
-            If ($Debug) {
-                $Command = "dbstop if error; dbstop in $Module; $Module; exit"
-            }
-            ElseIf ($Interactive) {
-                $Command = "$Module"
-            }
-            Else {
-                $Command = "$Module"
-                $Display = '-nodesktop'
-                $Flag = '-batch'
-            }
+            $Command = "dbstop if error; dbstop in $Module; $Module; exit"
+        }
+        ElseIf ($Interactive) {
+            $Command = "$Module"
+        }
+        Else {
+            $Command = "$Module"
+            $Display = '-nodesktop'
+            $Flag = '-batch'
         }
     }
     ElseIf ($Batch) {

@@ -119,4 +119,4 @@ test:
 # Run test suites.
 [windows]
 test:
-  Invoke-Pester tests
+  Invoke-Pester -CI -Output Detailed tests

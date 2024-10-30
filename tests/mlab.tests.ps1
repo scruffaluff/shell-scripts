@@ -9,7 +9,7 @@ Describe 'Install' {
     }
 
     It 'Mlab argumentless call contains no commands' {
-        $Expected = '& C:/Windows/matlab -nodesktop -nosplash'
+        $Expected = '& C:/Windows/matlab -nodisplay -nosplash'
 
         $Actual = & $Mlab run --echo
         $Actual | Should -Be $Expected
@@ -26,23 +26,23 @@ Describe 'Install' {
     It 'Mlab function call contains one batch command' {
         $Expected = '& C:/Windows/matlab -nodesktop -nosplash -batch script'
 
-        $Actual = & $Mlab  run --echo script
+        $Actual = & $Mlab run --echo script
         $Actual | Should -Be $Expected
     }
 
     It 'Mlab genpath option call contains multiple path commands' {
-        $Expected = '& C:/Windows/matlab -nodesktop -nosplash ' `
+        $Expected = '& C:/Windows/matlab -nodisplay -nosplash ' `
             + "-r addpath(genpath('/tmp')); "
 
-        $Actual = & $Mlab  run --echo --genpath /tmp
+        $Actual = & $Mlab run --echo --genpath /tmp
         $Actual | Should -Be $Expected
     }
 
     It 'Mlab path option call contains path command' {
-        $Expected = '& C:/Windows/matlab -nodesktop -nosplash ' `
+        $Expected = '& C:/Windows/matlab -nodisplay -nosplash ' `
             + "-r addpath('/tmp'); "
 
-        $Actual = & $Mlab  run --echo --addpath /tmp
+        $Actual = & $Mlab run --echo --addpath /tmp
         $Actual | Should -Be $Expected
     }
 
@@ -50,7 +50,7 @@ Describe 'Install' {
         $Expected = '& C:/Windows/matlab -nodesktop -nosplash ' `
             + "-batch addpath('src'); script"
 
-        $Actual = & $Mlab  run --echo src/script.m
+        $Actual = & $Mlab run --echo src/script.m
         $Actual | Should -Be $Expected
     }
 
@@ -59,7 +59,7 @@ Describe 'Install' {
             + "-r addpath('src'); dbstop if error; dbstop in script; " `
             + 'script; exit'
 
-        $Actual = & $Mlab  run --echo --debug src/script.m
+        $Actual = & $Mlab run --echo --debug src/script.m
         $Actual | Should -Be $Expected
     }
 }

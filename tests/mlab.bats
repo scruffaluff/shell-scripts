@@ -11,7 +11,7 @@ setup() {
 
 @test 'Mlab argumentless call contains no commands' {
   local actual expected
-  expected='/bin/matlab -nodesktop -nosplash'
+  expected='/bin/matlab -nodisplay -nosplash'
 
   actual="$(bash src/mlab.sh run --echo)"
   assert_equal "${actual}" "${expected}"
@@ -35,7 +35,7 @@ setup() {
 
 @test 'Mlab genpath option call contains multiple path commands' {
   local actual expected
-  expected="/bin/matlab -nodesktop -nosplash -r addpath(genpath('/tmp')); "
+  expected="/bin/matlab -nodisplay -nosplash -r addpath(genpath('/tmp')); "
 
   actual="$(bash src/mlab.sh run --echo --genpath /tmp)"
   assert_equal "${actual}" "${expected}"
@@ -43,7 +43,7 @@ setup() {
 
 @test 'Mlab path option call contains path command' {
   local actual expected
-  expected="/bin/matlab -nodesktop -nosplash -r addpath('/tmp'); "
+  expected="/bin/matlab -nodisplay -nosplash -r addpath('/tmp'); "
 
   actual="$(bash src/mlab.sh run --echo --addpath /tmp)"
   assert_equal "${actual}" "${expected}"
