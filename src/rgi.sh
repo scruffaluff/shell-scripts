@@ -67,6 +67,7 @@ version() {
 #######################################
 main() {
   edit=''
+  rg_cmd='rg --column --line-number --no-heading --smart-case --color always'
 
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
@@ -88,32 +89,27 @@ main() {
         exit 0
         ;;
       *)
-        error_usage "No such option '${1}'."
+        rg_cmd="${rg_cmd} ${1}"
+        shift 1
         ;;
     esac
   done
 
-  rg_cmd='rg --column --line-number --no-heading --smart-case --color always'
-
   # Flags:
   #   -n: Check if the string has nonzero length.
   if [ -n "${edit}" ]; then
-    fzf --ansi --disabled \
-      --bind "change:reload:sleep 0.1; ${rg_cmd} {q} || true" \
-      --bind "enter:become(${EDITOR} {1}:{2})" \
-      --bind "start:reload:${rg_cmd} {q}" \
-      --delimiter : \
+    fzf --ansi \
+      --bind "enter:become(${EDITOR:-vim} {1}:{2})" \
+      --bind "start:reload:${rg_cmd}" \
+      --delimiter ':' \
       --preview 'bat --color always --highlight-line {2} {1}' \
-      --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
-      --query "${*:-}"
+      --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
   else
-    fzf --ansi --disabled \
-      --bind "change:reload:sleep 0.1; ${rg_cmd} {q} || true" \
-      --bind "start:reload:${rg_cmd} {q}" \
-      --delimiter : \
+    fzf --ansi \
+      --bind "start:reload:${rg_cmd}" \
+      --delimiter ':' \
       --preview 'bat --color always --highlight-line {2} {1}' \
-      --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
-      --query "${*:-}"
+      --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
   fi
 }
 
