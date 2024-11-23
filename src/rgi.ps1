@@ -36,7 +36,6 @@ Function Version() {
 # Script entrypoint.
 Function Main() {
     $ArgIdx = 0
-    $CmdArgs = @()
     $Edit = $False
     $Editor = 'vim'
     $RgCmd = 'rg --column --line-number --no-heading --smart-case --color always'
