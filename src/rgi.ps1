@@ -16,7 +16,6 @@ Usage: rgi [OPTIONS]
 
 Options:
       --debug     Show shell debug traces
-  -e, --edit      Open selection with default editor
   -h, --help      Print help information
   -v, --version   Print version information
 '@
@@ -36,16 +35,11 @@ Function Version() {
 # Script entrypoint.
 Function Main() {
     $ArgIdx = 0
-    $Edit = $False
     $Editor = 'vim'
     $RgCmd = 'rg --column --line-number --no-heading --smart-case --color always'
 
     While ($ArgIdx -LT $Args[0].Count) {
         Switch ($Args[0][$ArgIdx]) {
-            { $_ -In '-e', '--edit' } {
-                $Edit = $True
-                $ArgIdx += 1
-            }
             { $_ -In '-h', '--help' } {
                 Usage
                 Exit 0
@@ -63,24 +57,15 @@ Function Main() {
         }
     }
 
-    If ($Edit) {
-        If ($Env:EDITOR) {
-            $Editor = $Env:Editor
-        }
-        fzf --ansi `
-            --bind "enter:become(& '$Editor {1}:{2}')" `
-            --bind "start:reload:$RgCmd" `
-            --delimiter ':' `
-            --preview 'bat --color always --highlight-line {2} {1}' `
-            --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
+    If ($Env:EDITOR) {
+        $Editor = $Env:Editor
     }
-    Else {
-        fzf --ansi `
-            --bind "start:reload:$RgCmd" `
-            --delimiter ':' `
-            --preview 'bat --color always --highlight-line {2} {1}' `
-            --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
-    }
+    fzf --ansi `
+        --bind "enter:become(& '$Editor {1}:{2}')" `
+        --bind "start:reload:$RgCmd" `
+        --delimiter ':' `
+        --preview 'bat --color always --highlight-line {2} {1}' `
+        --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
 }
 
 # Only run Main if invoked as script. Otherwise import functions as library.
