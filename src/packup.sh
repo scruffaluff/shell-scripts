@@ -149,7 +149,9 @@ upgrade() {
 
   if [ -x "$(command -v cargo)" ] && [ -O "$(which cargo)" ]; then
     cargo install --list | while read -r line; do
-      if expr "${line}" : '^.*:$' > /dev/null; then
+      # Do not use "^" as the first character of an expr expression. Some
+      # versions will throw an error.
+      if expr "${line}" : '.*:$' > /dev/null; then
         cargo install "$(echo "${line}" | cut -f1 -d ' ')"
       fi
     done
