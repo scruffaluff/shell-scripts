@@ -24,7 +24,6 @@ Usage: rgi [OPTIONS] [RG_ARGS]
 
 Options:
       --debug     Show shell debug traces
-  -e, --edit      Open selection with default editor
   -h, --help      Print help information
   -v, --version   Print version information
 EOF
@@ -66,7 +65,6 @@ version() {
 # Script entrypoint.
 #######################################
 main() {
-  edit=''
   rg_cmd='rg --column --line-number --no-heading --smart-case --color always'
 
   # Parse command line arguments.
@@ -74,10 +72,6 @@ main() {
     case "${1}" in
       --debug)
         set -o xtrace
-        shift 1
-        ;;
-      -e | --edit)
-        edit='true'
         shift 1
         ;;
       -h | --help)
@@ -95,22 +89,12 @@ main() {
     esac
   done
 
-  # Flags:
-  #   -n: Check if the string has nonzero length.
-  if [ -n "${edit}" ]; then
-    fzf --ansi \
-      --bind "enter:become(${EDITOR:-vim} {1}:{2})" \
-      --bind "start:reload:${rg_cmd}" \
-      --delimiter ':' \
-      --preview 'bat --color always --highlight-line {2} {1}' \
-      --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
-  else
-    fzf --ansi \
-      --bind "start:reload:${rg_cmd}" \
-      --delimiter ':' \
-      --preview 'bat --color always --highlight-line {2} {1}' \
-      --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
-  fi
+  fzf --ansi \
+    --bind "enter:become(${EDITOR:-vim} +{2} {1})" \
+    --bind "start:reload:${rg_cmd}" \
+    --delimiter ':' \
+    --preview 'bat --color always --highlight-line {2} {1}' \
+    --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
 }
 
 # Add ability to selectively skip main function during test suite.

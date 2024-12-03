@@ -22,6 +22,7 @@ Unix and Windows systems.
 
 | Name        | Description                                                         |
 | ----------- | ------------------------------------------------------------------- |
+| caffeinate  | Prevent system from sleeping during a program.                      |
 | clear-cache | Frees up disk space by clearing caches of several package managers. |
 | mlab        | Wrapper script for running Matlab programs from the command line.   |
 | packup      | Invokes upgrade commands to several installed package managers.     |
