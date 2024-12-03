@@ -27,6 +27,7 @@ Unix and Windows systems.
 | mlab        | Wrapper script for running Matlab programs from the command line.   |
 | packup      | Invokes upgrade commands to several installed package managers.     |
 | purge-snap  | Removes all traces of the Snap package manager.                     |
+| rgi         | Interactive Ripgrep searcher.                                       |
 | setup-tmate | Installs Tmate and creates a session suitable for CI pipelines.     |
 | trsync      | Rsync for one time remote connections.                              |
 | tscp        | SCP for one time remote connections.                                |
