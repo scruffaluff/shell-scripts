@@ -173,6 +173,10 @@ upgrade() {
   if [ -x "$(command -v tldr)" ]; then
     tldr --update
   fi
+
+  if [ -x "$(command -v ya)" ]; then
+    ya pack --upgrade
+  fi
 }
 
 #######################################
@@ -181,7 +185,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo 'Packup 0.4.2'
+  echo 'Packup 0.4.3'
 }
 
 #######################################

@@ -21,7 +21,7 @@ Options:
 
 # Print Packup version string.
 Function Version() {
-    Write-Output 'Packup 0.4.2'
+    Write-Output 'Packup 0.4.3'
 }
 
 # Script entrypoint.
@@ -75,6 +75,10 @@ Function Main() {
 
     If (Get-Command -ErrorAction SilentlyContinue tldr) {
         tldr --update
+    }
+
+    If (Get-Command -ErrorAction SilentlyContinue ya) {
+        ya pack --upgrade
     }
 }
 
