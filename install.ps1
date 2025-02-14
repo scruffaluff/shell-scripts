@@ -62,7 +62,7 @@ Function FindScripts($Version) {
     $Response = Invoke-WebRequest -UseBasicParsing -Uri "$Uri"
 
     $JqBin = FindJq
-    Write-Output "$Response" | & $JqBin --raw-output "$Filter"
+    Write-Output "$Response" | & $JqBin --exit-status --raw-output "$Filter"
 }
 
 # Print log message to stdout if logging is enabled.
