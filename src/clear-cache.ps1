@@ -21,7 +21,7 @@ Options:
 
 # Print ClearCache version string.
 Function Version() {
-    Write-Output 'ClearCache 0.2.1'
+    Write-Output 'ClearCache 0.2.2'
 }
 
 # Script entrypoint.

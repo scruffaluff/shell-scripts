@@ -21,7 +21,7 @@ Options:
 
 # Print Caffeinate version string.
 Function Version() {
-    Write-Output 'Caffeinate 0.0.1'
+    Write-Output 'Caffeinate 0.0.2'
 }
 
 # Script entrypoint.

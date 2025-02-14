@@ -10,8 +10,9 @@ $ErrorActionPreference = 'Stop'
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
-Installs Tmate and creates a remote session. Users can close the session by
-creating the file /close-tmate.
+Installs Tmate and creates a remote session.
+
+Users can close the session by creating the file /close-tmate.
 
 Usage: setup-tmate [OPTIONS]
 
@@ -45,7 +46,7 @@ Function RemoteScript($URL) {
 
 # Print SetupTmate version string.
 Function Version() {
-    Write-Output 'SetupTmate 0.3.1'
+    Write-Output 'SetupTmate 0.3.2'
 }
 
 # Script entrypoint.

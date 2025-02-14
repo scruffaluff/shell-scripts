@@ -5,7 +5,7 @@
 # Exit immediately if a command exits with non-zero return code.
 #
 # Flags:
-#   -e: Exit immediately when a command fails.
+#   -e: Exit immediately when a command pipeline fails.
 #   -u: Throw an error when an unset variable is encountered.
 set -eu
 
@@ -19,7 +19,7 @@ usage() {
   cat 1>&2 << EOF
 Installer script for Shell Scripts.
 
-Usage: install [OPTIONS] SCRIPT
+Usage: install [OPTIONS] [SCRIPT]
 
 Options:
       --debug               Show shell debug traces
@@ -133,7 +133,13 @@ download_jq() {
 #######################################
 error() {
   bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
   exit 1
 }
 
@@ -144,8 +150,14 @@ error() {
 #######################################
 error_usage() {
   bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "${1}" >&2
-  printf "Run 'install --help' for usage\n" >&2
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
+  printf "Run 'install --help' for usage.\n" >&2
   exit 2
 }
 
@@ -260,7 +272,7 @@ install_script() {
   #
   # Flags:
   #   -w: Check if file exists and is writable.
-  #   -z: Check if the string has zero length or is null.
+  #   -z: Check if the string is empty.
   if [ -z "${1}" ] && [ ! -w "${dst_file}" ]; then
     super="$(find_super)"
   else

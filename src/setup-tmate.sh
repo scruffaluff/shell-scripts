@@ -6,7 +6,7 @@
 # Exit immediately if a command exits with non-zero return code.
 #
 # Flags:
-#   -e: Exit immediately when a command fails.
+#   -e: Exit immediately when a command pipeline fails.
 #   -u: Throw an error when an unset variable is encountered.
 set -eu
 
@@ -18,8 +18,9 @@ set -eu
 #######################################
 usage() {
   cat 1>&2 << EOF
-Installs Tmate and creates a remote session. Users can close the session by
-creating the file /close-tmate.
+Installs Tmate and creates a remote session.
+
+Users can close the session by creating the file /close-tmate.
 
 Usage: setup-tmate [OPTIONS]
 
@@ -37,7 +38,13 @@ EOF
 #######################################
 error() {
   bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
   exit 1
 }
 
@@ -48,8 +55,14 @@ error() {
 #######################################
 error_usage() {
   bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "${1}" >&2
-  printf "Run 'packup --help' for usage.\n" >&2
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
+  printf "Run 'setup-tmate --help' for usage.\n" >&2
   exit 2
 }
 
@@ -199,7 +212,7 @@ setup_tmate() {
 #   Setup Tmate version string.
 #######################################
 version() {
-  echo 'SetupTmate 0.3.1'
+  echo 'SetupTmate 0.3.2'
 }
 
 #######################################

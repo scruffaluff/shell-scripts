@@ -7,7 +7,8 @@ Describe 'Install' {
         $Env:SHELL_SCRIPTS_NOLOG = 'true'
     }
 
-    It 'Missing name argument throws error' {
-        { & "$Install" --user } | Should -Throw "Error: Script argument required"
+    It 'Missing name argument writes error' {
+        $Actual = & "$Install" --user 
+        $Actual | Should -Be "Error: Script argument required"
     }
 }

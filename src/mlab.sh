@@ -5,7 +5,7 @@
 # Exit immediately if a command exits with non-zero return code.
 #
 # Flags:
-#   -e: Exit immediately when a command fails.
+#   -e: Exit immediately when a command pipeline fails.
 #   -u: Throw an error when an unset variable is encountered.
 set -eu
 
@@ -19,7 +19,7 @@ usage() {
   case "${1}" in
     main)
       cat 1>&2 << EOF
-Wrapper script for running Matlab programs from the command line
+Wrapper script for running Matlab programs from the command line.
 
 Usage: mlab [OPTIONS] [SUBCOMMAND]
 
@@ -33,11 +33,21 @@ Subcommands:
   run       Execute Matlab code
 EOF
       ;;
+    jupyter)
+      cat 1>&2 << EOF
+Launch Jupyter Lab with the Matlab kernel.
+
+Usage: mlab jupyter [OPTIONS] [ARGS]...
+
+Options:
+  -h, --help        Print help information
+EOF
+      ;;
     run)
       cat 1>&2 << EOF
-Execute Matlab code
+Execute Matlab code.
 
-Usage: mlab [OPTIONS] [SCRIPT] [ARGS]
+Usage: mlab run [OPTIONS] [SCRIPT] [ARGS]...
 
 Options:
   -a, --addpath <PATH>        Add folder to Matlab path
@@ -64,7 +74,13 @@ EOF
 #######################################
 error() {
   bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
   exit 1
 }
 
@@ -75,7 +91,13 @@ error() {
 #######################################
 error_usage() {
   bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
   printf "Run 'mlab %s--help' for usage.\n" "${2:+${2} }" >&2
   exit 2
 }
@@ -142,12 +164,25 @@ get_module() {
 }
 
 #######################################
-# Launch Jupyter Lab with Matlab kernel.
+# Launch Jupyter Lab with the Matlab kernel.
 #######################################
-launch_jupyter() {
+jupyter() {
   share_dir="${HOME}/.local/share/mlab"
-  matlab_dir="$(dirname "$(find_matlab)")"
 
+  # Parse command line arguments.
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
+      -h | --help)
+        usage 'run'
+        exit 0
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  matlab_dir="$(dirname "$(find_matlab)")"
   if [ ! -d "${share_dir}/venv" ]; then
     mkdir -p "${share_dir}"
     python3 -m venv "${share_dir}/venv"
@@ -294,7 +329,7 @@ main() {
         ;;
       jupyter)
         shift 1
-        launch_jupyter "$@"
+        jupyter "$@"
         exit 0
         ;;
       run)

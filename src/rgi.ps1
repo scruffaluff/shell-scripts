@@ -23,13 +23,13 @@ Options:
 
 # Print error message and exit script with usage error code.
 Function ErrorUsage($Message) {
-    Throw "Error: $Message"
+    Write-Error "Error: $Message"
     Exit 2
 }
 
 # Print Rgi version string.
 Function Version() {
-    Write-Output 'Rgi 0.0.1'
+    Write-Output 'Rgi 0.0.2'
 }
 
 # Script entrypoint.

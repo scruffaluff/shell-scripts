@@ -11,7 +11,7 @@ Function Usage() {
     Switch ($Args[0]) {
         'main' {
             Write-Output @'
-Wrapper script for running Matlab programs from the command line
+Wrapper script for running Matlab programs from the command line.
 
 Usage: mlab [OPTIONS] [SUBCOMMAND]
 
@@ -24,11 +24,21 @@ Subcommands:
   run       Execute Matlab code
 '@
         }
+        'jupyter' {
+            Write-Output @'
+Launch Jupyter Lab with the Matlab kernel.
+
+Usage: mlab jupyter [OPTIONS] [ARGS]...
+
+Options:
+  -h, --help        Print help information
+'@
+        }
         'run' {
             Write-Output @'
-Execute Matlab code
+Execute Matlab code.
 
-Usage: mlab [OPTIONS] [SCRIPT] [ARGS]
+Usage: mlab run [OPTIONS] [SCRIPT] [ARGS]...
 
 Options:
   -a, --addpath <PATH>        Add folder to Matlab path
@@ -50,7 +60,7 @@ Options:
 
 # Print error message and exit script with usage error code.
 Function ErrorUsage($Message) {
-    Throw "Error: $Message"
+    Write-Error "Error: $Message"
     Exit 2
 }
 
@@ -101,11 +111,24 @@ Function GetParameters($Params, $Index) {
     }
 }
 
-# Launch Jupyter Lab with Matlab kernel.
-Function LaunchJupyter() {
+# Launch Jupyter Lab with the Matlab kernel.
+Function Jupyter() {
+    $ArgIdx = 0
     $LocalDir = "$Env:LOCALAPPDATA/mlab"
-    $MatlabDir = "$(FindMatlab)"
 
+    While ($ArgIdx -LT $Args[0].Count) {
+        Switch ($Args[0][$ArgIdx]) {
+            { $_ -In '-h', '--help' } {
+                Usage 'run'
+                Exit 0
+            }
+            Default {
+                Break
+            }
+        }
+    }
+
+    $MatlabDir = "$(FindMatlab)"
     If (-Not (Test-Path -Path "$LocalDir/venv" -PathType Container)) {
         New-Item -Force -ItemType Directory -Path $LocalDir | Out-Null
         python3 -m venv "$LocalDir/venv"
@@ -242,7 +265,7 @@ Function Run() {
 
 # Print Mlab version string.
 Function Version() {
-    Write-Output 'Mlab 0.0.4'
+    Write-Output 'Mlab 0.0.5'
 }
 
 # Script entrypoint.
@@ -261,7 +284,7 @@ Function Main() {
             }
             'jupyter' {
                 $ArgIdx += 1
-                LaunchJupyter @(GetParameters $Args[0] $ArgIdx)
+                Jupyter @(GetParameters $Args[0] $ArgIdx)
                 Exit 0
             }
             'run' {
