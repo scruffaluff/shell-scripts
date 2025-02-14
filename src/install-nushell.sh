@@ -204,11 +204,11 @@ find_version() {
   fi
 
   jq_bin="$(find_jq)"
-  echo "${response}" | "${jq_bin}" --exit-status --raw-output '.tag_name'
+  printf "%s" "${response}" | "${jq_bin}" --exit-status --raw-output '.tag_name'
 }
 
 #######################################
-# Install script.
+# Download and install Nushell.
 # Arguments:
 #   Super user command for installation
 #   Nushell version
@@ -255,6 +255,14 @@ install_nushell() {
     super=''
   fi
 
+  # Make destination directory if it does not exist.
+  #
+  # Flags:
+  #   -d: Check if path exists and is a directory.
+  if [ ! -d "${dst_dir}" ]; then
+    mkdir -p "${dst_dir}"
+  fi
+
   log 'Installing Nushell...'
   tmp_dir="$(mktemp -d)"
   download '' \
@@ -264,6 +272,7 @@ install_nushell() {
   tar fx "${tmp_dir}/${stem}.tar.gz" -C "${tmp_dir}"
   ${super:+"${super}"} cp "${tmp_dir}/${stem}/nu" "${tmp_dir}/${stem}/"nu_* "${3}/"
 
+  export PATH="${dst_dir}:${PATH}"
   log "Installed Nushell $(nu --version)."
 }
 
