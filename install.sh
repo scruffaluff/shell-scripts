@@ -19,7 +19,7 @@ usage() {
   cat 1>&2 << EOF
 Installer script for Shell Scripts.
 
-Usage: install [OPTIONS] [SCRIPT]
+Usage: install [OPTIONS] [SCRIPTS]...
 
 Options:
       --debug               Show shell debug traces

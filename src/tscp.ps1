@@ -13,7 +13,7 @@ Function Usage() {
     Write-Output @'
 SCP for one time remote connections.
 
-Usage: tscp [OPTIONS]
+Usage: tscp [OPTIONS] [SCP_ARGS]...
 
 Options:
   -h, --help      Print help information

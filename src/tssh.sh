@@ -19,7 +19,7 @@ usage() {
   cat 1>&2 << EOF
 SSH for one time remote connections.
 
-Usage: tssh [OPTIONS]
+Usage: tssh [OPTIONS] [SSH_ARGS]...
 
 Options:
       --debug     Show shell debug traces

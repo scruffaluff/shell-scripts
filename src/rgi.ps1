@@ -14,7 +14,7 @@ Function Usage() {
     Write-Output @'
 Interactive Ripgrep searcher.
 
-Usage: rgi [OPTIONS] [RG_ARGS]
+Usage: rgi [OPTIONS] [RG_ARGS]...
 
 Options:
       --debug     Show shell debug traces

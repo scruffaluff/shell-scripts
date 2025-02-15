@@ -16,7 +16,7 @@ Function Usage() {
     Write-Output @'
 Installer script for Shell Scripts.
 
-Usage: install [OPTIONS] SCRIPT
+Usage: install [OPTIONS] [SCRIPTS]...
 
 Options:
   -d, --dest <PATH>         Directory to install scripts

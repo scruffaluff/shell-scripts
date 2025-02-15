@@ -11,9 +11,9 @@ $PSNativeCommandUseErrorActionPreference = $True
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
-Prevent system from sleeping during a program.
+Prevent the system from sleeping during a command.
 
-Usage: caffeinate [OPTIONS] [PROGRAM]
+Usage: caffeinate [OPTIONS] [COMMAND] [ARGS]...
 
 Options:
   -h, --help      Print help information

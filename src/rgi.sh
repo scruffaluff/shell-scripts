@@ -20,7 +20,7 @@ usage() {
   cat 1>&2 << EOF
 Interactive Ripgrep searcher.
 
-Usage: rgi [OPTIONS] [RG_ARGS]
+Usage: rgi [OPTIONS] [RG_ARGS]...
 
 Options:
       --debug     Show shell debug traces

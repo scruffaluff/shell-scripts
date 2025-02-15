@@ -17,9 +17,9 @@ set -eu
 #######################################
 usage() {
   cat 1>&2 << EOF
-Prevent system from sleeping during a program.
+Prevent the system from sleeping during a command.
 
-Usage: caffeinate [OPTIONS] [PROGRAM]
+Usage: caffeinate [OPTIONS] [COMMAND] [ARGS]...
 
 Options:
       --debug     Show shell debug traces
