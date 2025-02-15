@@ -95,7 +95,7 @@ main() {
         exit 0
         ;;
       *)
-        rg_cmd="${rg_cmd} ${1}"
+        rg_cmd="${rg_cmd} '${1}'"
         shift 1
         ;;
     esac
