@@ -20,7 +20,12 @@ Options:
       --debug     Show shell debug traces
   -h, --help      Print help information
   -v, --version   Print version information
+
+Ripgrep Options:
 '@
+If (Get-Command -ErrorAction SilentlyContinue rg) {
+    rg --help
+}
 }
 
 # Print error message and exit script with usage error code.
