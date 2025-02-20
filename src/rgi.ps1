@@ -23,9 +23,9 @@ Options:
 
 Ripgrep Options:
 '@
-If (Get-Command -ErrorAction SilentlyContinue rg) {
-    rg --help
-}
+    If (Get-Command -ErrorAction SilentlyContinue rg) {
+        rg --help
+    }
 }
 
 # Print error message and exit script with usage error code.
