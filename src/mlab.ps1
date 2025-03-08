@@ -64,8 +64,7 @@ Options:
 
 # Print error message and exit script with usage error code.
 Function ErrorUsage($Message) {
-    Write-Host -NoNewline -ForegroundColor Red 'error'
-    Write-Output ": $Message"
+    Write-Output "error: $Message"
     Write-Output "Run 'mlab --help' for usage"
     Exit 2
 }
