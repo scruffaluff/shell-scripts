@@ -9,7 +9,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Caffeinate, Mlab, and Rgi scripts.
+- Caffeinate, InstallNushell, Mlab, and Rgi scripts.
 
 ### Changed
 

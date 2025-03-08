@@ -3,8 +3,10 @@
     Wrapper script for running Matlab programs from the command line.
 #>
 
-# Exit immediately if a PowerShell Cmdlet encounters an error.
+# Exit immediately if a PowerShell cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
+# Disable progress bar for cmdlets.
+$ProgressPreference = 'SilentlyContinue'
 # Exit immediately when an native executable encounters an error.
 $PSNativeCommandUseErrorActionPreference = $True
 
@@ -55,14 +57,15 @@ Options:
 '@
         }
         Default {
-            ErrorUsage "No such usage option '$($Args[0])'"
+            Throw "No such usage option '$($Args[0])'"
         }
     }
 }
 
 # Print error message and exit script with usage error code.
 Function ErrorUsage($Message) {
-    Write-Error "Error: $Message"
+    Write-Output "error: $Message"
+    Write-Output "Run 'mlab --help' for usage"
     Exit 2
 }
 

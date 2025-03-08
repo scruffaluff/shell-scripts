@@ -4,8 +4,10 @@
     https://github.com/junegunn/fzf/blob/master/ADVANCED.md#using-fzf-as-interactive-ripgrep-launcher.
 #>
 
-# Exit immediately if a PowerShell Cmdlet encounters an error.
+# Exit immediately if a PowerShell cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
+# Disable progress bar for cmdlets.
+$ProgressPreference = 'SilentlyContinue'
 # Exit immediately when an native executable encounters an error.
 $PSNativeCommandUseErrorActionPreference = $True
 
@@ -26,12 +28,6 @@ Ripgrep Options:
     If (Get-Command -ErrorAction SilentlyContinue rg) {
         rg --help
     }
-}
-
-# Print error message and exit script with usage error code.
-Function ErrorUsage($Message) {
-    Write-Error "Error: $Message"
-    Exit 2
 }
 
 # Print Rgi version string.
