@@ -29,14 +29,6 @@ Options:
 '@
 }
 
-# Downloads file to destination efficiently.
-Function DownloadFile($SrcURL, $DstFile) {
-    # The progress bar updates every byte, which makes downloads slow. See
-    # https://stackoverflow.com/a/43477248 for an explanation.
-    $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest -UseBasicParsing -OutFile "$DstFile" -Uri "$SrcURL"
-}
-
 # Print error message and exit script with usage error code.
 Function ErrorUsage($Message) {
     Write-Host -NoNewline -ForegroundColor Red 'error'
@@ -53,9 +45,8 @@ Function FindJq() {
     }
     Else {
         $TempFile = [System.IO.Path]::GetTempFileName() -Replace '.tmp', '.exe'
-        DownloadFile `
-            https://github.com/jqlang/jq/releases/latest/download/jq-windows-amd64.exe `
-            $TempFile
+        Invoke-WebRequest -UseBasicParsing -OutFile $TempFile -Uri `
+            https://github.com/jqlang/jq/releases/latest/download/jq-windows-amd64.exe
         Write-Output $TempFile
     }
 }
@@ -152,7 +143,8 @@ Function Main() {
                 $MatchFound = $True
                 Log "Installing script $Name..."
 
-                DownloadFile "$SrcPrefix/$Script.ps1" "$DestDir/$Script.ps1"
+                Invoke-WebRequest -UseBasicParsing -OutFile `
+                    "$DestDir/$Script.ps1" -Uri "$SrcPrefix/$Script.ps1"
                 Log "Installed $(& $Name --version)."
             }
         }

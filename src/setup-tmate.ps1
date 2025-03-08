@@ -28,7 +28,8 @@ Options:
 
 Function InstallTmate($URL) {
     If (-Not (Get-Command -ErrorAction SilentlyContinue choco)) {
-        RemoteScript 'https://chocolatey.org/install.ps1'
+        Invoke-WebRequest -UseBasicParsing -Uri `
+            'https://chocolatey.org/install.ps1' | Invoke-Expression
     }
 
     If (-Not (Get-Command -ErrorAction SilentlyContinue pacman)) {
@@ -36,16 +37,6 @@ Function InstallTmate($URL) {
     }
 
     pacman --noconfirm --sync tmate
-}
-
-# Request remote script and execution efficiently.
-#
-# Required as a seperate function, since the default progress bar updates every
-# byte, making downloads slow. For more information, visit
-# https://stackoverflow.com/a/43477248.
-Function RemoteScript($URL) {
-    $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest -UseBasicParsing -Uri "$URL" | Invoke-Expression
 }
 
 # Print SetupTmate version string.
