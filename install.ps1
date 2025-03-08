@@ -8,13 +8,15 @@
 
 # Exit immediately if a PowerShell Cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
+# Exit immediately when an native executable encounters an error.
+$PSNativeCommandUseErrorActionPreference = $True
 
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
 Installer script for Shell Scripts.
 
-Usage: install [OPTIONS] SCRIPT
+Usage: install [OPTIONS] [SCRIPTS]...
 
 Options:
   -d, --dest <PATH>         Directory to install scripts

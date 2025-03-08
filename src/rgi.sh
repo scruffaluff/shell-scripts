@@ -20,13 +20,18 @@ usage() {
   cat 1>&2 << EOF
 Interactive Ripgrep searcher.
 
-Usage: rgi [OPTIONS] [RG_ARGS]
+Usage: rgi [OPTIONS] [RG_ARGS]...
 
 Options:
       --debug     Show shell debug traces
   -h, --help      Print help information
   -v, --version   Print version information
+
+Ripgrep Options:
 EOF
+  if [ -x "$(command -v rg)" ]; then
+    rg --help
+  fi
 }
 
 #######################################
@@ -95,7 +100,7 @@ main() {
         exit 0
         ;;
       *)
-        rg_cmd="${rg_cmd} ${1}"
+        rg_cmd="${rg_cmd} '${1}'"
         shift 1
         ;;
     esac

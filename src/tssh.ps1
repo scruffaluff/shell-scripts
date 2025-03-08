@@ -5,13 +5,15 @@
 
 # Exit immediately if a PowerShell Cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
+# Exit immediately when an native executable encounters an error.
+$PSNativeCommandUseErrorActionPreference = $True
 
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
 SSH for one time remote connections.
 
-Usage: tssh [OPTIONS]
+Usage: tssh [OPTIONS] [SSH_ARGS]...
 
 Options:
   -h, --help      Print help information

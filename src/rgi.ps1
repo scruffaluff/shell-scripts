@@ -6,19 +6,26 @@
 
 # Exit immediately if a PowerShell Cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
+# Exit immediately when an native executable encounters an error.
+$PSNativeCommandUseErrorActionPreference = $True
 
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
 Interactive Ripgrep searcher.
 
-Usage: rgi [OPTIONS] [RG_ARGS]
+Usage: rgi [OPTIONS] [RG_ARGS]...
 
 Options:
       --debug     Show shell debug traces
   -h, --help      Print help information
   -v, --version   Print version information
+
+Ripgrep Options:
 '@
+    If (Get-Command -ErrorAction SilentlyContinue rg) {
+        rg --help
+    }
 }
 
 # Print error message and exit script with usage error code.
@@ -50,7 +57,7 @@ Function Main() {
             }
             Default {
                 $Argument = $Args[0][$ArgIdx]
-                $RgCmd = "$RgCmd $Argument"
+                $RgCmd = "$RgCmd '$Argument'"
                 $ArgIdx += 1
                 Break
             }
