@@ -6,8 +6,10 @@
 # If unable to execute due to policy rules, run
 # Set-ExecutionPolicy RemoteSigned -Scope CurrentUser.
 
-# Exit immediately if a PowerShell Cmdlet encounters an error.
+# Exit immediately if a PowerShell cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
+# Disable progress bar for cmdlets.
+$ProgressPreference = 'SilentlyContinue'
 # Exit immediately when an native executable encounters an error.
 $PSNativeCommandUseErrorActionPreference = $True
 
@@ -27,14 +29,6 @@ Options:
 '@
 }
 
-# Downloads file to destination efficiently.
-Function DownloadFile($SrcURL, $DstFile) {
-    # The progress bar updates every byte, which makes downloads slow. See
-    # https://stackoverflow.com/a/43477248 for an explanation.
-    $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest -UseBasicParsing -OutFile "$DstFile" -Uri "$SrcURL"
-}
-
 # Print error message and exit script with usage error code.
 Function ErrorUsage($Message) {
     Write-Error "Error: $Message"
@@ -50,9 +44,8 @@ Function FindJq() {
     }
     Else {
         $TempFile = [System.IO.Path]::GetTempFileName() -Replace '.tmp', '.exe'
-        DownloadFile `
-            https://github.com/jqlang/jq/releases/latest/download/jq-windows-amd64.exe `
-            $TempFile
+        Invoke-WebRequest -UseBasicParsing -OutFile $TempFile -Uri `
+            https://github.com/jqlang/jq/releases/latest/download/jq-windows-amd64.exe
         Write-Output $TempFile
     }
 }
@@ -95,9 +88,8 @@ Function InstallNushell($Target, $Version, $DestDir) {
     New-Item -ItemType Directory -Path $TmpDir | Out-Null
 
     $Stem = "nu-$Version-x86_64-pc-windows-msvc"
-    DownloadFile `
+    Invoke-WebRequest -UseBasicParsing -OutFile "$TmpDir/$Stem.zip" -Uri `
         "https://github.com/nushell/nushell/releases/download/$Version/$Stem.zip" `
-        "$TmpDir/$Stem.zip"
 
     Expand-Archive -DestinationPath "$TmpDir/$Stem" -Path "$TmpDir/$Stem.zip"
     Copy-Item -Destination $DestDir -Path "$TmpDir/$Stem/*.exe"
