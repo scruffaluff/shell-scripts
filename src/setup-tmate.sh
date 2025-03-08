@@ -140,23 +140,26 @@ install_tmate_linux() {
       ;;
   esac
 
-  # Install OpenSSH and archive utils.
+  # Install OpenSSH and archive utils if not available.
   #
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [ -x "$(command -v apk)" ]; then
-    ${1:+"${1}"} apk add curl openssh-client xz
-  elif [ -x "$(command -v apt-get)" ]; then
-    ${1:+"${1}"} apt-get update
-    ${1:+"${1}"} apt-get install --yes curl openssh-client xz-utils
-  elif [ -x "$(command -v dnf)" ]; then
-    ${1:+"${1}"} dnf install --assumeyes curl openssh xz
-  elif [ -x "$(command -v pacman)" ]; then
-    ${1:+"${1}"} pacman --noconfirm --refresh --sync --sysupgrade
-    ${1:+"${1}"} pacman --noconfirm --sync curl openssh xz
-  elif [ -x "$(command -v zypper)" ]; then
-    ${1:+"${1}"} zypper install --no-confirm curl openssh tar xz
+  if [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v ssh)" ] ||
+    [ ! -x "$(command -v tar)" ] || [ ! -x "$(command -v xz)" ]; then
+    if [ -x "$(command -v apk)" ]; then
+      ${1:+"${1}"} apk add curl openssh-client tar xz
+    elif [ -x "$(command -v apt-get)" ]; then
+      ${1:+"${1}"} apt-get update
+      ${1:+"${1}"} apt-get install --yes curl openssh-client tar xz-utils
+    elif [ -x "$(command -v dnf)" ]; then
+      ${1:+"${1}"} dnf install --assumeyes curl openssh tar xz
+    elif [ -x "$(command -v pacman)" ]; then
+      ${1:+"${1}"} pacman --noconfirm --refresh --sync --sysupgrade
+      ${1:+"${1}"} pacman --noconfirm --sync curl openssh tar xz
+    elif [ -x "$(command -v zypper)" ]; then
+      ${1:+"${1}"} zypper install --no-confirm curl openssh tar xz
+    fi
   fi
 
   curl -LSfs "https://github.com/tmate-io/tmate/releases/download/${tmate_version}/tmate-${tmate_version}-static-linux-${tmate_arch}.tar.xz" -o /tmp/tmate.tar.xz

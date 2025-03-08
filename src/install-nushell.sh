@@ -58,8 +58,15 @@ download() {
   if [ -x "$(command -v curl)" ]; then
     ${1:+"${1}"} curl --fail --location --show-error --silent --output "${3}" \
       "${2}"
-  else
+  elif [ -x "$(command -v wget)" ]; then
     ${1:+"${1}"} wget -q -O "${3}" "${2}"
+  else
+    error "$(
+      cat << EOF
+Unable to find a network file downloader.
+Install curl, https://curl.se, manually before continuing.
+EOF
+    )"
   fi
 
   # Change file permissions if chmod parameter was passed.
@@ -199,8 +206,15 @@ find_version() {
   #   -x: Check if file exists and execute permission is granted.
   if [ -x "$(command -v curl)" ]; then
     response="$(curl --fail --location --show-error --silent "${url}")"
-  else
+  elif [ -x "$(command -v wget)" ]; then
     response="$(wget -q -O - "${url}")"
+  else
+    error "$(
+      cat << EOF
+Unable to find a network file downloader.
+Install curl, https://curl.se, manually before continuing.
+EOF
+    )"
   fi
 
   jq_bin="$(find_jq)"
