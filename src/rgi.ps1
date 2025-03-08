@@ -30,12 +30,6 @@ Ripgrep Options:
     }
 }
 
-# Print error message and exit script with usage error code.
-Function ErrorUsage($Message) {
-    Write-Error "Error: $Message"
-    Exit 2
-}
-
 # Print Rgi version string.
 Function Version() {
     Write-Output 'Rgi 0.0.2'

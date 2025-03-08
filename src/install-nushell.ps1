@@ -31,8 +31,9 @@ Options:
 
 # Print error message and exit script with usage error code.
 Function ErrorUsage($Message) {
-    Write-Error "Error: $Message"
-    Write-Error "Run 'install-nushell --help' for usage"
+    Write-Host -NoNewline -ForegroundColor Red 'error'
+    Write-Output ": $Message"
+    Write-Output "Run 'install-nushell --help' for usage"
     Exit 2
 }
 

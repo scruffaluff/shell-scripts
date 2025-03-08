@@ -57,14 +57,16 @@ Options:
 '@
         }
         Default {
-            ErrorUsage "No such usage option '$($Args[0])'"
+            Throw "No such usage option '$($Args[0])'"
         }
     }
 }
 
 # Print error message and exit script with usage error code.
 Function ErrorUsage($Message) {
-    Write-Error "Error: $Message"
+    Write-Host -NoNewline -ForegroundColor Red 'error'
+    Write-Output ": $Message"
+    Write-Output "Run 'mlab --help' for usage"
     Exit 2
 }
 

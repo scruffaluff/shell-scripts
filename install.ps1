@@ -39,8 +39,9 @@ Function DownloadFile($SrcURL, $DstFile) {
 
 # Print error message and exit script with usage error code.
 Function ErrorUsage($Message) {
-    Write-Error "Error: $Message"
-    Write-Error "Run 'install --help' for usage"
+    Write-Host -NoNewline -ForegroundColor Red 'error'
+    Write-Output ": $Message"
+    Write-Output "Run 'install --help' for usage"
     Exit 2
 }
 
