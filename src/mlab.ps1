@@ -63,9 +63,14 @@ Options:
 }
 
 # Print error message and exit script with usage error code.
-Function ErrorUsage($Message) {
+Function ErrorUsage($Message, $Subcommand) {
     Write-Output "error: $Message"
-    Write-Output "Run 'mlab --help' for usage"
+    If ($Subcommand) {
+        Write-Output "Run 'mlab $Subcommand --help' for usage"
+    }
+    Else {
+        Write-Output "Run 'mlab --help' for usage"
+    }
     Exit 2
 }
 
