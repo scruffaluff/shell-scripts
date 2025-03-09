@@ -5,7 +5,7 @@
 
 # Exit immediately if a PowerShell cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
-# Disable progress bar for cmdlets.
+# Disable progress bar for PowerShell cmdlets.
 $ProgressPreference = 'SilentlyContinue'
 # Exit immediately when an native executable encounters an error.
 $PSNativeCommandUseErrorActionPreference = $True

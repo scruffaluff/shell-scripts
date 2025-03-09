@@ -19,13 +19,14 @@ docs:
 [unix]
 format:
   npx prettier --check .
-  shfmt --diff install.sh src
+  shfmt --diff install.sh src scripts
 
 # Check code formatting.
 [windows]
 format:
   npx prettier --check .
   Invoke-ScriptAnalyzer -EnableExit -Path install.ps1 -Settings CodeFormatting
+  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path scripts -Settings CodeFormatting
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path src -Settings CodeFormatting
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path tests -Settings CodeFormatting
 
@@ -38,6 +39,7 @@ lint:
 [windows]
 lint:
   Invoke-ScriptAnalyzer -EnableExit -Path install.ps1 -Settings PSScriptAnalyzerSettings.psd1
+  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path scripts -Settings PSScriptAnalyzerSettings.psd1
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path src -Settings PSScriptAnalyzerSettings.psd1
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path tests -Settings PSScriptAnalyzerSettings.psd1
 
