@@ -52,7 +52,7 @@ Function FindJq() {
 
 # Find all scripts inside GitHub repository.
 Function FindScripts($Version) {
-    $Filter = '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".ps1\")'
+    $Filter = '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".nu\") or endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".nu\") | rtrimstr(\".ps1\")'
     $Uri = "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true"
     $Response = Invoke-WebRequest -UseBasicParsing -Uri "$Uri"
 

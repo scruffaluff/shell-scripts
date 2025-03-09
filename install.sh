@@ -239,7 +239,7 @@ EOF
   fi
 
   jq_bin="$(find_jq)"
-  filter='.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
+  filter='.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".nu") or endswith(".sh")) | ltrimstr("src/") | rtrimstr(".nu") | rtrimstr(".sh")'
   echo "${response}" | "${jq_bin}" --exit-status --raw-output "${filter}"
 }
 

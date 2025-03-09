@@ -62,6 +62,10 @@ _setup-shell:
   fi
   arch="$(uname -m | sed s/x86_64/amd64/ | sed s/x64/amd64/ | sed s/aarch64/arm64/)"
   os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+  if [ ! -x "$(command -v nu)" ]; then
+    ./scripts/install-nushell.sh --user
+  fi
+  echo "Nushell $(nu --version)"
   if [ ! -x "$(command -v jq)" ]; then
     if [ -x "$(command -v apk)" ]; then
       ${super:+"${super}"} apk update
@@ -110,6 +114,7 @@ _setup-shell:
 _setup-shell:
   #!powershell.exe
   $ErrorActionPreference = 'Stop'
+  $ProgressPreference = 'SilentlyContinue'
   $PSNativeCommandUseErrorActionPreference = $True
   # If executing task from PowerShell Core, error such as "'Install-Module'
   # command was found in the module 'PowerShellGet', but the module could not be
@@ -118,6 +123,10 @@ _setup-shell:
   Import-Module -MaximumVersion 1.1.0 -MinimumVersion 1.0.0 PackageManagement
   Import-Module -MaximumVersion 1.9.9 -MinimumVersion 1.0.0 PowerShellGet
   Get-PackageProvider -Force Nuget | Out-Null
+  If (-Not (Get-Command -ErrorAction SilentlyContinue nu)) {
+    & scripts/install-nushell.ps1 --user
+  }
+  Write-Output "Nushell $(nu --version)"
   If (-Not (Get-Module -ListAvailable -FullyQualifiedName @{ModuleName="PSScriptAnalyzer";ModuleVersion="1.0.0"})) {
     Install-Module -Force -MinimumVersion 1.0.0 -Name PSScriptAnalyzer
   }
