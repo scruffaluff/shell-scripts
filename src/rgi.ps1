@@ -1,6 +1,7 @@
 <#
 .SYNOPSIS
-    SCP for one time remote connections.
+    Interactive Ripgrep searcher based on logic from
+    https://github.com/junegunn/fzf/blob/master/ADVANCED.md#using-fzf-as-interactive-ripgrep-launcher.
 #>
 
 # Exit immediately if a PowerShell cmdlet encounters an error.
@@ -13,25 +14,32 @@ $PSNativeCommandUseErrorActionPreference = $True
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
-SCP for one time remote connections.
+Interactive Ripgrep searcher.
 
-Usage: tscp [OPTIONS] [SCP_ARGS]...
+Usage: rgi [OPTIONS] [RG_ARGS]...
 
 Options:
+      --debug     Show shell debug traces
   -h, --help      Print help information
   -v, --version   Print version information
+
+Ripgrep Options:
 '@
+    If (Get-Command -ErrorAction SilentlyContinue rg) {
+        rg --help
+    }
 }
 
-# Print Tscp version string.
+# Print Rgi version string.
 Function Version() {
-    Write-Output 'Tscp 0.2.1'
+    Write-Output 'Rgi 0.0.2'
 }
 
 # Script entrypoint.
 Function Main() {
     $ArgIdx = 0
-    $CmdArgs = @()
+    $Editor = 'vim'
+    $RgCmd = 'rg --column --line-number --no-heading --smart-case --color always'
 
     While ($ArgIdx -LT $Args[0].Count) {
         Switch ($Args[0][$ArgIdx]) {
@@ -44,21 +52,23 @@ Function Main() {
                 Exit 0
             }
             Default {
-                $CmdArgs += $Args[0][$ArgIdx]
+                $Argument = $Args[0][$ArgIdx]
+                $RgCmd = "$RgCmd '$Argument'"
                 $ArgIdx += 1
+                Break
             }
         }
     }
 
-    # Don't use PowerShell $Null for UserKnownHostsFile. It causes SSH to use
-    # ~/.ssh/known_hosts as a backup.
-    scp `
-        -o IdentitiesOnly=yes `
-        -o LogLevel=ERROR `
-        -o PreferredAuthentications='publickey,password' `
-        -o StrictHostKeyChecking=no `
-        -o UserKnownHostsFile=NUL `
-        $CmdArgs
+    If ($Env:EDITOR) {
+        $Editor = $Env:Editor
+    }
+    fzf --ansi `
+        --bind "enter:become(& '$Editor {1}:{2}')" `
+        --bind "start:reload:$RgCmd" `
+        --delimiter ':' `
+        --preview 'bat --color always --highlight-line {2} {1}' `
+        --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
 }
 
 # Only run Main if invoked as script. Otherwise import functions as library.

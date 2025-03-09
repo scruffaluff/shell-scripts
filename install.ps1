@@ -6,15 +6,19 @@
 # If unable to execute due to policy rules, run
 # Set-ExecutionPolicy RemoteSigned -Scope CurrentUser.
 
-# Exit immediately if a PowerShell Cmdlet encounters an error.
+# Exit immediately if a PowerShell cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
+# Disable progress bar for PowerShell cmdlets.
+$ProgressPreference = 'SilentlyContinue'
+# Exit immediately when an native executable encounters an error.
+$PSNativeCommandUseErrorActionPreference = $True
 
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
 Installer script for Shell Scripts.
 
-Usage: install [OPTIONS] SCRIPT
+Usage: install [OPTIONS] [SCRIPTS]...
 
 Options:
   -d, --dest <PATH>         Directory to install scripts
@@ -25,28 +29,35 @@ Options:
 '@
 }
 
-# Downloads file to destination efficiently.
-Function DownloadFile($SrcURL, $DstFile) {
-    # The progress bar updates every byte, which makes downloads slow. See
-    # https://stackoverflow.com/a/43477248 for an explanation.
-    $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest -UseBasicParsing -Uri "$SrcURL" -OutFile "$DstFile"
-}
-
 # Print error message and exit script with usage error code.
 Function ErrorUsage($Message) {
-    Throw "Error: $Message"
-    Write-Error "Run 'install --help' for usage"
+    Write-Output "error: $Message"
+    Write-Output "Run 'install --help' for usage"
     Exit 2
+}
+
+# Find or download Jq JSON parser.
+Function FindJq() {
+    $JqBin = $(Get-Command -ErrorAction SilentlyContinue jq).Source
+    If ($JqBin) {
+        Write-Output $JqBin
+    }
+    Else {
+        $TempFile = [System.IO.Path]::GetTempFileName() -Replace '.tmp', '.exe'
+        Invoke-WebRequest -UseBasicParsing -OutFile $TempFile -Uri `
+            https://github.com/jqlang/jq/releases/latest/download/jq-windows-amd64.exe
+        Write-Output $TempFile
+    }
 }
 
 # Find all scripts inside GitHub repository.
 Function FindScripts($Version) {
     $Filter = '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".ps1\")'
     $Uri = "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true"
+    $Response = Invoke-WebRequest -UseBasicParsing -Uri "$Uri"
 
-    $Response = $(Invoke-WebRequest -UseBasicParsing -Uri "$Uri")
-    Write-Output "$Response" | jq --raw-output "$Filter"
+    $JqBin = FindJq
+    Write-Output "$Response" | & $JqBin --exit-status --raw-output "$Filter"
 }
 
 # Print log message to stdout if logging is enabled.
@@ -98,7 +109,7 @@ Function Main() {
     }
 
     If ($List) {
-        $Scripts = $(FindScripts "$Version")
+        $Scripts = FindScripts "$Version"
         Write-Output $Scripts
     }
     ElseIf ($Name) {
@@ -122,7 +133,7 @@ Function Main() {
             $Env:Path = $PrependedPath
         }
 
-        $Scripts = $(FindScripts "$Version")
+        $Scripts = FindScripts "$Version"
         $MatchFound = $False
         $SrcPrefix = "https://raw.githubusercontent.com/scruffaluff/shell-scripts/$Version/src"
 
@@ -131,7 +142,8 @@ Function Main() {
                 $MatchFound = $True
                 Log "Installing script $Name..."
 
-                DownloadFile "$SrcPrefix/$Script.ps1" "$DestDir/$Script.ps1"
+                Invoke-WebRequest -UseBasicParsing -OutFile `
+                    "$DestDir/$Script.ps1" -Uri "$SrcPrefix/$Script.ps1"
                 Log "Installed $(& $Name --version)."
             }
         }

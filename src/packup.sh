@@ -5,7 +5,7 @@
 # Exit immediately if a command exits with non-zero return code.
 #
 # Flags:
-#   -e: Exit immediately when a command fails.
+#   -e: Exit immediately when a command pipeline fails.
 #   -u: Throw an error when an unset variable is encountered.
 set -eu
 
@@ -53,7 +53,13 @@ dnf_check_update() {
 #######################################
 error() {
   bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
   exit 1
 }
 
@@ -64,7 +70,13 @@ error() {
 #######################################
 error_usage() {
   bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
   printf "Run 'packup --help' for usage.\n" >&2
   exit 2
 }
@@ -73,10 +85,14 @@ error_usage() {
 # Find command to elevate as super user.
 #######################################
 find_super() {
+  # Do not use long form -user flag for id. It is not supported on MacOS.
+  #
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [ -x "$(command -v sudo)" ]; then
+  if [ "$(id -u)" -eq 0 ]; then
+    echo ''
+  elif [ -x "$(command -v sudo)" ]; then
     echo 'sudo'
   elif [ -x "$(command -v doas)" ]; then
     echo 'doas'
@@ -89,12 +105,7 @@ find_super() {
 # Invoke upgrade commands to all installed package managers.
 #######################################
 upgrade() {
-  # Do not use long form -user flag for id. It is not supported on MacOS.
-  if [ "$(id -u)" -ne 0 ]; then
-    super="$(find_super)"
-  else
-    super=''
-  fi
+  super="$(find_super)"
 
   # Do not quote the outer super parameter expansion. Shell will error due to be
   # being unable to find the "" command.
@@ -114,7 +125,7 @@ upgrade() {
 
   if [ -x "$(command -v brew)" ]; then
     brew update
-    brew upgrade
+    brew upgrade --greedy
   fi
 
   if [ -x "$(command -v dnf)" ]; then
@@ -127,12 +138,20 @@ upgrade() {
     ${super:+"${super}"} flatpak update --assumeyes
   fi
 
+  if [ -x "$(command -v opkg)" ]; then
+    ${super:+"${super}"} opkg update
+    ${super:+"${super}"} opkg list-upgradable |
+      cut -f 1 -d ' ' |
+      xargs -r ${super:+"${super}"} opkg upgrade
+  fi
+
   if [ -x "$(command -v pacman)" ]; then
     ${super:+"${super}"} pacman --noconfirm --refresh --sync --sysupgrade
   fi
 
   if [ -x "$(command -v pkg)" ]; then
     ${super:+"${super}"} pkg update
+    ${super:+"${super}"} pkg upgrade --yes
   fi
 
   if [ -x "$(command -v zypper)" ]; then
@@ -142,7 +161,9 @@ upgrade() {
 
   if [ -x "$(command -v cargo)" ] && [ -O "$(which cargo)" ]; then
     cargo install --list | while read -r line; do
-      if expr "${line}" : '^.*:$' > /dev/null; then
+      # Do not use "^" as the first character of an expr expression. Some
+      # versions will throw an error.
+      if expr "${line}" : '.*:$' > /dev/null; then
         cargo install "$(echo "${line}" | cut -f1 -d ' ')"
       fi
     done
@@ -160,6 +181,14 @@ upgrade() {
   if [ -x "$(command -v pipx)" ] && [ -O "$(which pipx)" ]; then
     pipx upgrade-all
   fi
+
+  if [ -x "$(command -v tldr)" ]; then
+    tldr --update
+  fi
+
+  if [ -x "$(command -v ya)" ]; then
+    ya pack --upgrade
+  fi
 }
 
 #######################################
@@ -168,7 +197,7 @@ upgrade() {
 #   Packup version string.
 #######################################
 version() {
-  echo 'Packup 0.4.0'
+  echo 'Packup 0.4.4'
 }
 
 #######################################

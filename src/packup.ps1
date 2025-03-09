@@ -3,8 +3,12 @@
     Invokes upgrade commands to all installed package managers.
 #>
 
-# Exit immediately if a PowerShell Cmdlet encounters an error.
+# Exit immediately if a PowerShell cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
+# Disable progress bar for PowerShell cmdlets.
+$ProgressPreference = 'SilentlyContinue'
+# Exit immediately when an native executable encounters an error.
+$PSNativeCommandUseErrorActionPreference = $True
 
 # Show CLI help information.
 Function Usage() {
@@ -21,7 +25,7 @@ Options:
 
 # Print Packup version string.
 Function Version() {
-    Write-Output 'Packup 0.4.0'
+    Write-Output 'Packup 0.4.4'
 }
 
 # Script entrypoint.
@@ -44,34 +48,41 @@ Function Main() {
         }
     }
 
-    If (Get-Command choco -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue choco) {
         choco upgrade --yes all
     }
 
-    If (Get-Command scoop -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue scoop) {
         scoop update
         scoop update --all
         scoop cleanup --all
     }
 
-    If (Get-Command cargo -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue cargo) {
         ForEach ($Line in $(cargo install --list)) {
-            Write-Output "$Line"
             If ("$Line" -Like '*:') {
                 cargo install $Line.Split()[0]
             }
         }
     }
 
-    If (Get-Command npm -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue npm) {
         # The "npm install" command is run before "npm update" command to avoid
         # messages about newer versions of NPM being available.
         npm install --global npm@latest
         npm update --global --loglevel error
     }
 
-    If (Get-Command pipx -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue pipx) {
         pipx upgrade-all
+    }
+
+    If (Get-Command -ErrorAction SilentlyContinue tldr) {
+        tldr --update
+    }
+
+    If (Get-Command -ErrorAction SilentlyContinue ya) {
+        ya pack --upgrade
     }
 }
 

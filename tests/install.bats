@@ -2,19 +2,19 @@
 
 setup() {
   export PATH="${BATS_TEST_DIRNAME}/..:${PATH}"
-  load '../node_modules/bats-support/load'
   load '../node_modules/bats-assert/load'
+  load '../node_modules/bats-support/load'
 
   # Disable logging to simplify stdout for testing.
   export SHELL_SCRIPTS_NOLOG='true'
 
-  # Mock functions for child processes by printing received arguments.
+  # Mock functions for child processes.
   #
   # Args:
   #   -f: Use override as a function instead of a variable.
   command() {
     # shellcheck disable=SC2317
-    echo '/bin/bash'
+    which jq
   }
   export -f command
 
@@ -61,7 +61,7 @@ https://raw.githubusercontent.com/scruffaluff/shell-scripts/develop/src/otherscr
   }
   export -f sudo
 
-  expected='sudo mkdir -p /bin'
-  actual="$(bash install.sh --dest /bin mockscript)"
+  expected='sudo mkdir -p /bin/fake'
+  actual="$(bash install.sh --dest /bin/fake mockscript)"
   assert_equal "${actual}" "${expected}"
 }

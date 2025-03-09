@@ -3,15 +3,19 @@
     SSH for one time remote connections.
 #>
 
-# Exit immediately if a PowerShell Cmdlet encounters an error.
+# Exit immediately if a PowerShell cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
+# Disable progress bar for PowerShell cmdlets.
+$ProgressPreference = 'SilentlyContinue'
+# Exit immediately when an native executable encounters an error.
+$PSNativeCommandUseErrorActionPreference = $True
 
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
 SSH for one time remote connections.
 
-Usage: tssh [OPTIONS]
+Usage: tssh [OPTIONS] [SSH_ARGS]...
 
 Options:
   -h, --help      Print help information
@@ -21,7 +25,7 @@ Options:
 
 # Print Tssh version string.
 Function Version() {
-    Write-Output 'Tssh 0.2.0'
+    Write-Output 'Tssh 0.2.1'
 }
 
 # Script entrypoint.

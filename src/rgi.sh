@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 #
-# Rsync for one time remote connections.
+# Interactive Ripgrep searcher based on logic from
+# https://github.com/junegunn/fzf/blob/master/ADVANCED.md#using-fzf-as-interactive-ripgrep-launcher.
 
 # Exit immediately if a command exits with non-zero return code.
 #
@@ -17,15 +18,20 @@ set -eu
 #######################################
 usage() {
   cat 1>&2 << EOF
-Rsync for one time remote connections.
+Interactive Ripgrep searcher.
 
-Usage: trsync [OPTIONS] [RSYNC_ARGS]...
+Usage: rgi [OPTIONS] [RG_ARGS]...
 
 Options:
       --debug     Show shell debug traces
   -h, --help      Print help information
   -v, --version   Print version information
+
+Ripgrep Options:
 EOF
+  if [ -x "$(command -v rg)" ]; then
+    rg --help
+  fi
 }
 
 #######################################
@@ -46,27 +52,38 @@ error() {
 }
 
 #######################################
-# Sync files without saving remote details.
+# Print error message and exit script with usage error code.
+# Outputs:
+#   Writes error message to stderr.
 #######################################
-sync() {
-  rsync \
-    -e 'ssh -o IdentitiesOnly=yes -o LogLevel=ERROR -o PreferredAuthentications=publickey,password -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
-    "$@"
+error_usage() {
+  bold_red='\033[1;31m' default='\033[0m'
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
+  printf "Run 'rgi --help' for usage.\n" >&2
+  exit 2
 }
 
 #######################################
-# Print Trsync version string.
+# Print Rgi version string.
 # Outputs:
-#   Trsync version string.
+#   Rgi version string.
 #######################################
 version() {
-  echo 'Trsync 0.2.1'
+  echo 'Rgi 0.0.2'
 }
 
 #######################################
 # Script entrypoint.
 #######################################
 main() {
+  rg_cmd='rg --column --line-number --no-heading --smart-case --color always'
+
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
     case "${1}" in
@@ -83,11 +100,18 @@ main() {
         exit 0
         ;;
       *)
-        sync "$@"
-        exit 0
+        rg_cmd="${rg_cmd} '${1}'"
+        shift 1
         ;;
     esac
   done
+
+  fzf --ansi \
+    --bind "enter:become(${EDITOR:-vim} +{2} {1})" \
+    --bind "start:reload:${rg_cmd}" \
+    --delimiter ':' \
+    --preview 'bat --color always --highlight-line {2} {1}' \
+    --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
 }
 
 # Add ability to selectively skip main function during test suite.

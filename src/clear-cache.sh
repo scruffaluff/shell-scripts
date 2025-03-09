@@ -5,7 +5,7 @@
 # Exit immediately if a command exits with non-zero return code.
 #
 # Flags:
-#   -e: Exit immediately when a command fails.
+#   -e: Exit immediately when a command pipeline fails.
 #   -u: Throw an error when an unset variable is encountered.
 set -eu
 
@@ -49,12 +49,7 @@ assert_cmd() {
 # Clear cache of all package managers.
 #######################################
 clear_cache() {
-  # Do not use long form -user flag for id. It is not supported on MacOS.
-  if [ "$(id -u)" -ne 0 ]; then
-    super="$(find_super)"
-  else
-    super=''
-  fi
+  super="$(find_super)"
 
   # Do not quote the outer super parameter expansion. Shell will error due to be
   # being unable to find the "" command.
@@ -148,7 +143,13 @@ clear_playwright() {
 #######################################
 error() {
   bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
   exit 1
 }
 
@@ -159,7 +160,13 @@ error() {
 #######################################
 error_usage() {
   bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
   printf "Run 'clear-cache --help' for usage.\n" >&2
   exit 2
 }
@@ -168,10 +175,14 @@ error_usage() {
 # Find command to elevate as super user.
 #######################################
 find_super() {
+  # Do not use long form -user flag for id. It is not supported on MacOS.
+  #
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [ -x "$(command -v sudo)" ]; then
+  if [ "$(id -u)" -eq 0 ]; then
+    echo ''
+  elif [ -x "$(command -v sudo)" ]; then
     echo 'sudo'
   elif [ -x "$(command -v doas)" ]; then
     echo 'doas'
@@ -186,7 +197,7 @@ find_super() {
 #   ClearCache version string.
 #######################################
 version() {
-  echo 'ClearCache 0.2.0'
+  echo 'ClearCache 0.2.2'
 }
 
 #######################################

@@ -9,8 +9,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Caffeinate, InstallNushell, Mlab, and Rgi scripts.
+
+### Changed
+
+- Improved error messages for piped commands.
+
+## 0.1.3 - 2024-06-07
+
+### Added
+
 - Doas support for all Unix scripts.
 - Multiple script installations with one command.
+- Opkg and Tldr update to Packup.
 
 ### Removed
 

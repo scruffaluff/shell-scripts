@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    SCP for one time remote connections.
+    Prevent system from sleeping during a program.
 #>
 
 # Exit immediately if a PowerShell cmdlet encounters an error.
@@ -13,9 +13,9 @@ $PSNativeCommandUseErrorActionPreference = $True
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
-SCP for one time remote connections.
+Prevent the system from sleeping during a command.
 
-Usage: tscp [OPTIONS] [SCP_ARGS]...
+Usage: caffeinate [OPTIONS] [COMMAND] [ARGS]...
 
 Options:
   -h, --help      Print help information
@@ -23,9 +23,9 @@ Options:
 '@
 }
 
-# Print Tscp version string.
+# Print Caffeinate version string.
 Function Version() {
-    Write-Output 'Tscp 0.2.1'
+    Write-Output 'Caffeinate 0.0.2'
 }
 
 # Script entrypoint.
@@ -50,15 +50,20 @@ Function Main() {
         }
     }
 
-    # Don't use PowerShell $Null for UserKnownHostsFile. It causes SSH to use
-    # ~/.ssh/known_hosts as a backup.
-    scp `
-        -o IdentitiesOnly=yes `
-        -o LogLevel=ERROR `
-        -o PreferredAuthentications='publickey,password' `
-        -o StrictHostKeyChecking=no `
-        -o UserKnownHostsFile=NUL `
-        $CmdArgs
+    caffeine
+    Try {
+        If ($CmdArgs.Count -Eq 0) {
+            While ($True) {
+                Start-Sleep -Seconds 86400
+            }
+        }
+        Else {
+            & $CmdArgs
+        }
+    }
+    Finally {
+        caffeine --appexit
+    }
 }
 
 # Only run Main if invoked as script. Otherwise import functions as library.

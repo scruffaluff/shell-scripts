@@ -3,8 +3,12 @@
     Frees up disk space by clearing caches of package managers.
 #>
 
-# Exit immediately if a PowerShell Cmdlet encounters an error.
+# Exit immediately if a PowerShell cmdlet encounters an error.
 $ErrorActionPreference = 'Stop'
+# Disable progress bar for PowerShell cmdlets.
+$ProgressPreference = 'SilentlyContinue'
+# Exit immediately when an native executable encounters an error.
+$PSNativeCommandUseErrorActionPreference = $True
 
 # Show CLI help information.
 Function Usage() {
@@ -21,7 +25,7 @@ Options:
 
 # Print ClearCache version string.
 Function Version() {
-    Write-Output 'ClearCache 0.2.0'
+    Write-Output 'ClearCache 0.2.2'
 }
 
 # Script entrypoint.
@@ -44,38 +48,38 @@ Function Main() {
         }
     }
 
-    If (Get-Command scoop -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue scoop) {
         scoop cache rm --all
     }
 
-    If (Get-Command cargo-cache -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue cargo-cache) {
         cargo-cache --autoclean
     }
 
     # Check if Docker client is install and Docker daemon is up and running.
-    If (Get-Command docker -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue docker) {
         docker ps 2>&1 | Out-Null
         If (-Not $LastExitCode) {
             docker system prune --force --volumes
         }
     }
 
-    If (Get-Command npm -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue npm) {
         npm cache clean --force --loglevel error
     }
 
-    If (Get-Command pip -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue pip) {
         pip cache purge
     }
 
     If (
-        (Get-Command playwright -ErrorAction SilentlyContinue) -And
-        (Test-Path -Path "$Env:LocalAppData\ms-playwright\.links" -PathType Container)
+        (Get-Command -ErrorAction SilentlyContinue playwright) -And
+        (Test-Path -PathType Container "$Env:LocalAppData\ms-playwright\.links")
     ) {
         playwright uninstall --all
     }
 
-    If (Get-Command poetry -ErrorAction SilentlyContinue) {
+    If (Get-Command -ErrorAction SilentlyContinue poetry) {
         ForEach ($Cache in $(poetry cache list)) {
             poetry cache clear --all --no-interaction "$Cache"
         }

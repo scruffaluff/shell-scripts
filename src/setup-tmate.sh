@@ -6,7 +6,7 @@
 # Exit immediately if a command exits with non-zero return code.
 #
 # Flags:
-#   -e: Exit immediately when a command fails.
+#   -e: Exit immediately when a command pipeline fails.
 #   -u: Throw an error when an unset variable is encountered.
 set -eu
 
@@ -18,8 +18,9 @@ set -eu
 #######################################
 usage() {
   cat 1>&2 << EOF
-Installs Tmate and creates a remote session. Users can close the session by
-creating the file /close-tmate.
+Installs Tmate and creates a remote session.
+
+Users can close the session by creating the file /close-tmate.
 
 Usage: setup-tmate [OPTIONS]
 
@@ -37,7 +38,13 @@ EOF
 #######################################
 error() {
   bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
   exit 1
 }
 
@@ -48,8 +55,14 @@ error() {
 #######################################
 error_usage() {
   bold_red='\033[1;31m' default='\033[0m'
-  printf "${bold_red}error${default}: %s\n" "${1}" >&2
-  printf "Run 'packup --help' for usage.\n" >&2
+  # Flags:
+  #   -t <FD>: Check if file descriptor is a terminal.
+  if [ -t 2 ]; then
+    printf "${bold_red}error${default}: %s\n" "${1}" >&2
+  else
+    printf "error: %s\n" "${1}" >&2
+  fi
+  printf "Run 'setup-tmate --help' for usage.\n" >&2
   exit 2
 }
 
@@ -57,10 +70,14 @@ error_usage() {
 # Find command to elevate as super user.
 #######################################
 find_super() {
+  # Do not use long form -user flag for id. It is not supported on MacOS.
+  #
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [ -x "$(command -v sudo)" ]; then
+  if [ "$(id -u)" -eq 0 ]; then
+    echo ''
+  elif [ -x "$(command -v sudo)" ]; then
     echo 'sudo'
   elif [ -x "$(command -v doas)" ]; then
     echo 'doas'
@@ -123,23 +140,26 @@ install_tmate_linux() {
       ;;
   esac
 
-  # Install OpenSSH and archive utils.
+  # Install OpenSSH and archive utils if not available.
   #
   # Flags:
   #   -v: Only show file path of command.
   #   -x: Check if file exists and execute permission is granted.
-  if [ -x "$(command -v apk)" ]; then
-    ${1:+"${1}"} apk add curl openssh-client xz
-  elif [ -x "$(command -v apt-get)" ]; then
-    ${1:+"${1}"} apt-get update
-    ${1:+"${1}"} apt-get install --yes curl openssh-client xz-utils
-  elif [ -x "$(command -v dnf)" ]; then
-    ${1:+"${1}"} dnf install --assumeyes curl openssh xz
-  elif [ -x "$(command -v pacman)" ]; then
-    ${1:+"${1}"} pacman --noconfirm --refresh --sync --sysupgrade
-    ${1:+"${1}"} pacman --noconfirm --sync curl openssh xz
-  elif [ -x "$(command -v zypper)" ]; then
-    ${1:+"${1}"} zypper install --no-confirm curl openssh tar xz
+  if [ ! -x "$(command -v curl)" ] || [ ! -x "$(command -v ssh)" ] ||
+    [ ! -x "$(command -v tar)" ] || [ ! -x "$(command -v xz)" ]; then
+    if [ -x "$(command -v apk)" ]; then
+      ${1:+"${1}"} apk add curl openssh-client tar xz
+    elif [ -x "$(command -v apt-get)" ]; then
+      ${1:+"${1}"} apt-get update
+      ${1:+"${1}"} apt-get install --yes curl openssh-client tar xz-utils
+    elif [ -x "$(command -v dnf)" ]; then
+      ${1:+"${1}"} dnf install --assumeyes curl openssh tar xz
+    elif [ -x "$(command -v pacman)" ]; then
+      ${1:+"${1}"} pacman --noconfirm --refresh --sync --sysupgrade
+      ${1:+"${1}"} pacman --noconfirm --sync curl openssh tar xz
+    elif [ -x "$(command -v zypper)" ]; then
+      ${1:+"${1}"} zypper install --no-confirm curl openssh tar xz
+    fi
   fi
 
   curl -LSfs "https://github.com/tmate-io/tmate/releases/download/${tmate_version}/tmate-${tmate_version}-static-linux-${tmate_arch}.tar.xz" -o /tmp/tmate.tar.xz
@@ -152,12 +172,7 @@ install_tmate_linux() {
 # Installs Tmate and creates a remote session.
 #######################################
 setup_tmate() {
-  # Do not use long form -user flag for id. It is not supported on MacOS.
-  if [ "$(id -u)" -ne 0 ]; then
-    super="$(find_super)"
-  else
-    super=''
-  fi
+  super="$(find_super)"
 
   # Install Tmate if not available.
   #
@@ -200,7 +215,7 @@ setup_tmate() {
 #   Setup Tmate version string.
 #######################################
 version() {
-  echo 'SetupTmate 0.3.0'
+  echo 'SetupTmate 0.3.2'
 }
 
 #######################################
