@@ -52,12 +52,33 @@ Function FindJq() {
 
 # Find all scripts inside GitHub repository.
 Function FindScripts($Version) {
-    $Filter = '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".nu\") or endswith(\".ps1\")) | ltrimstr(\"src/\") | rtrimstr(\".nu\") | rtrimstr(\".ps1\")'
+    $Filter = '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".nu\") or endswith(\".ps1\")) | ltrimstr(\"src/\")'
     $Uri = "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true"
     $Response = Invoke-WebRequest -UseBasicParsing -Uri "$Uri"
 
     $JqBin = FindJq
     Write-Output "$Response" | & $JqBin --exit-status --raw-output "$Filter"
+}
+
+# Install script and update path.
+Function InstallScript($Target, $SrcPrefix, $DestDir, $Script) {
+    $Name = [IO.Path]::GetFileNameWithoutExtension($Script) 
+    New-Item -Force -ItemType Directory -Path $DestDir | Out-Null
+
+    Log "Installing script $Name..."
+    Invoke-WebRequest -UseBasicParsing -OutFile "$DestDir/$Script" `
+        -Uri "$SrcPrefix/$Script"
+
+    # Add destination folder to system path.
+    $Path = [Environment]::GetEnvironmentVariable('Path', "$Target")
+    If (-Not ($Path -Like "*$DestDir*")) {
+        $PrependedPath = "$DestDir" + ";$Path";
+        [System.Environment]::SetEnvironmentVariable(
+            'Path', "$PrependedPath", "$Target"
+        )
+        $Env:Path = $PrependedPath
+    }
+    Log "Installed $(& $Name --version)."
 }
 
 # Print log message to stdout if logging is enabled.
@@ -72,6 +93,7 @@ Function Main() {
     $ArgIdx = 0
     $DestDir = ''
     $List = $False
+    $Names = @()
     $Target = 'Machine'
     $Version = 'main'
 
@@ -97,59 +119,45 @@ Function Main() {
                 Break
             }
             '--user' {
+                if (-Not $DestDir) {
+                    $DestDir = "$Env:AppData\ShellScripts"
+                }
                 $Target = 'User'
                 $ArgIdx += 1
                 Break
             }
             Default {
-                $Name = $Args[0][$ArgIdx]
+                $Names += $Args[0][$ArgIdx]
                 $ArgIdx += 1
             }
         }
     }
 
-    If ($List) {
-        $Scripts = FindScripts "$Version"
-        Write-Output $Scripts
+    $SrcPrefix = "https://raw.githubusercontent.com/scruffaluff/shell-scripts/$Version/src"
+    $Scripts = FindScripts "$Version"
+    If (-Not $DestDir) {
+        $DestDir = 'C:\Program Files\ShellScripts'
     }
-    ElseIf ($Name) {
-        If (-Not $DestDir) {
-            If ($Target -Eq 'User') {
-                $DestDir = "C:\Users\$Env:UserName\Documents\PowerShell\Scripts"
-            }
-            Else {
-                $DestDir = 'C:\Program Files\PowerShell\Scripts'
-            }
-        }
-        New-Item -Force -ItemType Directory -Path $DestDir | Out-Null
 
-        $Path = [Environment]::GetEnvironmentVariable('Path', "$Target")
-        If (-Not ($Path -Like "*$DestDir*")) {
-            $PrependedPath = "$DestDir" + ";$Path";
-
-            [System.Environment]::SetEnvironmentVariable(
-                'Path', "$PrependedPath", "$Target"
-            )
-            $Env:Path = $PrependedPath
-        }
-
-        $Scripts = FindScripts "$Version"
-        $MatchFound = $False
-        $SrcPrefix = "https://raw.githubusercontent.com/scruffaluff/shell-scripts/$Version/src"
-
+    If ($List) {
         ForEach ($Script in $Scripts) {
-            If ($Name -And ("$Script" -Eq "$Name")) {
-                $MatchFound = $True
-                Log "Installing script $Name..."
-
-                Invoke-WebRequest -UseBasicParsing -OutFile `
-                    "$DestDir/$Script.ps1" -Uri "$SrcPrefix/$Script.ps1"
-                Log "Installed $(& $Name --version)."
-            }
+            Write-Output "$([IO.Path]::GetFileNameWithoutExtension($Script))"
         }
+    }
+    ElseIf ($Names) {
+        ForEach ($Name in $Names) {
+            $MatchFound = $False
+            ForEach ($Script in $Scripts) {
+                $ScriptName = [IO.Path]::GetFileNameWithoutExtension($Script)
+                If ($ScriptName -Eq $Name) {
+                    $MatchFound = $True
+                    InstallScript $Target $SrcPrefix $DestDir $Script
+                }
+            }
 
-        If (-Not $MatchFound) {
-            Throw "Error: No script name match found for '$Name'"
+            If (-Not $MatchFound) {
+                Throw "Error: No script name match found for '$Name'"
+            }
         }
     }
     Else {

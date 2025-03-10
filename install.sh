@@ -215,7 +215,7 @@ EOF
 # Arguments:
 #   Version
 # Returns:
-#   Array of script name stems.
+#   Array of script names.
 #######################################
 find_scripts() {
   url="https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/${1}?recursive=true"
@@ -239,7 +239,7 @@ EOF
   fi
 
   jq_bin="$(find_jq)"
-  filter='.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".nu") or endswith(".sh")) | ltrimstr("src/") | rtrimstr(".nu") | rtrimstr(".sh")'
+  filter='.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".nu") or endswith(".sh")) | ltrimstr("src/")'
   echo "${response}" | "${jq_bin}" --exit-status --raw-output "${filter}"
 }
 
@@ -276,8 +276,9 @@ find_super() {
 #   Log message to stdout.
 #######################################
 install_script() {
-  dst_file="${3}/${4}"
-  src_url="${2}/${4}.sh"
+  name="${script%.*}"
+  dst_file="${3}/${name}"
+  src_url="${2}/${4}"
 
   # Use super user elevation command for system installation if user did not
   # give the --user, does not own the file, and is not root.
@@ -293,7 +294,7 @@ install_script() {
     super=''
   fi
 
-  log "Installing script ${4}..."
+  log "Installing script ${name}..."
   download "${super}" "${src_url}" "${dst_file}" 755
 
   # Add Scripts to shell profile if not in system path.
@@ -301,12 +302,12 @@ install_script() {
   # Flags:
   #   -e: Check if file exists.
   #   -v: Only show file path of command.
-  if [ ! -e "$(command -v "${4}")" ]; then
+  if [ ! -e "$(command -v "${name}")" ]; then
     configure_shell "${3}"
     export PATH="${3}:${PATH}"
   fi
 
-  log "Installed $("${4}" --version)."
+  log "Installed $("${name}" --version)."
 }
 
 #######################################
@@ -330,7 +331,7 @@ log() {
 # Script entrypoint.
 #######################################
 main() {
-  dst_dir='/usr/local/bin' names='' version='main'
+  dst_dir='' names='' version='main'
 
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
@@ -352,7 +353,9 @@ main() {
         shift 1
         ;;
       -u | --user)
-        dst_dir="${HOME}/.local/bin"
+        if [ -z "${dst_dir}" ]; then
+          dst_dir="${HOME}/.local/bin"
+        fi
         user_install='true'
         shift 1
         ;;
@@ -373,27 +376,32 @@ main() {
 
   src_prefix="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${version}/src"
   scripts="$(find_scripts "${version}")"
+  if [ -z "${dst_dir}" ]; then
+    dst_dir='/usr/local/bin'
+  fi
 
   # Flags:
   #   -n: Check if the string has nonzero length.
+  #   -z: Check if string has zero length.
   if [ -n "${list_scripts:-}" ]; then
-    echo "${scripts}"
+    for script in ${scripts}; do
+      echo "${script%.*}"
+    done
   else
     for name in ${names}; do
+      match_found=''
       for script in ${scripts}; do
-        if [ "${script}" = "${name}" ]; then
+        if [ "${script%.*}" = "${name}" ]; then
           match_found='true'
           install_script "${user_install:-}" "${src_prefix}" "${dst_dir}" \
             "${script}"
         fi
       done
-    done
 
-    # Flags:
-    #   -z: Check if string has zero length.
-    if [ -z "${match_found:-}" ]; then
-      error_usage "No script found for '${names}'."
-    fi
+      if [ -z "${match_found:-}" ]; then
+        error_usage "No script found for '${names}'."
+      fi
+    done
   fi
 }
 

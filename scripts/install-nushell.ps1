@@ -61,14 +61,17 @@ Function FindVersion($Version) {
 
 # Download and install Nushell.
 Function InstallNushell($Target, $Version, $DestDir) {
-    # Select destination directory if not provided.
-    If (-Not $DestDir) {
-        If ($Target -Eq 'Machine') {
+    If ($Target -Eq 'Machine') {
+        If (-Not $DestDir) {
             $DestDir = 'C:\Program Files\Nushell'
         }
-        Else {
+        $Registry = 'HKLM:\Software\Classes'
+    }
+    Else {
+        If (-Not $DestDir) {
             $DestDir = "$Env:AppData\Nushell"
         }
+        $Registry = 'HKCU:\Software\Classes'
     }
 
     # Create destination directory add it to the system path.
@@ -93,6 +96,16 @@ Function InstallNushell($Target, $Version, $DestDir) {
 
     Expand-Archive -DestinationPath "$TmpDir/$Stem" -Path "$TmpDir/$Stem.zip"
     Copy-Item -Destination $DestDir -Path "$TmpDir/$Stem/*.exe"
+
+    If (-Not (Test-Path -Path "$Registry\.nu")) {
+        New-Item -Force -Path "$Registry\.nu" | Out-Null
+        Set-ItemProperty -Name '(Default)' -Path "$Registry\.nu" -Value 'nufile'
+
+        $Command = '"' + "$DestDir\nu.exe" + '" "%1" %*'
+        New-Item -Force -Path "$Registry\nufile\shell\open\command" | Out-Null
+        Set-ItemProperty -Name '(Default)' -Path "$Registry\nufile\shell\open\command" `
+            -Value $Command
+    }
     Log "Installed Nushell $(nu --version)."
 }
 
