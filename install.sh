@@ -48,12 +48,20 @@ configure_shell() {
     bash)
       profile="${HOME}/.bashrc"
       ;;
-    zsh)
-      profile="${HOME}/.zshrc"
-      ;;
     fish)
       export_cmd="set -x PATH \"${1}\" \$PATH"
       profile="${HOME}/.config/fish/config.fish"
+      ;;
+    nu)
+      export_cmd="\$env.PATH = [\"${1}\" ...\$env.PATH]"
+      if [ "$(uname -s)" = 'Darwin' ]; then
+        profile="${HOME}/Library/Application Support/nushell/config.nu"
+      else
+        profile="${HOME}/.config/nushell/config.nu"
+      fi
+      ;;
+    zsh)
+      profile="${HOME}/.zshrc"
       ;;
     *)
       profile="${HOME}/.profile"
