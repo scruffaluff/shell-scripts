@@ -60,22 +60,44 @@ Function FindScripts($Version) {
     Write-Output "$Response" | & $JqBin --exit-status --raw-output "$Filter"
 }
 
+# Install dependencies for script.
+Function InstallDeps($Name, $Target, $Version) {
+    If (
+                        $ScriptName.EndsWith('.nu') -And 
+                        (-Not (Get-Command -ErrorAction SilentlyContinue nu)))
+                    {
+                        powershell { iex 
+                            "& { $(iwr -useb https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/scripts/install-nushell.ps1) } --user --version $Version" }
+                    }
+}
+
 # Install script and update path.
 Function InstallScript($Target, $SrcPrefix, $DestDir, $Script) {
-    $Name = [IO.Path]::GetFileNameWithoutExtension($Script) 
+    $Name = [IO.Path]::GetFileNameWithoutExtension($Script)
     New-Item -Force -ItemType Directory -Path $DestDir | Out-Null
+
+    $URL = "https://raw.githubusercontent.com/scruffaluff/shell-scripts/$Version"
+    If (
+        $ScriptName.EndsWith('.nu') -And 
+        (-Not (Get-Command -ErrorAction SilentlyContinue nu)))
+    {
+        powershell {
+            iex "& { $(iwr -useb $URL/scripts/install-nushell.ps1) } --user"
+        }
+    }
 
     Log "Installing script $Name..."
     Invoke-WebRequest -UseBasicParsing -OutFile "$DestDir/$Script" `
-        -Uri "$SrcPrefix/$Script"
+        -Uri "$URL/src/$Script"
 
     # Add destination folder to system path.
     $Path = [Environment]::GetEnvironmentVariable('Path', "$Target")
     If (-Not ($Path -Like "*$DestDir*")) {
-        $PrependedPath = "$DestDir" + ";$Path";
+        $PrependedPath = "$DestDir;$Path"
         [System.Environment]::SetEnvironmentVariable(
             'Path', "$PrependedPath", "$Target"
         )
+        Log "Added '$DestDir' to the system path"
         $Env:Path = $PrependedPath
     }
     Log "Installed $(& $Name --version)."
@@ -133,7 +155,6 @@ Function Main() {
         }
     }
 
-    $SrcPrefix = "https://raw.githubusercontent.com/scruffaluff/shell-scripts/$Version/src"
     $Scripts = FindScripts "$Version"
     If (-Not $DestDir) {
         $DestDir = 'C:\Program Files\ShellScripts'
@@ -151,7 +172,7 @@ Function Main() {
                 $ScriptName = [IO.Path]::GetFileNameWithoutExtension($Script)
                 If ($ScriptName -Eq $Name) {
                     $MatchFound = $True
-                    InstallScript $Target $SrcPrefix $DestDir $Script
+                    InstallScript $Target $Version $DestDir $Script
                 }
             }
 

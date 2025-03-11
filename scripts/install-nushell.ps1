@@ -78,10 +78,11 @@ Function InstallNushell($Target, $Version, $DestDir) {
     New-Item -Force -ItemType Directory -Path $DestDir | Out-Null
     $Path = [Environment]::GetEnvironmentVariable('Path', "$Target")
     If (-Not ($Path -Like "*$DestDir*")) {
-        $PrependedPath = "$DestDir" + ";$Path";
+        $PrependedPath = "$DestDir;$Path"
         [System.Environment]::SetEnvironmentVariable(
             'Path', "$PrependedPath", "$Target"
         )
+        Log "Added '$DestDir' to the system path"
         $Env:Path = $PrependedPath
     }
 
@@ -97,15 +98,27 @@ Function InstallNushell($Target, $Version, $DestDir) {
     Expand-Archive -DestinationPath "$TmpDir/$Stem" -Path "$TmpDir/$Stem.zip"
     Copy-Item -Destination $DestDir -Path "$TmpDir/$Stem/*.exe"
 
-    If (-Not (Test-Path -Path "$Registry\.nu")) {
+    # Register Nushell files as executables.
+    If (-Not (Get-ItemProperty -ErrorAction SilentlyContinue -Name '(Default)' -Path "$Registry\.nu")) {
         New-Item -Force -Path "$Registry\.nu" | Out-Null
-        Set-ItemProperty -Name '(Default)' -Path "$Registry\.nu" -Value 'nufile'
+        Set-ItemProperty -Name '(Default)' -Path "$Registry\.nu" -Type String `
+            -Value 'nufile'
 
         $Command = '"' + "$DestDir\nu.exe" + '" "%1" %*'
         New-Item -Force -Path "$Registry\nufile\shell\open\command" | Out-Null
         Set-ItemProperty -Name '(Default)' -Path "$Registry\nufile\shell\open\command" `
-            -Value $Command
+            -Type String -Value $Command
     }
+    # Add Nushell scripts to system path.
+    $PathExt = [Environment]::GetEnvironmentVariable('PATHEXT', "$Target")
+    If (-Not ($PathExt -Like "*.NU*")) {
+        $AppendedPath = "$PathExt;.NU".TrimStart(';') 
+        [System.Environment]::SetEnvironmentVariable(
+            'PATHEXT', "$AppendedPath", "$Target"
+        )
+        $Env:PATHEXT = $AppendedPath
+    }
+
     Log "Installed Nushell $(nu --version)."
 }
 
