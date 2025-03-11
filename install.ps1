@@ -60,18 +60,6 @@ Function FindScripts($Version) {
     Write-Output "$Response" | & $JqBin --exit-status --raw-output "$Filter"
 }
 
-# Install dependencies for script.
-Function InstallDeps($Name, $Target, $Version) {
-    If (
-        $ScriptName.EndsWith('.nu') -And
-        (-Not (Get-Command -ErrorAction SilentlyContinue nu))
-    ) {
-        powershell { iex
-            "& { $(iwr -useb https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/scripts/install-nushell.ps1) } --user --version $Version"
-        }
-    }
-}
-
 # Install script and update path.
 Function InstallScript($Target, $SrcPrefix, $DestDir, $Script) {
     $Name = [IO.Path]::GetFileNameWithoutExtension($Script)
@@ -82,8 +70,13 @@ Function InstallScript($Target, $SrcPrefix, $DestDir, $Script) {
         $ScriptName.EndsWith('.nu') -And
         (-Not (Get-Command -ErrorAction SilentlyContinue nu))
     ) {
-        powershell {
-            iex "& { $(iwr -useb $URL/scripts/install-nushell.ps1) } --user"
+        If ($Target -Eq 'Machine') {
+            iwr -useb "$URL/scripts/install-nushell.ps1" | iex
+        }
+        Else {
+            powershell {
+                iex "& { $(iwr -useb $URL/scripts/install-nushell.ps1) } --user"
+            }
         }
     }
 

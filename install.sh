@@ -286,9 +286,11 @@ find_super() {
 #   Log message to stdout.
 #######################################
 install_script() {
-  name="${script%.*}"
-  dst_file="${3}/${name}"
-  src_url="${2}/${4}"
+  name="${4%.*}"
+  dst_dir="${3}"
+  dst_file="${dst_dir}/${name}"
+  repo="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${2}"
+  src_url="${repo}/src/${4}"
 
   # Use super user elevation command for system installation if user did not
   # give the --user, does not own the file, and is not root.
@@ -296,12 +298,20 @@ install_script() {
   # Do not use long form --user flag for id. It is not supported on MacOS.
   #
   # Flags:
-  #   -w: Check if file exists and is writable.
+  #   -w: Check if folder exists and is writable.
   #   -z: Check if the string is empty.
-  if [ -z "${1}" ] && [ ! -w "${dst_file}" ]; then
+  if [ -z "${1}" ] && [ ! -w "${dst_dir}" ]; then
     super="$(find_super)"
   else
     super=''
+  fi
+
+  if [ "${4##*.}" = 'nu' ] && [ ! -x "$(command -v nu)" ]; then
+    if [ -z "${1}" ]; then
+      curl -LSfs "${repo}/scripts/install-nushell.sh" | sh
+    else
+      curl -LSfs "${repo}/scripts/install-nushell.sh" | sh -s -- --user
+    fi
   fi
 
   log "Installing script ${name} to '${dst_file}'."
@@ -313,8 +323,8 @@ install_script() {
   #   -e: Check if file exists.
   #   -v: Only show file path of command.
   if [ ! -e "$(command -v "${name}")" ]; then
-    configure_shell "${3}"
-    export PATH="${3}:${PATH}"
+    configure_shell "${dst_dir}"
+    export PATH="${dst_dir}:${PATH}"
   fi
 
   log "Installed $("${name}" --version)."
@@ -384,7 +394,6 @@ main() {
     esac
   done
 
-  src_prefix="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${version}/src"
   scripts="$(find_scripts "${version}")"
   if [ -z "${dst_dir}" ]; then
     dst_dir='/usr/local/bin'
@@ -403,7 +412,7 @@ main() {
       for script in ${scripts}; do
         if [ "${script%.*}" = "${name}" ]; then
           match_found='true'
-          install_script "${user_install:-}" "${src_prefix}" "${dst_dir}" \
+          install_script "${user_install:-}" "${version}" "${dst_dir}" \
             "${script}"
         fi
       done
