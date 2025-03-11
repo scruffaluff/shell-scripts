@@ -5,6 +5,7 @@
 
 @{
     ExcludeRules = @(
+        'PSAvoidUsingCmdletAliases',
         'PSAvoidUsingInvokeExpression',
         'PSAvoidUsingPositionalParameters'
     )

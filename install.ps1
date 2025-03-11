@@ -63,12 +63,13 @@ Function FindScripts($Version) {
 # Install dependencies for script.
 Function InstallDeps($Name, $Target, $Version) {
     If (
-                        $ScriptName.EndsWith('.nu') -And 
-                        (-Not (Get-Command -ErrorAction SilentlyContinue nu)))
-                    {
-                        powershell { iex 
-                            "& { $(iwr -useb https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/scripts/install-nushell.ps1) } --user --version $Version" }
-                    }
+        $ScriptName.EndsWith('.nu') -And
+        (-Not (Get-Command -ErrorAction SilentlyContinue nu))
+    ) {
+        powershell { iex
+            "& { $(iwr -useb https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/scripts/install-nushell.ps1) } --user --version $Version"
+        }
+    }
 }
 
 # Install script and update path.
@@ -78,15 +79,15 @@ Function InstallScript($Target, $SrcPrefix, $DestDir, $Script) {
 
     $URL = "https://raw.githubusercontent.com/scruffaluff/shell-scripts/$Version"
     If (
-        $ScriptName.EndsWith('.nu') -And 
-        (-Not (Get-Command -ErrorAction SilentlyContinue nu)))
-    {
+        $ScriptName.EndsWith('.nu') -And
+        (-Not (Get-Command -ErrorAction SilentlyContinue nu))
+    ) {
         powershell {
             iex "& { $(iwr -useb $URL/scripts/install-nushell.ps1) } --user"
         }
     }
 
-    Log "Installing script $Name..."
+    Log "Installing script $Name to '$DestDir/$Name'."
     Invoke-WebRequest -UseBasicParsing -OutFile "$DestDir/$Script" `
         -Uri "$URL/src/$Script"
 
@@ -97,7 +98,8 @@ Function InstallScript($Target, $SrcPrefix, $DestDir, $Script) {
         [System.Environment]::SetEnvironmentVariable(
             'Path', "$PrependedPath", "$Target"
         )
-        Log "Added '$DestDir' to the system path"
+        Log "Added '$DestDir' to the system path."
+        Log 'Restart the shell after installation.'
         $Env:Path = $PrependedPath
     }
     Log "Installed $(& $Name --version)."

@@ -74,19 +74,8 @@ Function InstallNushell($Target, $Version, $DestDir) {
         $Registry = 'HKCU:\Software\Classes'
     }
 
-    # Create destination directory add it to the system path.
+    Log "Installing Nushell to '$DestDir/nu.exe'."
     New-Item -Force -ItemType Directory -Path $DestDir | Out-Null
-    $Path = [Environment]::GetEnvironmentVariable('Path', "$Target")
-    If (-Not ($Path -Like "*$DestDir*")) {
-        $PrependedPath = "$DestDir;$Path"
-        [System.Environment]::SetEnvironmentVariable(
-            'Path', "$PrependedPath", "$Target"
-        )
-        Log "Added '$DestDir' to the system path"
-        $Env:Path = $PrependedPath
-    }
-
-    Log 'Installing Nushell...'
     $TmpDir = [System.IO.Path]::GetTempFileName()
     Remove-Item $TmpDir | Out-Null
     New-Item -ItemType Directory -Path $TmpDir | Out-Null
@@ -98,7 +87,16 @@ Function InstallNushell($Target, $Version, $DestDir) {
     Expand-Archive -DestinationPath "$TmpDir/$Stem" -Path "$TmpDir/$Stem.zip"
     Copy-Item -Destination $DestDir -Path "$TmpDir/$Stem/*.exe"
 
-    # Register Nushell files as executables.
+    $Path = [Environment]::GetEnvironmentVariable('Path', "$Target")
+    If (-Not ($Path -Like "*$DestDir*")) {
+        $PrependedPath = "$DestDir;$Path"
+        [System.Environment]::SetEnvironmentVariable(
+            'Path', "$PrependedPath", "$Target"
+        )
+        Log "Added '$DestDir' to the system path."
+        $Env:Path = $PrependedPath
+    }
+
     If (-Not (Get-ItemProperty -ErrorAction SilentlyContinue -Name '(Default)' -Path "$Registry\.nu")) {
         New-Item -Force -Path "$Registry\.nu" | Out-Null
         Set-ItemProperty -Name '(Default)' -Path "$Registry\.nu" -Type String `
@@ -108,15 +106,22 @@ Function InstallNushell($Target, $Version, $DestDir) {
         New-Item -Force -Path "$Registry\nufile\shell\open\command" | Out-Null
         Set-ItemProperty -Name '(Default)' -Path "$Registry\nufile\shell\open\command" `
             -Type String -Value $Command
+        Log "Registered Nushell to execute '.nu' files."
     }
-    # Add Nushell scripts to system path.
+
     $PathExt = [Environment]::GetEnvironmentVariable('PATHEXT', "$Target")
+    # User PATHEXT does not extend machine PATHEXT. Thus user PATHEXT must be
+    # changed to machine PATHEXT + ';.NU' if prevously empty.
+    If ((-Not $PathExt) -And ($Target -Eq 'User')) {
+        $PathExt = [Environment]::GetEnvironmentVariable('PATHEXT', 'Machine')
+    }
     If (-Not ($PathExt -Like "*.NU*")) {
-        $AppendedPath = "$PathExt;.NU".TrimStart(';') 
+        $AppendedPath = "$PathExt;.NU".TrimStart(';')
         [System.Environment]::SetEnvironmentVariable(
             'PATHEXT', "$AppendedPath", "$Target"
         )
         $Env:PATHEXT = $AppendedPath
+        Log "Registered '.nu' files as executables."
     }
 
     Log "Installed Nushell $(nu --version)."

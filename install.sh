@@ -62,6 +62,8 @@ configure_shell() {
 
   printf '\n# Added by Shell Scripts installer.\n%s\n' "${export_cmd}" \
     >> "${profile}"
+  log "Added '${export_cmd}' to the '${profile}' shell profile."
+  log 'Source the profile or restart the shell after installation.'
 }
 
 #######################################
@@ -294,7 +296,7 @@ install_script() {
     super=''
   fi
 
-  log "Installing script ${name}..."
+  log "Installing script ${name} to '${dst_file}'."
   download "${super}" "${src_url}" "${dst_file}" 755
 
   # Add Scripts to shell profile if not in system path.

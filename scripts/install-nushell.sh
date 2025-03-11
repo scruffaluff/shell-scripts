@@ -243,15 +243,17 @@ install_nushell() {
       ;;
     FreeBSD)
       super="$(find_super)"
+      log "Installing Nushell to '/usr/local/bin/nu'."
       ${super:+"${super}"} pkg update > /dev/null 2>&1
       ${super:+"${super}"} pkg install --yes nushell > /dev/null 2>&1
+      log "Installed Nushell $(nu --version)."
       exit 0
       ;;
     Linux)
       stem="nu-${version}-${arch}-unknown-linux-musl"
       ;;
     *)
-      error "Unsupported operating system '${os}'"
+      error "Unsupported operating system '${os}'."
       ;;
   esac
 
@@ -277,14 +279,14 @@ install_nushell() {
     mkdir -p "${dst_dir}"
   fi
 
-  log 'Installing Nushell...'
+  log "Installing Nushell to '${dst_dir}/nu'."
   tmp_dir="$(mktemp -d)"
   download '' \
     "https://github.com/nushell/nushell/releases/download/${version}/${stem}.tar.gz" \
     "${tmp_dir}/${stem}.tar.gz"
 
   tar fx "${tmp_dir}/${stem}.tar.gz" -C "${tmp_dir}"
-  ${super:+"${super}"} cp "${tmp_dir}/${stem}/nu" "${tmp_dir}/${stem}/"nu_* "${3}/"
+  ${super:+"${super}"} cp "${tmp_dir}/${stem}/nu" "${tmp_dir}/${stem}/"nu_* "${dst_dir}/"
 
   export PATH="${dst_dir}:${PATH}"
   log "Installed Nushell $(nu --version)."
