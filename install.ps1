@@ -137,7 +137,7 @@ Function Main() {
             }
             '--user' {
                 if (-Not $DestDir) {
-                    $DestDir = "$Env:AppData\ShellScripts"
+                    $DestDir = "$Env:LocalAppData\Programs\Bin"
                 }
                 $Target = 'User'
                 $ArgIdx += 1
@@ -152,7 +152,7 @@ Function Main() {
 
     $Scripts = FindScripts "$Version"
     If (-Not $DestDir) {
-        $DestDir = 'C:\Program Files\ShellScripts'
+        $DestDir = 'C:\Program Files\Bin'
     }
 
     If ($List) {

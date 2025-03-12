@@ -69,7 +69,7 @@ Function InstallNushell($Target, $Version, $DestDir) {
     }
     Else {
         If (-Not $DestDir) {
-            $DestDir = "$Env:AppData\Nushell"
+            $DestDir = "$Env:LocalAppData\Nushell"
         }
         $Registry = 'HKCU:\Software\Classes'
     }
