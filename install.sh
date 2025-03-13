@@ -48,12 +48,20 @@ configure_shell() {
     bash)
       profile="${HOME}/.bashrc"
       ;;
-    zsh)
-      profile="${HOME}/.zshrc"
-      ;;
     fish)
       export_cmd="set -x PATH \"${1}\" \$PATH"
       profile="${HOME}/.config/fish/config.fish"
+      ;;
+    nu)
+      export_cmd="\$env.PATH = [\"${1}\" ...\$env.PATH]"
+      if [ "$(uname -s)" = 'Darwin' ]; then
+        profile="${HOME}/Library/Application Support/nushell/config.nu"
+      else
+        profile="${HOME}/.config/nushell/config.nu"
+      fi
+      ;;
+    zsh)
+      profile="${HOME}/.zshrc"
       ;;
     *)
       profile="${HOME}/.profile"
@@ -62,6 +70,8 @@ configure_shell() {
 
   printf '\n# Added by Shell Scripts installer.\n%s\n' "${export_cmd}" \
     >> "${profile}"
+  log "Added '${export_cmd}' to the '${profile}' shell profile."
+  log 'Source the profile or restart the shell after installation.'
 }
 
 #######################################
@@ -215,7 +225,7 @@ EOF
 # Arguments:
 #   Version
 # Returns:
-#   Array of script name stems.
+#   Array of script names.
 #######################################
 find_scripts() {
   url="https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/${1}?recursive=true"
@@ -239,7 +249,7 @@ EOF
   fi
 
   jq_bin="$(find_jq)"
-  filter='.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".sh")) | ltrimstr("src/") | rtrimstr(".sh")'
+  filter='.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".nu") or endswith(".sh")) | ltrimstr("src/")'
   echo "${response}" | "${jq_bin}" --exit-status --raw-output "${filter}"
 }
 
@@ -276,8 +286,11 @@ find_super() {
 #   Log message to stdout.
 #######################################
 install_script() {
-  dst_file="${3}/${4}"
-  src_url="${2}/${4}.sh"
+  name="${4%.*}"
+  dst_dir="${3}"
+  dst_file="${dst_dir}/${name}"
+  repo="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${2}"
+  src_url="${repo}/src/${4}"
 
   # Use super user elevation command for system installation if user did not
   # give the --user, does not own the file, and is not root.
@@ -285,15 +298,23 @@ install_script() {
   # Do not use long form --user flag for id. It is not supported on MacOS.
   #
   # Flags:
-  #   -w: Check if file exists and is writable.
+  #   -w: Check if folder exists and is writable.
   #   -z: Check if the string is empty.
-  if [ -z "${1}" ] && [ ! -w "${dst_file}" ]; then
+  if [ -z "${1}" ] && [ ! -w "${dst_dir}" ]; then
     super="$(find_super)"
   else
     super=''
   fi
 
-  log "Installing script ${4}..."
+  if [ "${4##*.}" = 'nu' ] && [ ! -x "$(command -v nu)" ]; then
+    if [ -z "${1}" ]; then
+      curl -LSfs "${repo}/scripts/install-nushell.sh" | sh
+    else
+      curl -LSfs "${repo}/scripts/install-nushell.sh" | sh -s -- --user
+    fi
+  fi
+
+  log "Installing script ${name} to '${dst_file}'."
   download "${super}" "${src_url}" "${dst_file}" 755
 
   # Add Scripts to shell profile if not in system path.
@@ -301,12 +322,12 @@ install_script() {
   # Flags:
   #   -e: Check if file exists.
   #   -v: Only show file path of command.
-  if [ ! -e "$(command -v "${4}")" ]; then
-    configure_shell "${3}"
-    export PATH="${3}:${PATH}"
+  if [ ! -e "$(command -v "${name}")" ]; then
+    configure_shell "${dst_dir}"
+    export PATH="${dst_dir}:${PATH}"
   fi
 
-  log "Installed $("${4}" --version)."
+  log "Installed $("${name}" --version)."
 }
 
 #######################################
@@ -330,7 +351,7 @@ log() {
 # Script entrypoint.
 #######################################
 main() {
-  dst_dir='/usr/local/bin' names='' version='main'
+  dst_dir='' names='' version='main'
 
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
@@ -352,7 +373,9 @@ main() {
         shift 1
         ;;
       -u | --user)
-        dst_dir="${HOME}/.local/bin"
+        if [ -z "${dst_dir}" ]; then
+          dst_dir="${HOME}/.local/bin"
+        fi
         user_install='true'
         shift 1
         ;;
@@ -371,29 +394,33 @@ main() {
     esac
   done
 
-  src_prefix="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${version}/src"
   scripts="$(find_scripts "${version}")"
+  if [ -z "${dst_dir}" ]; then
+    dst_dir='/usr/local/bin'
+  fi
 
   # Flags:
   #   -n: Check if the string has nonzero length.
+  #   -z: Check if string has zero length.
   if [ -n "${list_scripts:-}" ]; then
-    echo "${scripts}"
+    for script in ${scripts}; do
+      echo "${script%.*}"
+    done
   else
     for name in ${names}; do
+      match_found=''
       for script in ${scripts}; do
-        if [ "${script}" = "${name}" ]; then
+        if [ "${script%.*}" = "${name}" ]; then
           match_found='true'
-          install_script "${user_install:-}" "${src_prefix}" "${dst_dir}" \
+          install_script "${user_install:-}" "${version}" "${dst_dir}" \
             "${script}"
         fi
       done
-    done
 
-    # Flags:
-    #   -z: Check if string has zero length.
-    if [ -z "${match_found:-}" ]; then
-      error_usage "No script found for '${names}'."
-    fi
+      if [ -z "${match_found:-}" ]; then
+        error_usage "No script found for '${names}'."
+      fi
+    done
   fi
 }
 
