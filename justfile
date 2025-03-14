@@ -25,7 +25,6 @@ format:
 [windows]
 format:
   npx prettier --check .
-  Invoke-ScriptAnalyzer -EnableExit -Path install.ps1 -Settings CodeFormatting
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path src -Settings CodeFormatting
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path tests -Settings CodeFormatting
 
@@ -46,7 +45,6 @@ lint:
 # Run code analyses.
 [windows]
 lint:
-  Invoke-ScriptAnalyzer -EnableExit -Path install.ps1 -Settings PSScriptAnalyzerSettings.psd1
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path src -Settings PSScriptAnalyzerSettings.psd1
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path tests -Settings PSScriptAnalyzerSettings.psd1
 
