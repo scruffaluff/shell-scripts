@@ -13,33 +13,41 @@ all: setup format lint docs test
 
 # Build documentation.
 docs:
+  cp -r src/install assets/
   npx vitepress build .
 
 # Check code formatting.
 [unix]
 format:
   npx prettier --check .
-  shfmt --diff install.sh src scripts
+  shfmt --diff --indent 2 install.sh src tests
 
 # Check code formatting.
 [windows]
 format:
   npx prettier --check .
   Invoke-ScriptAnalyzer -EnableExit -Path install.ps1 -Settings CodeFormatting
-  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path scripts -Settings CodeFormatting
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path src -Settings CodeFormatting
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path tests -Settings CodeFormatting
 
 # Run code analyses.
 [unix]
 lint:
-  scripts/shellcheck.sh
+  #!/usr/bin/env sh
+  set -eu
+  bats_files="$(find . -type f -name '*.bats' -not -path '*/node_modules/*')"
+  for file in ${bats_files}; do
+    shellcheck --shell bash "${file}"
+  done
+  sh_files="$(find . -type f -name '*.sh' -not -path '*/node_modules/*')"
+  for file in ${sh_files}; do
+    shellcheck "${file}"
+  done
 
 # Run code analyses.
 [windows]
 lint:
   Invoke-ScriptAnalyzer -EnableExit -Path install.ps1 -Settings PSScriptAnalyzerSettings.psd1
-  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path scripts -Settings PSScriptAnalyzerSettings.psd1
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path src -Settings PSScriptAnalyzerSettings.psd1
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path tests -Settings PSScriptAnalyzerSettings.psd1
 

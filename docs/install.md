@@ -6,26 +6,26 @@ prev:
 
 # Installation
 
-Shell Scripts provides POSIX shell and PowerShell install scripts to download
-any collection of scripts from the repository. The following command shows the
-list of downloadable scripts from the repository.
+Scripts provides POSIX shell and PowerShell install scripts to download any
+collection of scripts from the repository. The following command shows the list
+of downloadable scripts from the repository.
 
 ::: code-group
 
 ```sh [FreeBSD]
-curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- --list
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/scripts/main/install.sh | sh -s -- --list
 ```
 
 ```sh [Linux]
-curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- --list
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/scripts/main/install.sh | sh -s -- --list
 ```
 
 ```sh [MacOS]
-curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- --list
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/scripts/main/install.sh | sh -s -- --list
 ```
 
 ```powershell [Windows]
-powershell { iex "& { $(iwr -useb https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.ps1) } --list" }
+powershell { iex "& { $(iwr -useb https://raw.githubusercontent.com/scruffaluff/scripts/main/install.ps1) } --list" }
 ```
 
 :::
@@ -36,19 +36,19 @@ installed by replacing the `packup` argument.
 ::: code-group
 
 ```sh [FreeBSD]
-curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- packup
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/scripts/main/install.sh | sh -s -- packup
 ```
 
 ```sh [Linux]
-curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- packup
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/scripts/main/install.sh | sh -s -- packup
 ```
 
 ```sh [MacOS]
-curl -LSfs https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.sh | sh -s -- packup
+curl -LSfs https://raw.githubusercontent.com/scruffaluff/scripts/main/install.sh | sh -s -- packup
 ```
 
 ```powershell [Windows]
-powershell { iex "& { $(iwr -useb https://raw.githubusercontent.com/scruffaluff/shell-scripts/main/install.ps1) } packup" }
+powershell { iex "& { $(iwr -useb https://raw.githubusercontent.com/scruffaluff/scripts/main/install.ps1) } packup" }
 ```
 
 :::

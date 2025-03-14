@@ -34,13 +34,13 @@ setup() {
   local actual expected
   expected="curl --fail --location --show-error --silent --output \
 ${HOME}/.local/bin/otherscript \
-https://raw.githubusercontent.com/scruffaluff/shell-scripts/develop/src/otherscript.sh"
+https://raw.githubusercontent.com/scruffaluff/scripts/develop/src/otherscript.sh"
 
   actual="$(bash install.sh --user --version develop otherscript)"
   assert_equal "${actual}" "${expected}"
 }
 
-@test 'JSON parser finds all POSIX shell shell scripts' {
+@test 'JSON parser finds all POSIX scripts' {
   local actual expected
   expected=$'mockscript\notherscript'
 

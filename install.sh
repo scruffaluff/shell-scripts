@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# Install shell scripts for FreeBSD, MacOS, or Linux systems.
+# Install scripts for FreeBSD, MacOS, or Linux systems.
 
 # Exit immediately if a command exits with non-zero return code.
 #
@@ -17,7 +17,7 @@ set -eu
 #######################################
 usage() {
   cat 1>&2 << EOF
-Installer script for Shell Scripts.
+Installer script for Scripts.
 
 Usage: install [OPTIONS] [SCRIPTS]...
 
@@ -68,7 +68,7 @@ configure_shell() {
       ;;
   esac
 
-  printf '\n# Added by Shell Scripts installer.\n%s\n' "${export_cmd}" \
+  printf '\n# Added by Scripts installer.\n%s\n' "${export_cmd}" \
     >> "${profile}"
   log "Added '${export_cmd}' to the '${profile}' shell profile."
   log 'Source the profile or restart the shell after installation.'
@@ -228,7 +228,7 @@ EOF
 #   Array of script names.
 #######################################
 find_scripts() {
-  url="https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/${1}?recursive=true"
+  url="https://api.github.com/repos/scruffaluff/scripts/git/trees/${1}?recursive=true"
 
   # Flags:
   #   -O path: Save download to path.
@@ -289,7 +289,7 @@ install_script() {
   name="${4%.*}"
   dst_dir="${3}"
   dst_file="${dst_dir}/${name}"
-  repo="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${2}"
+  repo="https://raw.githubusercontent.com/scruffaluff/scripts/${2}"
   src_url="${repo}/src/${4}"
 
   # Use super user elevation command for system installation if user did not

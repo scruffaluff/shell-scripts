@@ -8,9 +8,8 @@
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
-  base: "/shell-scripts/",
-  description:
-    "Personal collection of POSIX shell and PowerShell utility scripts.",
+  base: "/scripts/",
+  description: "Personal collection of utility apps, installers, and scripts.",
   lastUpdated: true,
   outDir: "site",
   srcDir: "docs",
@@ -24,12 +23,11 @@ export default defineConfig({
       { text: "Home", link: "/" },
       { text: "Install", link: "/install" },
     ],
-    search: {
-      provider: "local",
-    },
+    search: { provider: "local" },
     socialLinks: [
-      { icon: "github", link: "https://github.com/scruffaluff/shell-scripts" },
+      { icon: "github", link: "https://github.com/scruffaluff/scripts" },
     ],
   },
-  title: "Shell Scripts",
+  title: "SScripts",
+  vite: { publicDir: "../assets" },
 });

@@ -29,10 +29,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body: >-
-            See the
-            [changelog](https://github.com/scruffaluff/shell-scripts/blob/${{
+            See the [changelog](https://github.com/scruffaluff/scripts/blob/${{
             github.ref_name }}/CHANGELOG.md) for more information.
-          name: Shell Scripts ${{ github.ref_name }}
+          name: Scripts ${{ github.ref_name }}
           tag_name: ${{ github.ref }}
       - name: Setup Tmate session if debug enabled
         if: >-

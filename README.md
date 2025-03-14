@@ -1,18 +1,18 @@
-# Shell Scripts
+# Scripts
 
-![](https://img.shields.io/github/repo-size/scruffaluff/shell-scripts)
-![](https://img.shields.io/github/license/scruffaluff/shell-scripts)
-
----
-
-**Documentation**: https://scruffaluff.github.io/shell-scripts
-
-**Source Code**: https://github.com/scruffaluff/shell-scripts
+![](https://img.shields.io/github/repo-size/scruffaluff/scripts)
+![](https://img.shields.io/github/license/scruffaluff/scripts)
 
 ---
 
-Shell Scripts is a collection of POSIX shell and PowerShell utility scripts.
-These scripts are designed for my personal usage, but should work on any system.
+**Documentation**: https://scruffaluff.github.io/scripts
+
+**Source Code**: https://github.com/scruffaluff/scripts
+
+---
+
+Scripts is a collection of POSIX shell and PowerShell utility scripts. These
+scripts are designed for my personal usage, but should work on any system.
 
 ## Installers
 
@@ -22,8 +22,8 @@ These scripts are designed for my personal usage, but should work on any system.
 
 ## Scripts
 
-The following table shows the available shell scripts. Each script is available
-in both POSIX shell and PowerShell versions if its functionality applies to both
+The following table shows the available scripts. Each script is available in
+both POSIX shell and PowerShell versions if its functionality applies to both
 Unix and Windows systems.
 
 | Name        | Description                                                         |
@@ -42,16 +42,16 @@ Unix and Windows systems.
 ## Install
 
 For instructions on installing the utility scripts for your operating system,
-see the [Install](https://scruffaluff.github.io/shell-scripts/install) section
-of the documentation.
+see the [Install](https://scruffaluff.github.io/scripts/install) section of the
+documentation.
 
 ## Contributing
 
 For guidance on setting up a development environment and how to make a
 contribution, see the
-[Contributing Guide](https://github.com/scruffaluff/shell-scripts/blob/main/CONTRIBUTING.md).
+[Contributing Guide](https://github.com/scruffaluff/scripts/blob/main/CONTRIBUTING.md).
 
 ## License
 
-Shell Scripts is distributed under a
-[MIT license](https://github.com/scruffaluff/shell-scripts/blob/main/LICENSE.md).
+Scripts is distributed under a
+[MIT license](https://github.com/scruffaluff/scripts/blob/main/LICENSE.md).
