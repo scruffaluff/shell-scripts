@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 #
-# Install shell scripts for FreeBSD, MacOS, or Linux systems.
+# Install Nushell for FreeBSD, MacOS, or Linux systems.
 
 # Exit immediately if a command exits with non-zero return code.
 #
@@ -17,61 +17,17 @@ set -eu
 #######################################
 usage() {
   cat 1>&2 << EOF
-Installer script for Shell Scripts.
+Installer script for Nushell.
 
-Usage: install [OPTIONS] [SCRIPTS]...
+Usage: install-nushell [OPTIONS]
 
 Options:
       --debug               Show shell debug traces
-  -d, --dest <PATH>         Directory to install scripts
+  -d, --dest <PATH>         Directory to install Nushell
   -h, --help                Print help information
-  -l, --list                List all available scripts
-  -u, --user                Install scripts for current user
-  -v, --version <VERSION>   Version of scripts to install
+  -u, --user                Install Nushell for current user
+  -v, --version <VERSION>   Version of Nushell to install
 EOF
-}
-
-#######################################
-# Add Scripts to system path in user's shell profile.
-# Globals:
-#   HOME
-#   PATH
-#   SHELL
-# Arguments:
-#   Parent directory of Scripts script.
-#######################################
-configure_shell() {
-  export_cmd="export PATH=\"${1}:\$PATH\""
-  shell_name="$(basename "${SHELL}")"
-
-  case "${shell_name}" in
-    bash)
-      profile="${HOME}/.bashrc"
-      ;;
-    fish)
-      export_cmd="set -x PATH \"${1}\" \$PATH"
-      profile="${HOME}/.config/fish/config.fish"
-      ;;
-    nu)
-      export_cmd="\$env.PATH = [\"${1}\" ...\$env.PATH]"
-      if [ "$(uname -s)" = 'Darwin' ]; then
-        profile="${HOME}/Library/Application Support/nushell/config.nu"
-      else
-        profile="${HOME}/.config/nushell/config.nu"
-      fi
-      ;;
-    zsh)
-      profile="${HOME}/.zshrc"
-      ;;
-    *)
-      profile="${HOME}/.profile"
-      ;;
-  esac
-
-  printf '\n# Added by Shell Scripts installer.\n%s\n' "${export_cmd}" \
-    >> "${profile}"
-  log "Added '${export_cmd}' to the '${profile}' shell profile."
-  log 'Source the profile or restart the shell after installation.'
 }
 
 #######################################
@@ -134,8 +90,8 @@ download_jq() {
   #
   # Flags:
   #   -m: Show system architecture name.
-  arch="$(uname -m | sed s/x86_64/amd64/ | sed s/x64/amd64/ |
-    sed s/aarch64/arm64/)"
+  arch="$(uname -m | sed s/x86_64/amd64/ | sed s/x64/amd64/ \
+    | sed s/aarch64/arm64/)"
   tmp_path="$(mktemp)"
   download '' \
     "https://github.com/jqlang/jq/releases/latest/download/jq-${1}-${arch}" \
@@ -174,7 +130,7 @@ error_usage() {
   else
     printf "error: %s\n" "${1}" >&2
   fi
-  printf "Run 'install --help' for usage.\n" >&2
+  printf "Run 'install-nushell --help' for usage.\n" >&2
   exit 2
 }
 
@@ -221,14 +177,27 @@ EOF
 }
 
 #######################################
-# Find all scripts inside GitHub repository.
-# Arguments:
-#   Version
-# Returns:
-#   Array of script names.
+# Find command to elevate as super user.
 #######################################
-find_scripts() {
-  url="https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/${1}?recursive=true"
+find_super() {
+  # Do not use long form --user flag for id. It is not supported on MacOS.
+  #
+  # Flags:
+  #   -v: Only show file path of command.
+  #   -x: Check if file exists and execute permission is granted.
+  if [ "$(id -u)" -eq 0 ]; then
+    echo ''
+  elif [ -x "$(command -v sudo)" ]; then
+    echo 'sudo'
+  elif [ -x "$(command -v doas)" ]; then
+    echo 'doas'
+  else
+    error 'Unable to find a command for super user elevation'
+  fi
+}
+
+find_version() {
+  url='https://api.github.com/repos/nushell/nushell/releases/latest'
 
   # Flags:
   #   -O path: Save download to path.
@@ -249,48 +218,44 @@ EOF
   fi
 
   jq_bin="$(find_jq)"
-  filter='.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".nu") or endswith(".sh")) | ltrimstr("src/")'
-  echo "${response}" | "${jq_bin}" --exit-status --raw-output "${filter}"
+  printf "%s" "${response}" | "${jq_bin}" --exit-status --raw-output '.tag_name'
 }
 
 #######################################
-# Find command to elevate as super user.
-#######################################
-find_super() {
-  # Do not use long form --user flag for id. It is not supported on MacOS.
-  #
-  # Flags:
-  #   -v: Only show file path of command.
-  #   -x: Check if file exists and execute permission is granted.
-  if [ "$(id -u)" -eq 0 ]; then
-    echo ''
-  elif [ -x "$(command -v sudo)" ]; then
-    echo 'sudo'
-  elif [ -x "$(command -v doas)" ]; then
-    echo 'doas'
-  else
-    error 'Unable to find a command for super user elevation'
-  fi
-}
-
-#######################################
-# Install script and update path.
+# Download and install Nushell.
 # Arguments:
 #   Super user command for installation
-#   Script URL prefix
-#   Destination path prefix
-#   Script name
+#   Nushell version
+#   Destination path
 # Globals:
 #   SHELL_SCRIPTS_NOLOG
 # Outputs:
 #   Log message to stdout.
 #######################################
-install_script() {
-  name="${4%.*}"
-  dst_dir="${3}"
-  dst_file="${dst_dir}/${name}"
-  repo="https://raw.githubusercontent.com/scruffaluff/shell-scripts/${2}"
-  src_url="${repo}/src/${4}"
+install_nushell() {
+  version="${2}" dst_dir="${3}"
+
+  arch="$(uname -m | sed s/amd64/x86_64/ | sed s/arm64/aarch64/)"
+  os="$(uname -s)"
+  case "${os}" in
+    Darwin)
+      stem="nu-${version}-${arch}-apple-darwin"
+      ;;
+    FreeBSD)
+      super="$(find_super)"
+      log "Installing Nushell to '/usr/local/bin/nu'."
+      ${super:+"${super}"} pkg update > /dev/null 2>&1
+      ${super:+"${super}"} pkg install --yes nushell > /dev/null 2>&1
+      log "Installed Nushell $(nu --version)."
+      exit 0
+      ;;
+    Linux)
+      stem="nu-${version}-${arch}-unknown-linux-musl"
+      ;;
+    *)
+      error "Unsupported operating system '${os}'."
+      ;;
+  esac
 
   # Use super user elevation command for system installation if user did not
   # give the --user, does not own the file, and is not root.
@@ -298,7 +263,7 @@ install_script() {
   # Do not use long form --user flag for id. It is not supported on MacOS.
   #
   # Flags:
-  #   -w: Check if folder exists and is writable.
+  #   -w: Check if file exists and is writable.
   #   -z: Check if the string is empty.
   if [ -z "${1}" ] && [ ! -w "${dst_dir}" ]; then
     super="$(find_super)"
@@ -306,28 +271,25 @@ install_script() {
     super=''
   fi
 
-  if [ "${4##*.}" = 'nu' ] && [ ! -x "$(command -v nu)" ]; then
-    if [ -z "${1}" ]; then
-      curl -LSfs "${repo}/scripts/install-nushell.sh" | sh
-    else
-      curl -LSfs "${repo}/scripts/install-nushell.sh" | sh -s -- --user
-    fi
-  fi
-
-  log "Installing script ${name} to '${dst_file}'."
-  download "${super}" "${src_url}" "${dst_file}" 755
-
-  # Add Scripts to shell profile if not in system path.
+  # Make destination directory if it does not exist.
   #
   # Flags:
-  #   -e: Check if file exists.
-  #   -v: Only show file path of command.
-  if [ ! -e "$(command -v "${name}")" ]; then
-    configure_shell "${dst_dir}"
-    export PATH="${dst_dir}:${PATH}"
+  #   -d: Check if path exists and is a directory.
+  if [ ! -d "${dst_dir}" ]; then
+    mkdir -p "${dst_dir}"
   fi
 
-  log "Installed $("${name}" --version)."
+  log "Installing Nushell to '${dst_dir}/nu'."
+  tmp_dir="$(mktemp -d)"
+  download '' \
+    "https://github.com/nushell/nushell/releases/download/${version}/${stem}.tar.gz" \
+    "${tmp_dir}/${stem}.tar.gz"
+
+  tar fx "${tmp_dir}/${stem}.tar.gz" -C "${tmp_dir}"
+  ${super:+"${super}"} cp "${tmp_dir}/${stem}/nu" "${tmp_dir}/${stem}/"nu_* "${dst_dir}/"
+
+  export PATH="${dst_dir}:${PATH}"
+  log "Installed Nushell $(nu --version)."
 }
 
 #######################################
@@ -351,7 +313,7 @@ log() {
 # Script entrypoint.
 #######################################
 main() {
-  dst_dir='' names='' version='main'
+  dst_dir='/usr/local/bin' os='' version=''
 
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do
@@ -368,14 +330,8 @@ main() {
         usage
         exit 0
         ;;
-      -l | --list)
-        list_scripts='true'
-        shift 1
-        ;;
       -u | --user)
-        if [ -z "${dst_dir}" ]; then
-          dst_dir="${HOME}/.local/bin"
-        fi
+        dst_dir="${HOME}/.local/bin"
         user_install='true'
         shift 1
         ;;
@@ -384,44 +340,16 @@ main() {
         shift 2
         ;;
       *)
-        if [ -n "${names}" ]; then
-          names="${names} ${1}"
-        else
-          names="${1}"
-        fi
-        shift 1
+        error_usage "No such option '${1}'."
         ;;
+
     esac
   done
 
-  scripts="$(find_scripts "${version}")"
-  if [ -z "${dst_dir}" ]; then
-    dst_dir='/usr/local/bin'
+  if [ -z "${version}" ]; then
+    version="$(find_version)"
   fi
-
-  # Flags:
-  #   -n: Check if the string has nonzero length.
-  #   -z: Check if string has zero length.
-  if [ -n "${list_scripts:-}" ]; then
-    for script in ${scripts}; do
-      echo "${script%.*}"
-    done
-  else
-    for name in ${names}; do
-      match_found=''
-      for script in ${scripts}; do
-        if [ "${script%.*}" = "${name}" ]; then
-          match_found='true'
-          install_script "${user_install:-}" "${version}" "${dst_dir}" \
-            "${script}"
-        fi
-      done
-
-      if [ -z "${match_found:-}" ]; then
-        error_usage "No script found for '${names}'."
-      fi
-    done
-  fi
+  install_nushell "${user_install:-}" "${version}" "${dst_dir}"
 }
 
 # Add ability to selectively skip main function during test suite.

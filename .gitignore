@@ -10,5 +10,6 @@
 *.xml
 /site/
 /tmp/
+assets/install/
 build/
 node_modules/

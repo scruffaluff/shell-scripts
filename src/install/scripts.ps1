@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Installs shell scripts for Windows systems.
+    Installs scripts for Windows systems.
 #>
 
 # If unable to execute due to policy rules, run
@@ -16,7 +16,7 @@ $PSNativeCommandUseErrorActionPreference = $True
 # Show CLI help information.
 Function Usage() {
     Write-Output @'
-Installer script for Shell Scripts.
+Installer script for Scripts.
 
 Usage: install [OPTIONS] [SCRIPTS]...
 
@@ -52,8 +52,8 @@ Function FindJq() {
 
 # Find all scripts inside GitHub repository.
 Function FindScripts($Version) {
-    $Filter = '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".nu\") or endswith(\".ps1\")) | ltrimstr(\"src/\")'
-    $Uri = "https://api.github.com/repos/scruffaluff/shell-scripts/git/trees/$Version`?recursive=true"
+    $Filter = '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/script/\")) | select(endswith(\".nu\") or endswith(\".ps1\")) | ltrimstr(\"src/script/\")'
+    $Uri = "https://api.github.com/repos/scruffaluff/scripts/git/trees/$Version`?recursive=true"
     $Response = Invoke-WebRequest -UseBasicParsing -Uri "$Uri"
 
     $JqBin = FindJq
@@ -65,24 +65,24 @@ Function InstallScript($Target, $SrcPrefix, $DestDir, $Script) {
     $Name = [IO.Path]::GetFileNameWithoutExtension($Script)
     New-Item -Force -ItemType Directory -Path $DestDir | Out-Null
 
-    $URL = "https://raw.githubusercontent.com/scruffaluff/shell-scripts/$Version"
+    $URL = "https://raw.githubusercontent.com/scruffaluff/scripts/$Version"
     If (
         $ScriptName.EndsWith('.nu') -And
         (-Not (Get-Command -ErrorAction SilentlyContinue nu))
     ) {
         If ($Target -Eq 'Machine') {
-            iwr -useb "$URL/scripts/install-nushell.ps1" | iex
+            iwr -useb "$URL/src/install/nushell.ps1" | iex
         }
         Else {
             powershell {
-                iex "& { $(iwr -useb $URL/scripts/install-nushell.ps1) } --user"
+                iex "& { $(iwr -useb $URL/src/install/nushell.ps1) } --user"
             }
         }
     }
 
     Log "Installing script $Name to '$DestDir/$Name'."
     Invoke-WebRequest -UseBasicParsing -OutFile "$DestDir/$Script" `
-        -Uri "$URL/src/$Script"
+        -Uri "$URL/src/script/$Script"
 
     # Add destination folder to system path.
     $Path = [Environment]::GetEnvironmentVariable('Path', "$Target")

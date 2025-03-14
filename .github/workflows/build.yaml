@@ -57,15 +57,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      # GitHub default shell for Windows is PowerShell Core and installing
-      # modules in a PowerShell session that is a subprocess of a PowerShell
-      # Core session causes failures related to not being able to find NuGet.
-      - if: ${{ runner.os == 'Windows' }}
-        name: Install development dependencies
-        run: just setup
-        shell: powershell
-      - if: ${{ runner.os != 'Windows' }}
-        name: Install development dependencies
+      - name: Install development dependencies
         run: just setup
       - name: Check code formatting
         run: just format
