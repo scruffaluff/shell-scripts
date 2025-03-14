@@ -134,8 +134,8 @@ download_jq() {
   #
   # Flags:
   #   -m: Show system architecture name.
-  arch="$(uname -m | sed s/x86_64/amd64/ | sed s/x64/amd64/ |
-    sed s/aarch64/arm64/)"
+  arch="$(uname -m | sed s/x86_64/amd64/ | sed s/x64/amd64/ \
+    | sed s/aarch64/arm64/)"
   tmp_path="$(mktemp)"
   download '' \
     "https://github.com/jqlang/jq/releases/latest/download/jq-${1}-${arch}" \

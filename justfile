@@ -20,7 +20,6 @@ docs:
 [unix]
 format:
   npx prettier --check .
-  shfmt --diff --indent 2 install.sh src tests
 
 # Check code formatting.
 [windows]
@@ -101,22 +100,6 @@ _setup-shell:
     fi
   fi
   jq --version
-  if [ ! -x "$(command -v shfmt)" ]; then
-    if [ -x "$(command -v brew)" ]; then
-      brew install shfmt
-    elif [ -x "$(command -v pkg)" ]; then
-      ${super:+"${super}"} pkg update
-      ${super:+"${super}"} pkg install --yes shfmt
-    else
-      shfmt_version="$(curl  --fail --location --show-error \
-        https://formulae.brew.sh/api/formula/shfmt.json |
-        jq --exit-status --raw-output .versions.stable)"
-      curl --fail --location --show-error --output /tmp/shfmt \
-        "https://github.com/mvdan/sh/releases/download/v${shfmt_version}/shfmt_v${shfmt_version}_${os}_${arch}"
-      ${super:+"${super}"} install /tmp/shfmt /usr/local/bin/shfmt
-    fi
-  fi
-  shfmt --version
 
 [windows]
 _setup-shell:
