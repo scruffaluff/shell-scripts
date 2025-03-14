@@ -28,6 +28,6 @@ export default defineConfig({
       { icon: "github", link: "https://github.com/scruffaluff/scripts" },
     ],
   },
-  title: "SScripts",
+  title: "Scripts",
   vite: { publicDir: "../assets" },
 });

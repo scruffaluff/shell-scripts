@@ -8,7 +8,7 @@
       "size": 540
     },
     {
-      "path": "src/mockscript.sh",
+      "path": "src/script/mockscript.sh",
       "mode": "100644",
       "type": "blob",
       "size": 659
@@ -19,19 +19,19 @@
       "type": "tree"
     },
     {
-      "path": "src/otherscript.sh",
+      "path": "src/script/otherscript.sh",
       "mode": "100644",
       "type": "blob",
       "size": 621
     },
     {
-      "path": "src/data.json",
+      "path": "src/script/data.json",
       "mode": "100644",
       "type": "blob",
       "size": 720
     },
     {
-      "path": "src/directory",
+      "path": "src/script/directory",
       "mode": "040000",
       "type": "tree"
     }

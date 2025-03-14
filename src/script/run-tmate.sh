@@ -12,7 +12,6 @@ set -eu
 
 #######################################
 # Show CLI help information.
-# Cannot use function name help, since help is a pre-existing command.
 # Outputs:
 #   Writes help information to stdout.
 #######################################
@@ -22,7 +21,7 @@ Installs Tmate and creates a remote session.
 
 Users can close the session by creating the file /close-tmate.
 
-Usage: setup-tmate [OPTIONS]
+Usage: run-tmate [OPTIONS]
 
 Options:
       --debug     Show shell debug traces
@@ -62,7 +61,7 @@ error_usage() {
   else
     printf "error: %s\n" "${1}" >&2
   fi
-  printf "Run 'setup-tmate --help' for usage.\n" >&2
+  printf "Run 'run-tmate --help' for usage.\n" >&2
   exit 2
 }
 

@@ -34,7 +34,7 @@ setup() {
   local actual expected
   expected="curl --fail --location --show-error --silent --output \
 ${HOME}/.local/bin/otherscript \
-https://raw.githubusercontent.com/scruffaluff/scripts/develop/src/otherscript.sh"
+https://raw.githubusercontent.com/scruffaluff/scripts/develop/src/script/otherscript.sh"
 
   actual="$(bash src/install/scripts.sh --user --version develop otherscript)"
   assert_equal "${actual}" "${expected}"

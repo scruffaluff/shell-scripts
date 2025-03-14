@@ -17,28 +17,27 @@ settings, and install each program for immediate use.
 
 | Name    | Description                                         |
 | ------- | --------------------------------------------------- |
-| deno    | Installs Deno.                                      |
-| just    | Installs Just.                                      |
 | nushell | Installs Nushell.                                   |
 | scripts | Installs programs from the following scripts table. |
 
 ## Scripts
 
 The following table shows the available scripts. These are single file programs
-that peform convenience tasks.
+that peform convenience tasks. They can be installed with the repostiory's
+`scripts` installer.
 
-| Name        | Description                                                         |
-| ----------- | ------------------------------------------------------------------- |
-| caffeinate  | Prevent system from sleeping during a program.                      |
-| clear-cache | Frees up disk space by clearing caches of several package managers. |
-| mlab        | Wrapper script for running Matlab programs from the command line.   |
-| packup      | Invokes upgrade commands to several installed package managers.     |
-| purge-snap  | Removes all traces of the Snap package manager.                     |
-| rgi         | Interactive Ripgrep searcher.                                       |
-| setup-tmate | Installs Tmate and creates a session suitable for CI pipelines.     |
-| trsync      | Rsync for one time remote connections.                              |
-| tscp        | SCP for one time remote connections.                                |
-| tssh        | SSH for one time remote connections.                                |
+| Name        | Description                                     |
+| ----------- | ----------------------------------------------- |
+| caffeinate  | Prevent system from sleeping during a program.  |
+| clear-cache | Remove package manager caches.                  |
+| mlab        | Wrapper script for running Matlab as a CLI.     |
+| packup      | Upgrade programs from several package managers. |
+| purge-snap  | Remove all traces of the Snap package manager.  |
+| rgi         | Interactive Ripgrep searcher.                   |
+| run-tmate   | Install and run Tmate for CI pipelines.         |
+| trsync      | Rsync for one time remote connections.          |
+| tscp        | SCP for one time remote connections.            |
+| tssh        | SSH for one time remote connections.            |
 
 ## Contributing
 
