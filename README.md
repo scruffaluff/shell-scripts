@@ -1,30 +1,31 @@
 # Scripts
 
-![](https://img.shields.io/github/repo-size/scruffaluff/scripts)
+![](https://img.shields.io/github/actions/workflow/status/scruffaluff/scripts/build.yaml)
 ![](https://img.shields.io/github/license/scruffaluff/scripts)
+![](https://img.shields.io/github/repo-size/scruffaluff/scripts)
 
----
-
-**Documentation**: https://scruffaluff.github.io/scripts
-
-**Source Code**: https://github.com/scruffaluff/scripts
-
----
-
-Scripts is a collection of POSIX shell and PowerShell utility scripts. These
-scripts are designed for my personal usage, but should work on any system.
+Scripts is my personal collection of utility applications, installers, and
+scripts. For instructions on using these programs, see the
+[Install](https://scruffaluff.github.io/scripts/install) section of the
+documentation.
 
 ## Installers
 
-| Name    | Description       |
-| ------- | ----------------- |
-| nushell | Installs Nushell. |
+The following table shows the available installer programs. These are POSIX
+shell and PowerShell scripts that download dependencies, configure system
+settings, and install each program for immediate use.
+
+| Name    | Description                                         |
+| ------- | --------------------------------------------------- |
+| deno    | Installs Deno.                                      |
+| just    | Installs Just.                                      |
+| nushell | Installs Nushell.                                   |
+| scripts | Installs programs from the following scripts table. |
 
 ## Scripts
 
-The following table shows the available scripts. Each script is available in
-both POSIX shell and PowerShell versions if its functionality applies to both
-Unix and Windows systems.
+The following table shows the available scripts. These are single file programs
+that peform convenience tasks.
 
 | Name        | Description                                                         |
 | ----------- | ------------------------------------------------------------------- |
@@ -38,12 +39,6 @@ Unix and Windows systems.
 | trsync      | Rsync for one time remote connections.                              |
 | tscp        | SCP for one time remote connections.                                |
 | tssh        | SSH for one time remote connections.                                |
-
-## Install
-
-For instructions on installing the utility scripts for your operating system,
-see the [Install](https://scruffaluff.github.io/scripts/install) section of the
-documentation.
 
 ## Contributing
 
