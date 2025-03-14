@@ -52,7 +52,7 @@ Function FindJq() {
 
 # Find all scripts inside GitHub repository.
 Function FindScripts($Version) {
-    $Filter = '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/\")) | select(endswith(\".nu\") or endswith(\".ps1\")) | ltrimstr(\"src/\")'
+    $Filter = '.tree[] | select(.type == \"blob\") | .path | select(startswith(\"src/script/\")) | select(endswith(\".nu\") or endswith(\".ps1\")) | ltrimstr(\"src/script/\")'
     $Uri = "https://api.github.com/repos/scruffaluff/scripts/git/trees/$Version`?recursive=true"
     $Response = Invoke-WebRequest -UseBasicParsing -Uri "$Uri"
 
@@ -82,7 +82,7 @@ Function InstallScript($Target, $SrcPrefix, $DestDir, $Script) {
 
     Log "Installing script $Name to '$DestDir/$Name'."
     Invoke-WebRequest -UseBasicParsing -OutFile "$DestDir/$Script" `
-        -Uri "$URL/src/$Script"
+        -Uri "$URL/src/script/$Script"
 
     # Add destination folder to system path.
     $Path = [Environment]::GetEnvironmentVariable('Path', "$Target")

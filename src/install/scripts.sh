@@ -249,7 +249,7 @@ EOF
   fi
 
   jq_bin="$(find_jq)"
-  filter='.tree[] | select(.type == "blob") | .path | select(startswith("src/")) | select(endswith(".nu") or endswith(".sh")) | ltrimstr("src/")'
+  filter='.tree[] | select(.type == "blob") | .path | select(startswith("src/script/")) | select(endswith(".nu") or endswith(".sh")) | ltrimstr("src/script/")'
   echo "${response}" | "${jq_bin}" --exit-status --raw-output "${filter}"
 }
 
@@ -290,7 +290,7 @@ install_script() {
   dst_dir="${3}"
   dst_file="${dst_dir}/${name}"
   repo="https://raw.githubusercontent.com/scruffaluff/scripts/${2}"
-  src_url="${repo}/src/${4}"
+  src_url="${repo}/src/script/${4}"
 
   # Use super user elevation command for system installation if user did not
   # give the --user, does not own the file, and is not root.
