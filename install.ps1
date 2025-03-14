@@ -71,11 +71,11 @@ Function InstallScript($Target, $SrcPrefix, $DestDir, $Script) {
         (-Not (Get-Command -ErrorAction SilentlyContinue nu))
     ) {
         If ($Target -Eq 'Machine') {
-            iwr -useb "$URL/scripts/install-nushell.ps1" | iex
+            iwr -useb "$URL/src/install/nushell.ps1" | iex
         }
         Else {
             powershell {
-                iex "& { $(iwr -useb $URL/scripts/install-nushell.ps1) } --user"
+                iex "& { $(iwr -useb $URL/src/install/nushell.ps1) } --user"
             }
         }
     }

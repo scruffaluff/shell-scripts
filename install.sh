@@ -308,9 +308,9 @@ install_script() {
 
   if [ "${4##*.}" = 'nu' ] && [ ! -x "$(command -v nu)" ]; then
     if [ -z "${1}" ]; then
-      curl -LSfs "${repo}/scripts/install-nushell.sh" | sh
+      curl -LSfs "${repo}/src/install/nushell.sh" | sh
     else
-      curl -LSfs "${repo}/scripts/install-nushell.sh" | sh -s -- --user
+      curl -LSfs "${repo}/src/install/nushell.sh" | sh -s -- --user
     fi
   fi
 

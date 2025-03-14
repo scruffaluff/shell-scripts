@@ -63,7 +63,7 @@ _setup-shell:
   arch="$(uname -m | sed s/x86_64/amd64/ | sed s/x64/amd64/ | sed s/aarch64/arm64/)"
   os="$(uname -s | tr '[:upper:]' '[:lower:]')"
   if [ ! -x "$(command -v nu)" ]; then
-    ./scripts/install-nushell.sh --user
+    ./src/install/nushell.sh --user
   fi
   echo "Nushell $(nu --version)"
   if [ ! -x "$(command -v jq)" ]; then
@@ -124,7 +124,7 @@ _setup-shell:
   Import-Module -MaximumVersion 1.9.9 -MinimumVersion 1.0.0 PowerShellGet
   Get-PackageProvider -Force Nuget | Out-Null
   If (-Not (Get-Command -ErrorAction SilentlyContinue nu)) {
-    & scripts/install-nushell.ps1 --user
+    & src/install/nushell.ps1 --user
   }
   Write-Output "Nushell $(nu --version)"
   If (-Not (Get-Module -ListAvailable -FullyQualifiedName @{ModuleName="PSScriptAnalyzer";ModuleVersion="1.0.0"})) {
