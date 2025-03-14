@@ -1,6 +1,5 @@
 # Scripts
 
-![](https://img.shields.io/github/actions/workflow/status/scruffaluff/scripts/build.yaml)
 ![](https://img.shields.io/github/license/scruffaluff/scripts)
 ![](https://img.shields.io/github/repo-size/scruffaluff/scripts)
 

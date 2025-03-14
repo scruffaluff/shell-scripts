@@ -1,7 +1,7 @@
 Describe 'Install' {
     BeforeAll {
         # Path normalization required for Assert-MockCalled parameter filters.
-        $Mlab = [System.IO.Path]::GetFullPath("$PSScriptRoot/../src/mlab.ps1")
+        $Mlab = [System.IO.Path]::GetFullPath("$PSScriptRoot/../src/script/mlab.ps1")
         . "$Mlab"
 
         $Env:MLAB_PROGRAM = 'C:/Windows/matlab'
