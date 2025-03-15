@@ -3,30 +3,36 @@
 # For more information, visit https://just.systems.
 
 set windows-shell := ['powershell.exe', '-NoLogo', '-Command']
+export PATH := if os() == "windows" {
+  justfile_dir() / ".vendor/bin;" + env_var("Path")
+} else {
+  justfile_dir() / ".vendor/bin:" + env_var("PATH")
+}
 
 # List all commands available in justfile.
 list:
   just --list
 
 # Execute all commands.
-all: setup format lint docs test
+all: setup format lint doc test
 
 # Build documentation.
-docs:
-  cp -r src/install assets/
-  npx vitepress build .
+[unix]
+doc:
+  cp -r src/install doc/public/
+  deno run --allow-all npm:vitepress build .
 
 # Check code formatting.
 [unix]
 format:
-  npx prettier --check .
+  deno run --allow-all npm:prettier --check .
 
 # Check code formatting.
 [windows]
 format:
-  npx prettier --check .
+  deno run --allow-all npm:prettier --check .
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path src -Settings CodeFormatting
-  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path tests -Settings CodeFormatting
+  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path test -Settings CodeFormatting
 
 # Run code analyses.
 [unix]
@@ -46,61 +52,32 @@ lint:
 [windows]
 lint:
   Invoke-ScriptAnalyzer -EnableExit -Recurse -Path src -Settings PSScriptAnalyzerSettings.psd1
-  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path tests -Settings PSScriptAnalyzerSettings.psd1
+  Invoke-ScriptAnalyzer -EnableExit -Recurse -Path test -Settings PSScriptAnalyzerSettings.psd1
 
 # Install development dependencies.
-setup: _setup-shell
-  node --version
-  npm --version
-  npm ci
+setup: _setup
+  deno install --frozen
 
 [unix]
-_setup-shell:
+_setup:
   #!/usr/bin/env sh
   set -eu
-  if [ "$(id -u)" -eq 0 ]; then
-    super=''
-  elif [ -x "$(command -v sudo)" ]; then
-    super='sudo'
-  elif [ -x "$(command -v doas)" ]; then
-    super='doas'
-  fi
-  arch="$(uname -m | sed s/x86_64/amd64/ | sed s/x64/amd64/ | sed s/aarch64/arm64/)"
-  os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-  if [ ! -x "$(command -v nu)" ]; then
-    ./src/install/nushell.sh --user
-  fi
-  echo "Nushell $(nu --version)"
   if [ ! -x "$(command -v jq)" ]; then
-    if [ -x "$(command -v apk)" ]; then
-      ${super:+"${super}"} apk update
-      ${super:+"${super}"} apk add jq
-    elif [ -x "$(command -v apt-get)" ]; then
-      ${super:+"${super}"} apt-get update
-      ${super:+"${super}"} apt-get install --yes jq
-    elif [ -x "$(command -v brew)" ]; then
-      brew install jq
-    elif [ -x "$(command -v dnf)" ]; then
-      ${super:+"${super}"} dnf check-update || {
-        code="$?"
-        [ "${code}" -ne 100 ] && exit "${code}"
-      }
-      ${super:+"${super}"} dnf install --assumeyes jq
-    elif [ -x "$(command -v pacman)" ]; then
-      ${super:+"${super}"} pacman --noconfirm --refresh --sync --sysupgrade
-      ${super:+"${super}"} pacman --noconfirm --sync jq
-    elif [ -x "$(command -v pkg)" ]; then
-      ${super:+"${super}"} pkg update
-      ${super:+"${super}"} pkg install --yes jq
-    elif [ -x "$(command -v zypper)" ]; then
-      ${super:+"${super}"} zypper update --no-confirm
-      ${super:+"${super}"} zypper install --no-confirm jq
-    fi
+    ./src/install/jq.sh --dest .vendor/bin
   fi
   jq --version
+  if [ ! -x "$(command -v nu)" ]; then
+    ./src/install/nushell.sh --dest .vendor/bin
+  fi
+  echo "Nushell $(nu --version)"
+  if [ ! -x "$(command -v deno)" ]; then
+    DENO_INSTALL="$(pwd)/.vendor" curl -fsSL https://deno.land/install.sh | \
+      sh -s -- --no-modify-path --yes
+  fi
+  deno --version
 
 [windows]
-_setup-shell:
+_setup:
   #!powershell.exe
   $ErrorActionPreference = 'Stop'
   $ProgressPreference = 'SilentlyContinue'
@@ -112,10 +89,19 @@ _setup-shell:
   Import-Module -MaximumVersion 1.1.0 -MinimumVersion 1.0.0 PackageManagement
   Import-Module -MaximumVersion 1.9.9 -MinimumVersion 1.0.0 PowerShellGet
   Get-PackageProvider -Force Nuget | Out-Null
+  If (-Not (Get-Command -ErrorAction SilentlyContinue jq)) {
+    & src/install/jq.ps1 --dest .vendor/bin
+  }
+  jq --version
   If (-Not (Get-Command -ErrorAction SilentlyContinue nu)) {
-    & src/install/nushell.ps1 --user
+    & src/install/nushell.ps1 --dest .vendor/bin
   }
   Write-Output "Nushell $(nu --version)"
+  If (-Not (Get-Command -ErrorAction SilentlyContinue deno)) {
+    $Env:DENO_INSTALL="$(pwd)/.vendor"
+    irm https://deno.land/install.ps1 | iex
+  }
+  deno --version
   If (-Not (Get-Module -ListAvailable -FullyQualifiedName @{ModuleName="PSScriptAnalyzer";ModuleVersion="1.0.0"})) {
     Install-Module -Force -MinimumVersion 1.0.0 -Name PSScriptAnalyzer
   }
@@ -128,9 +114,9 @@ _setup-shell:
 # Run test suites.
 [unix]
 test:
-  npx bats --recursive tests
+  deno run --allow-all npm:bats --recursive test
 
 # Run test suites.
 [windows]
 test:
-  Invoke-Pester -CI -Output Detailed tests
+  Invoke-Pester -CI -Output Detailed test
