@@ -6,7 +6,7 @@ setup() {
   load '../node_modules/bats-support/load'
 
   # Disable logging to simplify stdout for testing.
-  export SHELL_SCRIPTS_NOLOG='true'
+  export SCRIPTS_NOLOG='true'
 
   # Mock functions for child processes.
   #
@@ -21,7 +21,7 @@ setup() {
   # shellcheck disable=SC2317
   curl() {
     if [[ "$*" =~ api\.github\.com ]]; then
-      cat tests/data/install_response.json
+      cat test/data/install_response.json
     else
       echo "curl $*"
       exit 0

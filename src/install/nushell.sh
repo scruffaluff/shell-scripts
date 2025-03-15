@@ -71,7 +71,7 @@ EOF
   # Change file permissions if chmod parameter was passed.
   #
   # Flags:
-  #   -n: Check if the string has nonzero length.
+  #   -n: Check if string has nonzero length.
   if [ -n "${4:-}" ]; then
     ${1:+"${1}"} chmod "${4}" "${3}"
   fi
@@ -227,7 +227,7 @@ EOF
 #   Nushell version
 #   Destination path
 # Globals:
-#   SHELL_SCRIPTS_NOLOG
+#   SCRIPTS_NOLOG
 # Outputs:
 #   Log message to stdout.
 #######################################
@@ -294,7 +294,7 @@ install_nushell() {
 #######################################
 # Print log message to stdout if logging is enabled.
 # Globals:
-#   SHELL_SCRIPTS_NOLOG
+#   SCRIPTS_NOLOG
 # Outputs:
 #   Log message to stdout.
 #######################################
@@ -303,7 +303,7 @@ log() {
   #
   # Flags:
   #   -z: Check if string has zero length.
-  if [ -z "${SHELL_SCRIPTS_NOLOG:-}" ]; then
+  if [ -z "${SCRIPTS_NOLOG:-}" ]; then
     echo "$@"
   fi
 }
@@ -312,7 +312,7 @@ log() {
 # Script entrypoint.
 #######################################
 main() {
-  dst_dir='/usr/local/bin' os='' version=''
+  dst_dir='/usr/local/bin' version=''
 
   # Parse command line arguments.
   while [ "${#}" -gt 0 ]; do

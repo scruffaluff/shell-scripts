@@ -6,7 +6,7 @@ setup() {
   load '../node_modules/bats-support/load'
 
   export MLAB_PROGRAM='/bin/matlab'
-  export SHELL_SCRIPTS_NOLOG='true'
+  export SCRIPTS_NOLOG='true'
 }
 
 @test 'Mlab argumentless call contains no commands' {
